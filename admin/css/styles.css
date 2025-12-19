@@ -1,0 +1,264 @@
+@media (min-width: 992px) { /* For large screens and up */
+  .offcanvas {
+    --bs-offcanvas-width: min(95vw, 480px);
+  }
+}
+
+.btn{border-radius:5rem;}
+
+canvas {
+  opacity: 0;
+  filter: blur(1rem);
+  animation: fadeInBlur 1s ease forwards;
+  animation-delay: 1s;
+}
+
+@keyframes fadeInBlur {
+  from {
+    opacity: 0;
+    filter: blur(1rem);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0rem);
+  }
+}
+
+.ui{
+    opacity: 1; /* always visible */
+}
+
+.login-modal, .ui .blur, .ui #codeToggle, .ui #objLibToggle{
+   animation: fadeIn 750ms ease forwards;
+   animation-delay: 500ms;
+    opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.bg-none{
+   background:none !important;
+   background-color:none !important;
+   background-image:none !important;
+}
+
+body, .dropdown-item{
+  font-family: "Outfit", sans-serif !important;
+  font-optical-sizing: auto;
+  font-weight: 200;
+  font-style: normal;
+}
+
+.blur{
+  backdrop-filter: saturate(180%) blur(1rem);
+  -webkit-backdrop-filter: saturate(180%) blur(1rem);
+  isolation: isolate;
+  position: relative;
+  will-change: backdrop-filter;
+  transform: translateZ(0);
+}
+
+#helpOverlay{
+  display: none;
+}
+
+.offcanvas .btn-close{
+  background-image:none !important;
+  padding: .25rem 1rem .75rem .5rem !important;
+  margin: 0rem !important;
+}
+
+#jsonEditor {
+  flex: 1;
+  height: 100%;
+  color: #ffffff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+.cm-editor{
+   height: 100%;
+   background: #22222290;
+}
+
+#modelList {
+  list-style: none;
+  padding: 0;
+  margin: 0px 0 0 0;
+}
+
+#modelList li {
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+#properties {
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+#modelList li.selected { background: #444; }
+
+#contextMenu {
+  position: absolute;
+  display: none;
+  background: #11111190;
+  border: 1px solid #555;
+  border-radius: .5rem;
+  padding: 4px;
+  list-style: none;
+  z-index: 1000;
+  backdrop-filter:blur(1rem);
+}
+
+/* Caret (disclosure) for groups */
+.caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+.caret::before {
+  content: "\25B6"; /* ▶ */
+  font-size: 10px;
+  line-height: 1;
+  color: #ccc;
+  transition: transform 0.12s ease;
+}
+.caret.expanded::before {
+  transform: rotate(90deg);
+}
+.children-collapsed {
+  display: none;
+}
+
+/* Drag and drop styles */
+#modelList li.dragging {
+  opacity: 0.5;
+  background: #333;
+  border-left: 3px solid #99ccff;
+}
+
+#modelList li.drag-over {
+  background: #555;
+  border: 2px dashed #99ccff;
+  border-radius: 3px;
+}
+
+#modelList li[draggable="true"]:hover {
+  background: #444;
+  cursor: grab;
+}
+
+#modelList li[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+#codeToggle {
+  transition: opacity 0.15s ease-in-out;
+}
+
+/* Resize handle for code editor panel */
+.offcanvas-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  height: 97%;
+  margin: auto;
+  cursor: ew-resize;
+  z-index: 1056;
+  background: transparent;
+  transition: background 0.2s ease;
+  display: none;
+}
+
+.offcanvas.show .offcanvas-resize-handle {
+  display: block;
+}
+
+.offcanvas-resize-handle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.offcanvas-resize-handle:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Resize handle for object library panel (vertical) */
+.offcanvas-resize-handle-vertical {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  width: 97%;
+  margin: auto;
+  cursor: ns-resize;
+  z-index: 1056;
+  background: transparent;
+  transition: background 0.2s ease;
+  display: none;
+}
+
+.offcanvas.show .offcanvas-resize-handle-vertical {
+  display: block;
+}
+
+.offcanvas-resize-handle-vertical:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.offcanvas-resize-handle-vertical:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Multi-select drag feedback */
+#modelList li.dragging.multi-select {
+  border-left: 3px solid #ffcc00;
+  background: #444;
+}
+
+/* Object Library Styles */
+#objLibToggle {
+  transition: opacity 0.15s ease-in-out;
+}
+
+#objLibGrid .card {
+  overflow: hidden;
+}
+
+#objLibGrid .card-img-top {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#objLibGrid .card-img-top canvas {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+}
+
+#objLibContent {
+  max-height: 70vh;
+  overflow-y: auto;
+}

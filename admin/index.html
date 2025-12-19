@@ -1,0 +1,515 @@
+<!doctype html>
+<html data-bs-theme="dark">
+
+<head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <title>RP1 Scene Assembler</title>
+
+   <link rel="stylesheet" href="css/styles.css">
+
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+   <script type="text/javascript" src="js/vendor/jquery-3.3.1.js"></script>
+   <script type="text/javascript" src="js/vendor/cdn.socket.io_4.8.1_socket.io.min.js"></script>
+
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVMF.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVSB.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRest.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVXP.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVIO.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRP.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRP_Dev.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRP_Fabric.js"></script>
+   <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRP_Map.js"></script>
+
+   <!-- App -->
+   <script src="js/rp1.js"></script>
+
+   <!-- Core Three.js -->
+   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+
+   <!-- Controls & Loaders -->
+   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
+   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+   <script type="text/javascript" class="data_asp">
+      const g_pRequire = MV.MVMF.Core.Require('MVRP_Dev,MVRP_Map,MVRP_Fabric');
+      var g_pMap = null;
+
+      $(document).ready(
+         function() {
+            g_pMap = new ExtractMap($('body'), window.location.origin + '/config/fabric.msf.json', 70, 1);
+            //$('.data_asp').remove ();
+         }
+      );
+   </script>
+</head>
+
+<body>
+
+   <!-- Login Modal -->
+   <div class="login-modal vh-100 vw-100 bg-dark position-relative z-3 jsLogin" style="display:none;" tabindex="-1">
+      <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
+         <small>Welcome to the </small>
+         <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">RP1 Scene Assembler</h1>
+         <small class="mb-4 pe-none">Please enter your admin key to edit your scene.</small>
+         <div class="jsLogin container">
+            <form class="row g-3 justify-content-center align-items-center mb-5" onsubmit="onLogin(event)">
+               <div class="col-12 col-lg-4">
+                  <div class="form-floating">
+                     <input type="password" id="key" name="key" class="form-control form-control-sm jsKey" aria-describedby="Your Key" placeholder="Your Key" autocomplete="current-password" required>
+                     <label for="key"><i class="fa-solid fa-key"></i> Enter your key:</label>
+                  </div>
+               </div>
+               <div class="col-12">
+                  <button type="submit" class="btn btn-lg btn-primary my-3 rounded-5"><i class="fa-solid fa-door-open"></i> Enter</button>
+               </div>
+            </form>
+            <script>
+               function onLogin(event) {
+                  g_pMap.onLogin(event);
+               }
+            </script>
+         </div>
+      </div>
+   </div>
+
+   <div class="ui position-absolute w-100 user-select-none pe-none z-2 jsSceneEditor" style="display:none;">
+      <nav class="main navbar navbar-expand py-1 pe-auto">
+         <div class="container-lg">
+            <ul class="navbar-nav gap-2 mb-lg-0 blur rounded-5 bg-dark bg-opacity-25 px-2">
+               <li class="nav-item dropdown">
+                  <a class="nav-link ps-3 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                     <i class="fa-solid fa-cube d-none"></i> scn assmblr
+                  </a>
+                  <ul class="dropdown-menu">
+                     <li>
+                        <div class="dropdown-item py-2">
+                           <select id="sceneSelect" class="form-select jsPObject mb-3" aria-label="Select a scene">
+                              <option value="0" class="jsNewScene" disabled>&lt;New Scene&gt;</option>
+                           </select>
+                           <button class="jsSceneAdd">Add Scene</button>
+                        </div>
+                     </li>
+                     <li>
+                        <div class="dropdown-item mx-auto py-2">
+                           <div class="form-check form-switch">
+                              <input class="form-check-input" type="checkbox" role="switch" id="snap">
+                              <label class="form-check-label" for="snap">Snap Objects to Grid</label>
+                           </div>
+                        </div>
+                     </li>
+                     <li>
+                        <hr class="dropdown-divider">
+                     </li>
+                     <li>
+                        <div class="px-3 py-2 d-flex align-items-center w-100 gap-3">
+                           <label for="canvasSize" class="form-label w-100 m-0">Canvas&nbsp;Size</label>
+                           <input type="text" class="form-control" id="canvasSize" placeholder="20" value="20" style="width:5rem">
+                           <button type="submit" class="btn btn-outline-light" id="setCanvasSize">Set</button>
+                        </div>
+                     </li>
+                  </ul>
+               </li>
+               <li class="nav-item border-start my-1">
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link" id="undo"><i class="fa-solid fa-rotate-left" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Undo (ctrl+z)"></i></button>
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link" id="redo"><i class="fa-solid fa-rotate-right" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+y)"></i></button>
+               </li>
+               <li class="nav-item border-start my-1">
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link" id="delete"><i class="fa-solid fa-trash" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete"></i></button>
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link" id="resetCamera"><i class="fa-solid fa-camera" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Reset Camera"></i></button>
+               </li>
+               <li class="nav-item border-start my-1">
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link" id="exportJson"><i class="fa-solid fa-file-export" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Export JSON"></i></button>
+               </li>
+               <li class="nav-item">
+                  <button class="nav-link jsPublish"><i class="fa-solid fa-cloud-arrow-up" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Publish Scene"></i></button>
+               </li>
+            </ul>
+            <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#codeEditorPanel" aria-controls="codeEditorPanel" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Scene JSON" id="codeToggle"><i class="fa-solid fa-code"></i> Code Editor</button>
+         </div>
+      </nav>
+      <nav class="secondary navbar navbar-expand p-0 mt-3 mt-lg-0 pe-none d-none" id="objControls">
+         <ul class="navbar-nav transforms gap-1 mb-lg-0 rounded-5 blur mx-auto pe-auto bg-dark bg-opacity-75">
+            <li class="nav-item">
+               <button class="nav-link p-3 ps-4" id="translate" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Move (W)"><i class="fa-solid fa-arrows-up-down-left-right fa-lg"></i></button>
+            </li>
+            <li class="nav-item border-start my-1">
+            </li>
+            <li class="nav-item">
+               <button class="nav-link p-3" id="rotate" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Rotate (E)"><i class="fa-solid fa-rotate fa-lg"></i></button>
+            </li>
+            <li class="nav-item border-start my-1">
+            </li>
+            <li class="nav-item">
+               <button class="nav-link p-3 pe-4" id="scale" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Scale (E)"><i class="fa-solid fa-expand fa-lg"></i></button>
+            </li>
+         </ul>
+      </nav>
+   </div>
+   <div class="ui position-fixed mt-5 pt-2 ms-3 h-100 z-1 jsSceneEditor" id="sidebar" style="display:none;">
+      <div id="modelsPanel" class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;">
+         <div class="card-body">
+            <ul class="list-group list-group-flush rounded-3 pe-auto small" id="modelList">
+            </ul>
+         </div>
+      </div>
+
+      <div class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;" id="propertiesPanel">
+         <div class="card-body">
+            <h6 class="card-title pe-none user-select-none">Properties</h6>
+            <p class="card-text small" id="properties"></p>
+            <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
+            <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
+         </div>
+      </div>
+
+      <div class="card rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;" id="helpOverlay">
+         <div class="card-body small">
+            <strong>Hotkeys</strong><br>
+            W – Move<br>
+            E – Rotate<br>
+            R – Scale<br>
+            Q – Detach gizmo<br>
+            Shift+Q – Re‑attach gizmo<br>
+            F – Frame selected<br>
+            Ctrl+Z – Undo<br>
+            Click model – Focus it<br>
+            Double‑click empty – Reset to canvas<br>
+            H – Toggle this help
+         </div>
+      </div>
+
+   </div>
+
+   <div class="ui position-absolute bottom-0 w-100 user-select-none pe-none z-1 jsSceneEditor" style="display:none;">
+      <nav class="main navbar navbar-expand py-1 pe-auto">
+         <div class="container-lg">
+            <ul class="d-flex justify-content-center w-100">
+            <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
+         </ul>
+      </nav>
+   </div>
+
+   <div class="offcanvas offcanvas-end mt-5 rounded-start-4 border-top bg-dark bg-opacity-75 blur z-1" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="codeEditorPanel" aria-labelledby="codeEditorPanel">
+      <div class="offcanvas-resize-handle" id="codeEditorResizeHandle"></div>
+      <div class="offcanvas-header d-flex justify-content-between pb-0">
+            <h5 class="offcanvas-title m-0 p-0 user-select-none">Code Editor</h5>
+         <button type="button" class="btn-close p-1 rounded-2" data-bs-dismiss="offcanvas" aria-label="Close"><i class="fa-solid fa-arrow-right-from-bracket fa-lg"></i></button>
+      </div>
+      <div class="offcanvas-body pt-2 pb-1" id="code">
+         <div id="jsonEditor" class="h-100"></div>
+      </div>
+      <div class="offcanvas-footer p-3 pb-4 d-flex justify-content-between" id="jsonButtons">
+         <button type="button" class="btn btn-sm btn-primary fa-beat w-100" style="--fa-beat-scale: 1.025; --fa-animation-duration: 2s; display: none;" id="applyChanges"><i class="fa-solid fa-arrows-spin fa-spin"></i> Apply Changes</button>
+      </div>
+   </div>
+
+   <div class="offcanvas offcanvas-bottom rounded-top-4 border-start border-end bg-dark bg-opacity-75 blur mx-5 z-1" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="objLibPanel" aria-labelledby="objLibPanel">
+      <div class="offcanvas-resize-handle-vertical" id="objLibResizeHandle"></div>
+      <div class="offcanvas-header d-flex justify-content-between py-2">
+         <h5 class="offcanvas-title m-0 p-0 user-select-none">Object Library</h5>
+         <button type="button" class="btn-close p-1 rounded-2" data-bs-dismiss="offcanvas" aria-label="Close"><i class="fa-solid fa-arrow-right-from-bracket fa-rotate-90 fa-lg"></i></button>
+      </div>
+      <div class="offcanvas-body py-2" id="objLibContent">
+            <div class="row g-3" id="objLibGrid">
+               <div class="col-12 text-center text-muted py-5">
+                  <i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i>
+                  <p class="mb-0">Loading objects...</p>
+               </div>
+            </div>
+      </div>
+   </div>
+
+   <!-- Modal for unsaved changes warning -->
+   <div class="modal fade blur" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+         <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-0 pb-1">
+               <h5 class="modal-title" id="unsavedChangesModalLabel">
+                  <i class="fa-solid fa-triangle-exclamation me-2"></i>Unsaved Code Changes
+               </h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+               <p>You have unsaved code changes in the Code Editor. Please apply or discard your changes before making edits to the 3D scene.</p>
+               <p class="small text-muted">Discarding changes will simply revert the code changes you have made.</p>
+               <p class="mb-0 text-center"><strong>What would you like to do?</strong></p>
+            </div>
+            <div class="modal-footer d-flex justify-content-between border-0">
+               <button type="button" class="btn btn-secondary rounded-5" id="discardChangesFromModal">
+                  <i class="fa-solid fa-eraser me-1"></i>Discard Changes
+               </button>
+               <button type="button" class="btn btn-primary rounded-5" id="applyChangesFromModal">
+                  <i class="fa-solid fa-arrows-spin fa-spin me-1"></i>Apply Changes
+               </button>
+            </div>
+         </div>
+      </div>
+   </div>
+
+   <!-- Saving Changes Modal -->
+   <div class="vh-100 vw-100 bg-dark bg-opacity-50 blur position-relative z-3 jsUnsaved" style="display:none" tabindex="-1">
+      <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
+         <i class="fa-solid fa-spinner fa-spin fa-3x mb-4 text-primary"></i>
+         <h5 class="modal-title mb-0" id="publishingModalLabel">Publishing Your Scene...</h5>
+         <p class="text-muted mt-3 mb-0">Please wait while your scene is saved.</p>
+      </div>
+   </div>
+
+   <script type="module">
+      import {
+         EditorView,
+         keymap,
+         lineNumbers,
+         highlightActiveLine,
+         drawSelection
+      } from 'https://esm.sh/@codemirror/view@6';
+      import {
+         EditorState
+      } from 'https://esm.sh/@codemirror/state@6';
+      import {
+         defaultHighlightStyle,
+         syntaxHighlighting,
+         foldGutter,
+         foldKeymap,
+         bracketMatching
+      } from 'https://esm.sh/@codemirror/language@6';
+      import {
+         json,
+         jsonParseLinter
+      } from 'https://esm.sh/@codemirror/lang-json@6';
+      import {
+         defaultKeymap,
+         history,
+         historyKeymap,
+         undo,
+         redo
+      } from 'https://esm.sh/@codemirror/commands@6';
+      import {
+         searchKeymap,
+         highlightSelectionMatches
+      } from 'https://esm.sh/@codemirror/search@6';
+      import {
+         closeBrackets,
+         closeBracketsKeymap
+      } from 'https://esm.sh/@codemirror/autocomplete@6';
+      import {
+         linter,
+         lintGutter
+      } from 'https://esm.sh/@codemirror/lint@6';
+      import {
+         oneDark
+      } from 'https://esm.sh/@codemirror/theme-one-dark@6';
+
+      const container = document.getElementById('jsonEditor');
+      let initialDoc = container?.dataset?.initial || container?.textContent || '';
+
+      // Clear any existing visible text to avoid duplicate rendering next to CodeMirror
+      if (container) container.textContent = '';
+
+      const updateListeners = [];
+
+      const view = new EditorView({
+         state: EditorState.create({
+            doc: initialDoc,
+            extensions: [
+               EditorState.allowMultipleSelections.of(true),
+               oneDark,
+               lineNumbers(),
+               foldGutter(),
+               highlightActiveLine(),
+               drawSelection(),
+               bracketMatching(),
+               closeBrackets(),
+               highlightSelectionMatches(),
+               lintGutter(),
+               linter(jsonParseLinter()),
+               history(),
+               keymap.of([
+                  ...defaultKeymap,
+                  ...historyKeymap,
+                  ...searchKeymap,
+                  ...foldKeymap,
+                  ...closeBracketsKeymap
+               ]),
+               syntaxHighlighting(defaultHighlightStyle, {
+                  fallback: true
+               }),
+               json(),
+               EditorView.updateListener.of(
+                  v => {
+                     if (v.docChanged) {
+                        const value = v.state.doc.toString();
+                        container.dispatchEvent(new CustomEvent('json-change', {
+                           detail: {
+                              value
+                           }
+                        }));
+                     }
+
+                     if (v.focusChanged && view.hasFocus) {
+                        container.dispatchEvent(new Event('focus'));
+                     }
+                  }
+               )
+            ]
+         }),
+         parent: container
+      });
+
+      window.jsonEditorAPI = {
+         getValue() {
+            return view.state.doc.toString();
+         },
+         setValue(text) {
+            const curLen = view.state.doc.length;
+            view.dispatch({
+               changes: {
+                  from: 0,
+                  to: curLen,
+                  insert: text
+               }
+            });
+         },
+         focus() {
+            view.focus();
+         },
+         hasFocus() {
+            return view.hasFocus;
+         },
+         undo() {
+            undo({state: view.state, dispatch: view.dispatch});
+         },
+         redo() {
+            redo({state: view.state, dispatch: view.dispatch});
+         }
+      };
+
+      // Clear the buffered initial data attribute once the editor is ready
+      if (container && container.dataset) delete container.dataset.initial;
+   </script>
+</body>
+
+<!-- App -->
+<script src="js/main.js"></script>
+
+<!-- Enable BS Tooltips -->
+<script type="text/javascript">
+const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+
+// Fade #codeToggle when codeEditorPanel is visible
+const codeEditorPanel = document.getElementById('codeEditorPanel');
+const codeToggle = document.getElementById('codeToggle');
+const codeEditorResizeHandle = document.getElementById('codeEditorResizeHandle');
+
+if (codeEditorPanel && codeToggle) {
+   codeEditorPanel.addEventListener('shown.bs.offcanvas', function () {
+      codeToggle.classList.add('opacity-0');
+      codeToggle.style.pointerEvents = 'none';
+   });
+
+   codeEditorPanel.addEventListener('hidden.bs.offcanvas', function () {
+      codeToggle.classList.remove('opacity-0');
+      codeToggle.style.pointerEvents = '';
+   });
+}
+
+// Resize functionality for code editor panel
+if (codeEditorPanel && codeEditorResizeHandle) {
+   let isResizing = false;
+   let startX = 0;
+   let startWidth = 0;
+
+   codeEditorResizeHandle.addEventListener('mousedown', function(e) {
+      if (!codeEditorPanel.classList.contains('show')) return;
+
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = codeEditorPanel.offsetWidth;
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+   });
+
+   document.addEventListener('mousemove', function(e) {
+      if (!isResizing) return;
+
+      const deltaX = startX - e.clientX; // Negative because we're dragging left
+      const newWidth = Math.max(320, Math.min(window.innerWidth * 0.95, startWidth + deltaX));
+
+      codeEditorPanel.style.width = newWidth + 'px';
+      codeEditorPanel.style.setProperty('--bs-offcanvas-width', newWidth + 'px');
+   });
+
+   document.addEventListener('mouseup', function() {
+      if (isResizing) {
+         isResizing = false;
+         document.body.style.cursor = '';
+         document.body.style.userSelect = '';
+      }
+   });
+}
+
+// Resize functionality for object library panel (vertical resize from top)
+const objLibResizeHandle = document.getElementById('objLibResizeHandle');
+
+if (objLibPanel && objLibResizeHandle) {
+   let isResizingVertical = false;
+   let startY = 0;
+   let startHeight = 0;
+
+   objLibResizeHandle.addEventListener('mousedown', function(e) {
+      if (!objLibPanel.classList.contains('show')) return;
+
+      isResizingVertical = true;
+      startY = e.clientY;
+      startHeight = objLibPanel.offsetHeight;
+      document.body.style.cursor = 'ns-resize';
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+   });
+
+   document.addEventListener('mousemove', function(e) {
+      if (!isResizingVertical) return;
+
+      const deltaY = startY - e.clientY; // Positive when dragging up (increasing height)
+      const minHeight = 200; // Minimum height in pixels
+      const maxHeight = window.innerHeight * 0.9; // Maximum 90% of viewport height
+      const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY));
+
+      objLibPanel.style.height = newHeight + 'px';
+      objLibPanel.style.setProperty('--bs-offcanvas-height', newHeight + 'px');
+   });
+
+   document.addEventListener('mouseup', function() {
+      if (isResizingVertical) {
+         isResizingVertical = false;
+         document.body.style.cursor = '';
+         document.body.style.userSelect = '';
+      }
+   });
+}
+
+</script>
+
+</html>
