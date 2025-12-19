@@ -11,6 +11,9 @@ mvconfig.json
 mvmf.json
 mvmf2.json
 
+public/fabric/*
+!public/fabric/sample.msf
+
 .DS_Store
 
 # User-specific files
