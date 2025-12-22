@@ -62,7 +62,7 @@
 
       $(document).ready(
          function() {
-            g_pMap = new ExtractMap($('body'), window.location.origin + '/config/fabric.msf.json', 70, 1);
+            g_pMap = new ExtractMap($('body'), 70, 1);
             //$('.data_asp').remove ();
          }
       );
@@ -74,12 +74,15 @@
    <!-- Login Modal -->
    <div class="login-modal vh-100 vw-100 bg-dark position-relative z-3 jsLogin" style="display:none;" tabindex="-1">
       <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
-         <small>Welcome to the </small>
-         <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">RP1 Scene Assembler</h1>
+         <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">Scene Assembler</h1>
          <small class="mb-4 pe-none">Please enter your admin key to edit your scene.</small>
          <div class="jsLogin container">
             <form class="row g-3 justify-content-center align-items-center mb-5" onsubmit="onLogin(event)">
                <div class="col-12 col-lg-4">
+                  <div class="form-floating">
+                     <input type="text" id="msf" name="key" class="form-control form-control-sm jsUrl" aria-describedby="Your Fabric Url" placeholder="Your Fabric Url" autocomplete="current-password" required>
+                     <label for="msf"><i class="fa-solid fa-key"></i> Enter your Fabric Url:</label>
+                  </div>
                   <div class="form-floating">
                      <input type="password" id="key" name="key" class="form-control form-control-sm jsKey" aria-describedby="Your Key" placeholder="Your Key" autocomplete="current-password" required>
                      <label for="key"><i class="fa-solid fa-key"></i> Enter your key:</label>

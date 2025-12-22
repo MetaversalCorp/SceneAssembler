@@ -24,6 +24,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    #m_wClass_Object;
    #m_twObjectIx;
    #pZone;
+   #pLogin;
 
    #jPObject;
    #pRMXRoot;
@@ -39,8 +40,16 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    };
 
    eSTATE = ExtractMap.eSTATE;
-   constructor (jSelector, sURL, wClass_Object, twObjectIx, pLnGPrimary)
+   constructor (jSelector, wClass_Object, twObjectIx)
    {
+      let pData = 
+      {
+         sExpired : ';expires=Thu, 01 Jan 1970 00:00:01 GMT',
+         sPath    : ';path=/',
+         sZone    : '',
+         sSameSite: ';samesite=strict'
+      };
+
       super ();
 
       this.jSelector = jSelector;
@@ -65,8 +74,27 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       this.jSelector.find ('.jsPublish').on ('click', this.onClick_Publish.bind (this));
       this.jSelector.find ('.jsSceneAdd').on ('click', this.onClick_SceneAdd.bind (this));
 
-      this.#m_pFabric = new MV.MVRP.MSF (sURL, MV.MVRP.MSF.eMETHOD.GET);
-      this.#m_pFabric.Attach (this);
+      let pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
+      this.#pLogin = {
+         sUrl: pZone.Get ('sUrl'),
+         sKey: pZone.Get ('sKey'),
+         bLogin: true,
+         bLoggedIn: false
+      }
+
+      if (this.#pLogin.sUrl && this.#pLogin.sKey)
+      {
+         this.#m_pFabric = new MV.MVRP.MSF (this.#pLogin.sUrl, MV.MVRP.MSF.eMETHOD.GET);
+         this.#m_pFabric.Attach (this);
+      }
+      else
+      {
+         this.jSelector.find ('.jsLogin').show ();
+         this.jSelector.find ('.jsSceneEditor').hide ();
+         this.jSelector.find ('.jsUrl').val (window.location.origin + '/fabric/fabric.msf');
+
+         this.#m_pFabric = null;
+      }
    }
 
    destructor ()
@@ -89,6 +117,35 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       }
    }
 
+   StringToBase64 (str)
+   {
+      let encoded = btoa (encodeURIComponent (str).replace(/%([0-9A-F]{2})/g,
+        function toSolidBytes(match, p1) 
+        {
+            return String.fromCharCode('0x' + p1);
+        }));
+
+      return encoded.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+   }
+
+   Base64ToString (str)
+   {
+      let decoded = str.replace(/-/g, '+').replace(/_/g, '/');
+
+      while (decoded.length % 4) 
+      {
+         decoded += '=';
+      }
+
+      return decodeURIComponent (atob(decoded).split('').map 
+         (
+            function(c) 
+            {
+               return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }
+         ).join (''));
+   }
+  
    onInserted (pNotice)
    {
       if (this.IsReady ())
@@ -255,7 +312,19 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
          {
             if (this.#m_pFabric.IsReady ())
             {
-               this.Exec ();
+               this.#m_pLnG = this.#m_pFabric.GetLnG ("map");
+               this.#m_pLnG.Attach (this);
+            }
+         }
+         else if (pNotice.pCreator == this.#m_pLnG)
+         {
+            if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.LOGGEDIN)
+            {
+               this.SaveLogin ();
+            }
+            else if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.LOGGEDOUT)
+            {
+               this.Login ();
             }
          }
          else if (pNotice.pCreator.IsReady ())
@@ -290,7 +359,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
                   else
                   {
                      this.ReadyState (this.eSTATE.READY); // No Scenes
-                     this.DisplayPanel ();
                   }
                }
             }
@@ -315,7 +383,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
                   }
 
                   this.UpdateScene ();
-                  this.DisplayPanel ();
                }
             }
          }
@@ -324,36 +391,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
                pNotice.pCreator.wClass_Object == this.#pRMXPending.wClass_Object && pNotice.pCreator.twObjectIx == this.#pRMXPending.twObjectIx)
       {
          this.#bPending = false;
-      }
-      else if (pNotice.pCreator == this.#m_pLnG)
-      {
-         if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.LOGGEDIN)
-         {
-            this.DisplayPanel ();
-         }
-      }
-   }
-
-   Exec ()
-   {
-      let sID;
-
-      if (this.#m_pLnG == null)
-      {
-         this.#m_pLnG = this.#m_pFabric.GetLnG ("map");
-         this.#m_pLnG.Attach (this);
-
-         if (this.#m_wClass_Object == 70)
-            sID = 'RMRoot';
-         else if (this.#m_wClass_Object == 71)
-            sID = 'RMCObject';
-         else if (this.#m_wClass_Object == 72)
-            sID = 'RMTObject';
-         else if (this.#m_wClass_Object == 73)
-            sID = 'RMPObject';
-
-         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx] = this.#m_pLnG.Model_Open (sID, this.#m_twObjectIx);
-         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx].Attach (this);
       }
    }
 
@@ -942,55 +979,78 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       }
    }
 
-   DisplayPanel ()
+   SaveLogin ()
    {
-      let pData = 
+      if (this.#pLogin.bLoggedIn == false)
       {
-         sExpired : ';expires=Thu, 01 Jan 1970 00:00:01 GMT',
-         sPath    : ';path=/',
-         sZone    : '',
-         sSameSite: ';samesite=strict'
-      };
-
-      if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.LOGGEDIN)
-      {
-         if (this.bLogin)
+         let pData = 
          {
-            if (this.#pZone == null)
-               this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
-            this.#pZone.Set ('sKey', MV.MVMF.Escape (this.jSelector.find ('.jsKey').val ()));
-         }
+            sExpired : ';expires=Thu, 01 Jan 1970 00:00:01 GMT',
+            sPath    : ';path=/',
+            sZone    : '',
+            sSameSite: ';samesite=strict'
+         };
+         let sID;
+
+         this.#pLogin.bLoggedIn = true;
+
+         if (this.#pZone == null)
+            this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
+         this.#pZone.Set ('sKey', this.#pLogin.sKey);
+         this.#pZone.Set ('sUrl', this.#pLogin.sUrl);
 
          this.jSelector.find ('.jsLogin').hide ();
          this.jSelector.find ('.jsSceneEditor').show ();
+
+         if (this.#m_wClass_Object == 70)
+            sID = 'RMRoot';
+         else if (this.#m_wClass_Object == 71)
+            sID = 'RMCObject';
+         else if (this.#m_wClass_Object == 72)
+            sID = 'RMTObject';
+         else if (this.#m_wClass_Object == 73)
+            sID = 'RMPObject';
+
+         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx] = this.#m_pLnG.Model_Open (sID, this.#m_twObjectIx);
+         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx].Attach (this);
+      }
+   }
+
+   Login ()
+   {
+      if (this.#pLogin.bLogin)
+      {
+         this.#pLogin.bLogin = false;
+         this.#m_pLnG.Login ('token=' + MV.MVMF.Escape (this.#pLogin.sKey));
       }
       else
       {
-         let sKey = null;
-
-         if (this.#pZone == null)
-         {
-            this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
-
-            sKey = this.#pZone.Get ('sKey');
-
-            if (sKey != null)
-               this.#m_pLnG.Login ('token=' + sKey );
-         }
-
-         if (sKey == null)
-         {
-            this.jSelector.find ('.jsLogin').show ();
-            this.jSelector.find ('.jsSceneEditor').hide ();
-         }
+         setTimeout (this.onLoginFailure.bind (this), 0);
       }
+   }
+
+   onLoginFailure ()
+   {
+      this.#m_pFabric.Detach (this);
+      this.#m_pFabric.destructor ();
+      this.#m_pFabric = null;
    }
 
    onLogin (e)
    {
       e.preventDefault ();
 
-      this.bLogin = true;
-      this.#m_pLnG.Login ('token=' + MV.MVMF.Escape (this.jSelector.find ('.jsKey').val ()));
+      this.#pLogin = {
+         sKey: this.jSelector.find ('.jsKey').val (),
+         sUrl: this.jSelector.find ('.jsUrl').val (),
+         bLogin: true,
+         bLoggedIn: false
+      };
+
+      if (this.#pLogin.sUrl != '')
+      {
+         this.#m_pFabric = new MV.MVRP.MSF (this.#pLogin.sUrl, MV.MVRP.MSF.eMETHOD.GET);
+         this.#m_pFabric.Attach (this);
+      }
    }
 };
