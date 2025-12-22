@@ -54,7 +54,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
       this.jSelector = jSelector;
 
-      this.#pZone = null;
+      this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
 
       this.nStack = 0;
       this.#twObjectIx_PendingDelete = 0;
@@ -73,11 +73,11 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       this.#jPObject.on ('change', this.onClick_Scene.bind (this));
       this.jSelector.find ('.jsPublish').on ('click', this.onClick_Publish.bind (this));
       this.jSelector.find ('.jsSceneAdd').on ('click', this.onClick_SceneAdd.bind (this));
+      this.jSelector.find ('.jsDisconnect').on ('click', this.onClick_Disconnect.bind (this));
 
-      let pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
       this.#pLogin = {
-         sUrl: pZone.Get ('sUrl'),
-         sKey: pZone.Get ('sKey'),
+         sUrl: this.#pZone.Get ('sUrl'),
+         sKey: this.#pZone.Get ('sKey'),
          bLogin: true,
          bLoggedIn: false
       }
@@ -101,20 +101,32 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    {
       if (this.#m_pLnG)
       {
-         for (let sItem in this.#m_MapRMXItem)
+         for (let sKey in this.#m_MapRMXItem)
          {
-            let Item = this.#m_MapRMXItem[sItem];
-
-            Item.pRMXObject.Detach (this);
-            this.#m_pLnG.Model_Close (Item.pRMXObject);
+            this.#m_MapRMXItem[sKey].Detach (this);
+            this.#m_pLnG.Model_Close (this.#m_MapRMXItem[sKey]);
          }
 
-         this.#m_pFabric.Detach (this);
-         this.#m_pFabric.destructor ();
+         if (this.#m_pFabric)
+         {
+            this.#m_pFabric.Detach (this);
+            this.#m_pFabric.destructor ();
 
-         this.#m_pFabric = null;
+            this.#m_pFabric = null;
+         }
+
          this.#m_pLnG = null;
       }
+
+      this.#pLogin = {
+         sUrl: window.location.origin + '/fabric/fabric.msf',
+         sKey: '',
+         bLogin: true,
+         bLoggedIn: false
+      }
+
+      this.#pZone.Remove ('sUrl');
+      this.#pZone.Remove ('sKey');
    }
 
    StringToBase64 (str)
@@ -956,6 +968,16 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       this.jSelector.find ('select option.jsNewScene').prop ('disabled', false);
    }
 
+   onClick_Disconnect (e)
+   {
+      this.destructor ();
+
+      this.ReadyState (this.eSTATE.NOTREADY);
+
+      this.jSelector.find ('.jsLogin').show ();
+      this.jSelector.find ('.jsSceneEditor').hide ();
+   }
+
    onPublish ()
    {
       let sJSON = getJSONEditorText ();
@@ -994,8 +1016,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
          this.#pLogin.bLoggedIn = true;
 
-         if (this.#pZone == null)
-            this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
          this.#pZone.Set ('sKey', this.#pLogin.sKey);
          this.#pZone.Set ('sUrl', this.#pLogin.sUrl);
 
