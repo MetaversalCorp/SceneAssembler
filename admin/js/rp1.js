@@ -25,6 +25,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    #m_twObjectIx;
    #pZone;
    #pLogin;
+   #bIsObjectLibLoaded;
 
    #jPObject;
    #pRMXRoot;
@@ -51,7 +52,8 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       };
 
       super ();
-
+      
+      this.#bIsObjectLibLoaded = false;
       this.jSelector = jSelector;
 
       this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
@@ -972,6 +974,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    {
       this.destructor ();
 
+      this.#bIsObjectLibLoaded = false;
       this.ReadyState (this.eSTATE.NOTREADY);
 
       this.jSelector.find ('.jsLogin').show ();
@@ -1072,5 +1075,28 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
          this.#m_pFabric = new MV.MVRP.MSF (this.#pLogin.sUrl, MV.MVRP.MSF.eMETHOD.GET);
          this.#m_pFabric.Attach (this);
       }
+   }
+
+   LoadObjectLibrary ()
+   {
+      if (this.#bIsObjectLibLoaded == false)
+      {
+         loadObjectLibrary (this.GetRootUrl ());
+         this.#bIsObjectLibLoaded = true;
+      }
+   }
+
+   GetRootUrl ()
+   {
+      let sResult = this.#m_pFabric.GetMapRootUrl ();
+
+      if (sResult.length > 0)
+      {
+         let c = sResult.slice (-1);
+         if (c != '/')
+            sResult += '/';
+      }
+
+      return sResult;
    }
 };

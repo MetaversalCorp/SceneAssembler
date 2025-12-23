@@ -115,8 +115,19 @@ const loadingPromises = new Map();
 // Track ongoing loading operations
 
 // ===== URL and Model Loading Utilities =====
-function isUrl(sReference) {
-    return sReference && (sReference.startsWith('http://') || sReference.startsWith('https://'));
+function isUrl (sReference) 
+{
+    let bResult = false;
+
+    if (sReference)
+    {
+        sReference = sReference.toLowerCase ();
+
+        if (sReference.startsWith ('http://') || sReference.startsWith ('https://'))
+            sResult = true;
+    }
+
+    return bResult;
 }
 
 /**
@@ -182,28 +193,16 @@ function getCacheKey(sReference, scale=null, rotation=null) {
  * - Filenames: duck.glb (prepends /objects/)
  * - URLs: http://example.com/model.glb (returns as-is)
  */
-function normalizeReferencePath(sReference) {
-    if (!sReference) return sReference;
-    
-    // If it's a URL, return as-is
-    if (isUrl(sReference)) {
-        return sReference;
-    }
-    
-    // If it starts with /, it's already an absolute path from server root
-    // This includes paths like /objects/duck.glb
-    if (sReference.startsWith('/')) {
-        return sReference;
-    }
-    
-    // If it starts with objects/, normalize to /objects/
-    if (sReference.startsWith('objects/')) {
-        return '/' + sReference;
-    }
-    
-    // Otherwise, assume it's a relative path and prepend /objects/
-    // This handles cases where just the filename is provided (e.g., "duck.glb")
-    return '/objects/' + sReference;
+function normalizeReferencePath (sReference) 
+{
+   if (sReference && isUrl (sReference) == false)
+   {
+      let sRootUrl = g_pMap.GetRootUrl ();
+
+      sReference = new URL (sReference, sRootUrl).href;
+   }
+
+   return sReference;
 }
 
 async function loadModelFromReference(sReference, boundingBox=null, scale=null, rotation=null) {
@@ -5276,23 +5275,13 @@ if (objLibPanel && objLibToggle) {
 }
 
 // Fetch object list from JSON file in /objects directory
-async function getObjectFiles() {
+async function getObjectFiles (sRootUrl) 
+{
     try {
         // Construct URL relative to current page location to handle both http and file protocols
         // If running through server, use absolute path; otherwise construct from current location
-        let jsonUrl = '/objects/objects.json';
         
-        // If we're on file:// protocol, we can't fetch - return empty and show error
-        if (window.location.protocol === 'file:') {
-            console.error('Cannot load objects.json: Page must be served through HTTP server, not file:// protocol');
-            console.error('Please access the page through the web server (e.g., http://localhost:PORT)');
-            return [];
-        }
-        
-        // Construct full URL if needed (for relative paths)
-        if (!jsonUrl.startsWith('http')) {
-            jsonUrl = new URL(jsonUrl, window.location.origin).href;
-        }
+        let jsonUrl = new URL ('/objects/objects.json', sRootUrl).href;
         
         console.log('Fetching objects.json from:', jsonUrl);
         const response = await fetch(jsonUrl);
@@ -5504,14 +5493,15 @@ function createObjectLibraryItem(objectPath) {
     
     // Create preview after adding to DOM
     setTimeout(() => {
-        createObjectPreview(`/objects/${objectPath}`, previewContainer);
+        createObjectPreview (normalizeReferencePath ('/objects/' + objectPath), previewContainer);
     }, 100);
     
     return col;
 }
 
 // Load and display objects in the library
-async function loadObjectLibrary() {
+async function loadObjectLibrary (sRootUrl) 
+{
     if (!objLibGrid) {
         console.error('objLibGrid element not found');
         return;
@@ -5521,7 +5511,7 @@ async function loadObjectLibrary() {
     
     try {
         console.log('Loading object library...');
-        const objectFiles = await getObjectFiles();
+        const objectFiles = await getObjectFiles (sRootUrl);
         console.log('Received object files:', objectFiles);
         
         if (objectFiles.length === 0) {
@@ -5550,13 +5540,10 @@ async function loadObjectLibrary() {
 }
 
 // Load object library when panel is shown
-if (objLibPanel) {
-    let libraryLoaded = false;
-    objLibPanel.addEventListener('shown.bs.offcanvas', function () {
-        if (!libraryLoaded) {
-            loadObjectLibrary();
-            libraryLoaded = true;
-        }
+if (objLibPanel)
+{
+    objLibPanel.addEventListener ('shown.bs.offcanvas', function () {
+        g_pMap.LoadObjectLibrary ();
     });
     
     // Cleanup previews when panel is hidden
