@@ -3264,205 +3264,240 @@ renderer.domElement.addEventListener("dblclick", e => {
 );
 
 // ===== Keyboard shortcuts =====
-window.addEventListener("keydown", e => {
-    const key = e.key.toLowerCase();
-    const inForm = (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
-    const isJSONEditor = jsonEditor && (jsonEditor === e.target || (jsonEditor.contains && jsonEditor.contains(e.target)));
-    const isHotkey = ["w", "e", "r", "q", "f", "h", "z", "delete", "d", "alt", " "].includes(key);
+window.addEventListener
+(
+   "keydown", 
+   e => {
+      if (e.key)
+      {
+         const key = e.key.toLowerCase();
+         const inForm = (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
+         const isJSONEditor = jsonEditor && (jsonEditor === e.target || (jsonEditor.contains && jsonEditor.contains(e.target)));
+         const isHotkey = ["w", "e", "r", "q", "f", "h", "z", "delete", "d", "alt", " "].includes(key);
+         // Block all hotkeys when JSON editor is focused
+         if (isJSONEditor)
+             return;
+         if (inForm && !isHotkey)
+             return;
+         // Track Alt key for duplication
+         if (key === "alt") {
+             isAltPressed = true;
+         }
 
-    // Block all hotkeys when JSON editor is focused
-    if (isJSONEditor)
-        return;
+         // Track Spacebar for camera panning
+         if (key === " " || e.code === "Space") 
+         {
+            e.preventDefault(); // Prevent page scroll
+            isSpacePressed = true;
+            // Transfer any active free movement directions to panning
+            if (freeMoveDirection.left) panDirection.left = true;
+            if (freeMoveDirection.right) panDirection.right = true;
+            if (freeMoveDirection.up) panDirection.up = true;
+            if (freeMoveDirection.down) panDirection.down = true;
+            // Reset free movement directions
+            freeMoveDirection.left = false;
+            freeMoveDirection.right = false;
+            freeMoveDirection.up = false;
+            freeMoveDirection.down = false;
+         }
 
-    if (inForm && !isHotkey)
-        return;
-
-    // Track Alt key for duplication
-    if (key === "alt") {
-        isAltPressed = true;
-    }
-
-    // Track Spacebar for camera panning
-    if (key === " " || e.code === "Space") {
-        e.preventDefault(); // Prevent page scroll
-        isSpacePressed = true;
-        // Transfer any active free movement directions to panning
-        if (freeMoveDirection.left) panDirection.left = true;
-        if (freeMoveDirection.right) panDirection.right = true;
-        if (freeMoveDirection.up) panDirection.up = true;
-        if (freeMoveDirection.down) panDirection.down = true;
-        // Reset free movement directions
-        freeMoveDirection.left = false;
-        freeMoveDirection.right = false;
-        freeMoveDirection.up = false;
-        freeMoveDirection.down = false;
-    }
-
-    // Track Arrow keys for panning direction (only when Space is pressed)
-    if (isSpacePressed) {
-        if (e.key === "ArrowLeft" || e.code === "ArrowLeft") {
-            e.preventDefault();
-            panDirection.left = true;
-        } else if (e.key === "ArrowRight" || e.code === "ArrowRight") {
-            e.preventDefault();
-            panDirection.right = true;
-        } else if (e.key === "ArrowUp" || e.code === "ArrowUp") {
-            e.preventDefault();
-            panDirection.up = true;
-        } else if (e.key === "ArrowDown" || e.code === "ArrowDown") {
-            e.preventDefault();
-            panDirection.down = true;
-        }
-    } else {
-        // Track Arrow keys for free camera movement (when Space is NOT pressed)
-        if (e.key === "ArrowLeft" || e.code === "ArrowLeft") {
-            e.preventDefault();
-            freeMoveDirection.left = true;
-        } else if (e.key === "ArrowRight" || e.code === "ArrowRight") {
-            e.preventDefault();
-            freeMoveDirection.right = true;
-        } else if (e.key === "ArrowUp" || e.code === "ArrowUp") {
-            e.preventDefault();
-            freeMoveDirection.up = true;
-        } else if (e.key === "ArrowDown" || e.code === "ArrowDown") {
-            e.preventDefault();
-            freeMoveDirection.down = true;
-        }
-    }
-
-    switch (key) {
-    case "w":
-        if (!checkUnsavedChangesBeforeEdit()) break;
-        if (isEditingAllowed()) {
-            transform.setMode("translate");
-            updateTransformButtonActiveState();
-        }
-        break;
-    case "e":
-        if (!checkUnsavedChangesBeforeEdit()) break;
-        if (isEditingAllowed()) {
-            transform.setMode("rotate");
-            updateTransformButtonActiveState();
-        }
-        break;
-    case "r":
-        if (!checkUnsavedChangesBeforeEdit()) break;
-        if (isEditingAllowed()) {
-            transform.setMode("scale");
-            updateTransformButtonActiveState();
-        }
-        break;
-    case "q":
-        if (e.shiftKey) {
-            if (selectedObject)
-                transform.attach(selectedObject);
-        } else {
-            transform.detach();
-            updateTransformButtonActiveState();
-        }
-        break;
-    case "f":
-        if (selectedObject)
-            frameCameraOn(selectedObject);
-        break;
-    case "h":
-        {
-            const helpOverlay = document.getElementById("helpOverlay");
-            if (helpOverlay)
-                helpOverlay.style.display = (helpOverlay.style.display === "none" || helpOverlay.style.display === "") ? "block" : "none";
-            break;
-        }
-    case "delete":
-        if (!checkUnsavedChangesBeforeEdit()) break;
-        // Filter out canvas root from deletion
-        const objectsToDelete = selectedObjects.filter(obj => !obj.userData?.isCanvasRoot);
-        if (objectsToDelete.length)
-            [...objectsToDelete].forEach(deleteObject);
-        else if (selectedObject && !selectedObject.userData?.isCanvasRoot)
-            deleteObject(selectedObject);
-
-        // If only Object Root is selected, do nothing
-        if (selectedObjects.length === 1 && selectedObjects[0].userData?.isCanvasRoot) {
-            return;
-        }
-        break;
-    case "d":
-        if ((e.ctrlKey || e.metaKey) && !inForm) {
-            e.preventDefault();
-            if (!checkUnsavedChangesBeforeEdit()) break;
-            duplicateSelectedObjects();
-        }
-        break;
-    default:
-        // Only handle undo/redo if code editor is not focused (let CodeMirror handle it when focused)
-        if (!isCodeEditorFocused()) {
-            if ((e.ctrlKey || e.metaKey) && key === "z") {
+         // Track Arrow keys for panning direction (only when Space is pressed)
+         if (isSpacePressed) 
+         {
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft") 
+            {
                 e.preventDefault();
-                if (e.shiftKey) {
-                    // Ctrl+Shift+Z or Cmd+Shift+Z for redo
-                    redo();
-                } else {
-                    // Ctrl+Z or Cmd+Z for undo
-                    undo();
-                }
-            } else if ((e.ctrlKey || e.metaKey) && key === "y") {
+                panDirection.left = true;
+            } 
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight") 
+            {
                 e.preventDefault();
-                // Ctrl+Y or Cmd+Y for redo
-                redo();
+                panDirection.right = true;
+            } 
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp") 
+            {
+                e.preventDefault();
+                panDirection.up = true;
+            } 
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown") 
+            {
+                e.preventDefault();
+                panDirection.down = true;
             }
-        }
-        break;
-    }
-}
+         } 
+         else 
+         {
+            // Track Arrow keys for free camera movement (when Space is NOT pressed)
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft") 
+            {
+               e.preventDefault();
+               freeMoveDirection.left = true;
+            } 
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight") 
+            {
+               e.preventDefault();
+               freeMoveDirection.right = true;
+            } 
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp") 
+            {
+               e.preventDefault();
+               freeMoveDirection.up = true;
+            } 
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown") 
+            {
+               e.preventDefault();
+               freeMoveDirection.down = true;
+            }
+         }
+
+         switch (key) 
+         {
+         case "w":
+            if (!checkUnsavedChangesBeforeEdit()) break;
+            if (isEditingAllowed()) 
+            {
+                transform.setMode("translate");
+                updateTransformButtonActiveState();
+            }
+            break;
+
+         case "e":
+            if (!checkUnsavedChangesBeforeEdit()) break;
+            if (isEditingAllowed()) 
+            {
+                transform.setMode("rotate");
+                updateTransformButtonActiveState();
+            }
+            break;
+         case "r":
+             if (!checkUnsavedChangesBeforeEdit()) break;
+             if (isEditingAllowed()) {
+                 transform.setMode("scale");
+                 updateTransformButtonActiveState();
+             }
+             break;
+         case "q":
+             if (e.shiftKey) {
+                 if (selectedObject)
+                     transform.attach(selectedObject);
+             } else {
+                 transform.detach();
+                 updateTransformButtonActiveState();
+             }
+             break;
+         case "f":
+             if (selectedObject)
+                 frameCameraOn(selectedObject);
+             break;
+         case "h":
+             {
+                 const helpOverlay = document.getElementById("helpOverlay");
+                 if (helpOverlay)
+                     helpOverlay.style.display = (helpOverlay.style.display === "none" || helpOverlay.style.display === "") ? "block" : "none";
+                 break;
+             }
+         case "delete":
+             if (!checkUnsavedChangesBeforeEdit()) break;
+             // Filter out canvas root from deletion
+             const objectsToDelete = selectedObjects.filter(obj => !obj.userData?.isCanvasRoot);
+             if (objectsToDelete.length)
+                 [...objectsToDelete].forEach(deleteObject);
+             else if (selectedObject && !selectedObject.userData?.isCanvasRoot)
+                 deleteObject(selectedObject);
+             // If only Object Root is selected, do nothing
+             if (selectedObjects.length === 1 && selectedObjects[0].userData?.isCanvasRoot) {
+                 return;
+             }
+             break;
+         case "d":
+             if ((e.ctrlKey || e.metaKey) && !inForm) {
+                 e.preventDefault();
+                 if (!checkUnsavedChangesBeforeEdit()) break;
+                 duplicateSelectedObjects();
+             }
+             break;
+         default:
+             // Only handle undo/redo if code editor is not focused (let CodeMirror handle it when focused)
+             if (!isCodeEditorFocused()) {
+                 if ((e.ctrlKey || e.metaKey) && key === "z") {
+                     e.preventDefault();
+                     if (e.shiftKey) {
+                         // Ctrl+Shift+Z or Cmd+Shift+Z for redo
+                         redo();
+                     } else {
+                         // Ctrl+Z or Cmd+Z for undo
+                         undo();
+                     }
+                 } else if ((e.ctrlKey || e.metaKey) && key === "y") {
+                     e.preventDefault();
+                     // Ctrl+Y or Cmd+Y for redo
+                     redo();
+                 }
+             }
+             break;
+         }
+      }
+    } 
 );
 
-window.addEventListener("keyup", e => {
-    const key = e.key.toLowerCase();
+window.addEventListener
+(
+   "keyup", 
+   e => {
+      if (e.key)
+      {
+         const key = e.key.toLowerCase ();
 
-    // Track Alt key release
-    if (key === "alt") {
-        isAltPressed = false;
-    }
+         // Track Alt key release
+         if (key === "alt") 
+         {
+            isAltPressed = false;
+         }
 
-    // Track Spacebar release
-    if (key === " " || e.code === "Space") {
-        isSpacePressed = false;
-        // Transfer any active pan directions to free movement before resetting
-        if (panDirection.left) freeMoveDirection.left = true;
-        if (panDirection.right) freeMoveDirection.right = true;
-        if (panDirection.up) freeMoveDirection.up = true;
-        if (panDirection.down) freeMoveDirection.down = true;
-        // Reset all pan directions when spacebar is released
-        panDirection.left = false;
-        panDirection.right = false;
-        panDirection.up = false;
-        panDirection.down = false;
-    }
+         // Track Spacebar release
+         if (key === " " || e.code === "Space") 
+         {
+            isSpacePressed = false;
+            // Transfer any active pan directions to free movement before resetting
+            if (panDirection.left) freeMoveDirection.left = true;
+            if (panDirection.right) freeMoveDirection.right = true;
+            if (panDirection.up) freeMoveDirection.up = true;
+            if (panDirection.down) freeMoveDirection.down = true;
 
-    // Track Arrow key releases for panning
-    if (isSpacePressed) {
-        if (e.key === "ArrowLeft" || e.code === "ArrowLeft") {
+            // Reset all pan directions when spacebar is released
             panDirection.left = false;
-        } else if (e.key === "ArrowRight" || e.code === "ArrowRight") {
             panDirection.right = false;
-        } else if (e.key === "ArrowUp" || e.code === "ArrowUp") {
             panDirection.up = false;
-        } else if (e.key === "ArrowDown" || e.code === "ArrowDown") {
             panDirection.down = false;
-        }
-    } else {
-        // Track Arrow key releases for free movement
-        if (e.key === "ArrowLeft" || e.code === "ArrowLeft") {
-            freeMoveDirection.left = false;
-        } else if (e.key === "ArrowRight" || e.code === "ArrowRight") {
-            freeMoveDirection.right = false;
-        } else if (e.key === "ArrowUp" || e.code === "ArrowUp") {
-            freeMoveDirection.up = false;
-        } else if (e.key === "ArrowDown" || e.code === "ArrowDown") {
-            freeMoveDirection.down = false;
-        }
-    }
-}
+         }
+
+         // Track Arrow key releases for panning
+         if (isSpacePressed) 
+         {
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
+               panDirection.left = false;
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight")
+               panDirection.right = false;
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp")
+               panDirection.up = false;
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown")
+               panDirection.down = false;
+             
+         } 
+         else 
+         {
+            // Track Arrow key releases for free movement
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
+               freeMoveDirection.left = false;
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight")
+               freeMoveDirection.right = false;
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp")
+               freeMoveDirection.up = false;
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown")
+               freeMoveDirection.down = false;
+         }
+      }  
+   }
 );
 
 // ===== Fix #ui buttons =====

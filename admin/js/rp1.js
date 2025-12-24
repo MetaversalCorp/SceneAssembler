@@ -108,6 +108,10 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
             this.#m_MapRMXItem[sKey].Detach (this);
             this.#m_pLnG.Model_Close (this.#m_MapRMXItem[sKey]);
          }
+         this.#m_MapRMXItem = {};         
+
+         this.#m_pLnG.Detach (this);
+         this.#m_pLnG = null;
 
          if (this.#m_pFabric)
          {
@@ -116,8 +120,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
             this.#m_pFabric = null;
          }
-
-         this.#m_pLnG = null;
       }
 
       this.#pLogin = {
@@ -328,6 +330,10 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
             {
                this.#m_pLnG = this.#m_pFabric.GetLnG ("map");
                this.#m_pLnG.Attach (this);
+            }
+            else if (this.#m_pFabric.ReadyState () == this.#m_pFabric.eSTATE.ERROR)
+            {
+               console.log ('Error Loading Fabric File.');
             }
          }
          else if (pNotice.pCreator == this.#m_pLnG)
