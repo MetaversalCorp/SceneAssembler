@@ -1,26 +1,27 @@
 <!doctype html>
 <!--
    Copyright 2025 Metaversal Corporation.
-   
-   Licensed under the Apache License, Version 2.0 (the "License"); 
-   you may not use this file except in compliance with the License. 
-   You may obtain a copy of the License at 
-   
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
       https://www.apache.org/licenses/LICENSE-2.0
-   
-   Unless required by applicable law or agreed to in writing, software 
-   distributed under the License is distributed on an "AS IS" BASIS, 
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-   See the License for the specific language governing permissions and 
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
    limitations under the License.
-   
+
    SPDX-License-Identifier: Apache-2.0
 -->
 <html data-bs-theme="dark">
+
 <head>
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1">
-   <title>RP1 Scene Assembler</title>
+   <title>Scene Assembler</title>
 
    <link rel="stylesheet" href="css/styles.css">
 
@@ -32,7 +33,7 @@
    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-   <script type="text/javascript" src="js/vendor/jquery-3.3.1.js"></script>
+   <script type="text/javascript" src="js/vendor/jquery-3.7.1.min.js"></script>
    <script type="text/javascript" src="js/vendor/cdn.socket.io_4.8.1_socket.io.min.js"></script>
 
    <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVMF.js"></script>
@@ -46,6 +47,7 @@
    <script type="text/javascript" src="https://cdn2.rp1.com/js/mv/MVRP_Map.js"></script>
 
    <!-- App -->
+   <script src="js/maputil.js"></script>
    <script src="js/rp1.js"></script>
 
    <!-- Core Three.js -->
@@ -77,12 +79,17 @@
          <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">Scene Assembler</h1>
          <small class="mb-4 pe-none">Please enter your admin key to edit your scene.</small>
          <div class="jsLogin container">
-            <form class="row g-3 justify-content-center align-items-center mb-5" onsubmit="onLogin(event)">
+            <form class="row g-2 justify-content-center align-items-center mb-5" onsubmit="onLogin(event)">
                <div class="col-12 col-lg-4">
                   <div class="form-floating">
                      <input type="text" id="msf" name="key" class="form-control form-control-sm jsUrl" aria-describedby="Your Fabric Url" placeholder="Your Fabric Url" autocomplete="current-password" required>
-                     <label for="msf"><i class="fa-solid fa-key"></i> Enter your Fabric Url:</label>
+                     <label for="msf"><i class="fa-solid fa-file-code"></i> Enter your Fabric Url:</label>
                   </div>
+               </div>
+               <div class="col-lg-12 d-none d-lg-block">
+
+               </div>
+               <div class="col-12 col-lg-4">
                   <div class="form-floating">
                      <input type="password" id="key" name="key" class="form-control form-control-sm jsKey" aria-describedby="Your Key" placeholder="Your Key" autocomplete="current-password" required>
                      <label for="key"><i class="fa-solid fa-key"></i> Enter your key:</label>
@@ -104,20 +111,17 @@
    <div class="ui position-absolute w-100 user-select-none pe-none z-2 jsSceneEditor" style="display:none;">
       <nav class="main navbar navbar-expand py-1 pe-auto">
          <div class="container-lg">
-            <ul class="navbar-nav gap-2 mb-lg-0 blur rounded-5 bg-dark bg-opacity-25 px-2">
+            <ul class="navbar-nav gap-2 mb-lg-0 blur rounded-5 bg-dark bg-opacity-25 px-1">
+               <li class="nav-item my-auto">
+                  <button class="btn btn-outline-light border-0 bg-opacity-25 rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#sceneManagerPanel" aria-controls="sceneManagerPanel">
+                     <span class="jsCurrentScene"></span>
+                  </button>
+               </li>
                <li class="nav-item dropdown">
-                  <a class="nav-link ps-3 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
-                     <i class="fa-solid fa-cube d-none"></i> scn assmblr
-                  </a>
+                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                     <i class="fa-solid fa-cog" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Scene Settings"></i>
+                  </button>
                   <ul class="dropdown-menu">
-                     <li>
-                        <div class="dropdown-item py-2">
-                           <select id="sceneSelect" class="form-select jsPObject mb-3" aria-label="Select a scene">
-                              <option value="0" class="jsNewScene" disabled>&lt;New Scene&gt;</option>
-                           </select>
-                           <button class="jsSceneAdd">Add Scene</button>
-                        </div>
-                     </li>
                      <li>
                         <div class="dropdown-item mx-auto py-2">
                            <div class="form-check form-switch">
@@ -141,30 +145,29 @@
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="undo"><i class="fa-solid fa-rotate-left" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Undo (ctrl+z)"></i></button>
+                  <button class="nav-link" id="undo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Undo (ctrl+z)"><i class="fa-solid fa-rotate-left"></i></button>
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="redo"><i class="fa-solid fa-rotate-right" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+y)"></i></button>
+                  <button class="nav-link" id="redo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+y)"><i class="fa-solid fa-rotate-right"></i></button>
                </li>
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="delete"><i class="fa-solid fa-trash" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete"></i></button>
+                  <button class="nav-link" id="delete" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete Selected Object"><i class="fa-solid fa-trash"></i></button>
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="resetCamera"><i class="fa-solid fa-camera" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Reset Camera"></i></button>
+                  <button class="nav-link" id="resetCamera" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Reset Camera"><i class="fa-solid fa-camera"></i></button>
                </li>
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="exportJson"><i class="fa-solid fa-file-export" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Export JSON"></i></button>
+                  <button class="nav-link" id="exportJson" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Export JSON"><i class="fa-solid fa-file-export"></i></button>
                </li>
                <li class="nav-item">
-                  <button class="nav-link jsPublish"><i class="fa-solid fa-cloud-arrow-up" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Publish Scene"></i></button>
+                  <button class="nav-link jsPublish pe-3" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Publish Scene"><i class="fa-solid fa-cloud-arrow-up"></i></button>
                </li>
             </ul>
             <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#codeEditorPanel" aria-controls="codeEditorPanel" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Scene JSON" id="codeToggle"><i class="fa-solid fa-code"></i> Code Editor</button>
-            <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5 jsDisconnect" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Disconnect" id="codeDisconnect"><i class="fa-solid fa-code"></i> Disconnect</button>
          </div>
       </nav>
       <nav class="secondary navbar navbar-expand p-0 mt-3 mt-lg-0 pe-none d-none" id="objControls">
@@ -185,6 +188,7 @@
          </ul>
       </nav>
    </div>
+
    <div class="ui position-fixed mt-5 pt-2 ms-3 h-100 z-1 jsSceneEditor" id="sidebar" style="display:none;">
       <div id="modelsPanel" class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;">
          <div class="card-body">
@@ -224,15 +228,46 @@
       <nav class="main navbar navbar-expand py-1 pe-auto">
          <div class="container-lg">
             <ul class="d-flex justify-content-center w-100">
-            <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
-         </ul>
+               <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
+            </ul>
+         </div>
       </nav>
    </div>
 
-   <div class="offcanvas offcanvas-end mt-5 rounded-start-4 border-top bg-dark bg-opacity-75 blur z-1" data-bs-scroll="true" data-bs-backdrop="false" tabindex="-1" id="codeEditorPanel" aria-labelledby="codeEditorPanel">
+   <template id="tmpl_scene">      
+      <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center jsSceneItem">
+         <span class="jsSceneItemName"></span>
+         <button class="btn btn-sm btn-outline-danger w-auto jsDeleteScene" type="button"><i class="fa-solid fa-trash"></i></button>
+      </li>
+   </template>
+
+   <!-- Offcanvas Panels -->
+   <div class="offcanvas offcanvas-start" tabindex="-1" id="sceneManagerPanel" aria-labeledby="sceneManagerPanelLabel">
+      <div class="offcanvas-header d-flex justify-content-between pb-0">
+         <h5 class="offcanvas-title pe-none text-uppercase fw-lighter" id="sceneManagerPanelLabel">Scene Assembler</h5>
+         <button type="button" class="btn-close p-1 rounded-2" data-bs-dismiss="offcanvas" aria-label="Close"><i class="fa-solid fa-arrow-right-from-bracket fa-lg fa-rotate-180"></i></button>
+      </div>
+      <div class="offcanvas-body d-flex flex-column gap-3">
+         <!-- New Scene -->
+         <button class="btn btn-light w-100 jsNewScene">
+            <i class="fa-solid fa-plus"></i> New Scene
+         </button>
+         <!-- Scene List -->
+         <ul class="list-group jsSceneList">
+         </ul>
+      </div>
+      <!-- Disconnect -->
+      <div class="offcanvas-footer p-3 pb-4 d-flex justify-content-between">
+         <button class="btn btn-outline-warning w-100 jsDisconnect" id="codeDisconnect" data-bs-dismiss="offcanvas" aria-label="Close">
+            <i class="fa-solid fa-plug-circle-xmark"></i> Disconnect from Fabric
+         </button>
+      </div>
+   </div>
+
+   <div class="offcanvas offcanvas-end mt-5 rounded-start-4 border-top bg-dark bg-opacity-75 blur z-1" data-bs-scroll="false" data-bs-backdrop="false" tabindex="-1" id="codeEditorPanel" aria-labelledby="codeEditorPanel">
       <div class="offcanvas-resize-handle" id="codeEditorResizeHandle"></div>
       <div class="offcanvas-header d-flex justify-content-between pb-0">
-            <h5 class="offcanvas-title m-0 p-0 user-select-none">Code Editor</h5>
+         <h5 class="offcanvas-title m-0 p-0 user-select-none">Code Editor</h5>
          <button type="button" class="btn-close p-1 rounded-2" data-bs-dismiss="offcanvas" aria-label="Close"><i class="fa-solid fa-arrow-right-from-bracket fa-lg"></i></button>
       </div>
       <div class="offcanvas-body pt-2 pb-1" id="code">
@@ -250,16 +285,41 @@
          <button type="button" class="btn-close p-1 rounded-2" data-bs-dismiss="offcanvas" aria-label="Close"><i class="fa-solid fa-arrow-right-from-bracket fa-rotate-90 fa-lg"></i></button>
       </div>
       <div class="offcanvas-body py-2" id="objLibContent">
-            <div class="row g-3" id="objLibGrid">
-               <div class="col-12 text-center text-muted py-5">
-                  <i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i>
-                  <p class="mb-0">Loading objects...</p>
-               </div>
+         <div class="row g-3" id="objLibGrid">
+            <div class="col-12 text-center text-muted py-5">
+               <i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i>
+               <p class="mb-0">Loading objects...</p>
             </div>
+         </div>
       </div>
    </div>
 
-   <!-- Modal for unsaved changes warning -->
+   <!-- Modals -->
+   <div class="modal fade blur jsModalScene" id="deleteChangesModal" tabindex="-1" aria-labelledby="deleteChangesModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+         <div class="modal-content bg-dark text-light">
+            <div class="modal-header border-0 pb-1">
+               <h5 class="modal-title" id="deleteChangesModalLabel">
+                  <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Scene
+               </h5>
+               <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+               <p>You are about to delete <span class="jsSceneName"></span>. This can not be reverted.</p>
+               <p class="mb-0 text-center"><strong>Do you want to delete the scene?</strong></p>
+            </div>
+            <div class="modal-footer d-flex justify-content-between border-0">
+               <button type="button" class="btn btn-secondary rounded-5 jsDeleteCancel">
+                  <i class="fa-solid fa-eraser me-1"></i>Cancel
+               </button>
+               <button type="button" class="btn btn-primary rounded-5 jsDeleteOk">
+                  <i class="fa-solid fa-bomb  me-1"></i>Delete Scene
+               </button>
+            </div>
+         </div>
+      </div>
+   </div>
+
    <div class="modal fade blur" id="unsavedChangesModal" tabindex="-1" aria-labelledby="unsavedChangesModalLabel" aria-hidden="true">
       <div class="modal-dialog">
          <div class="modal-content bg-dark text-light">
@@ -286,7 +346,6 @@
       </div>
    </div>
 
-   <!-- Saving Changes Modal -->
    <div class="vh-100 vw-100 bg-dark bg-opacity-50 blur position-relative z-3 jsUnsaved" style="display:none" tabindex="-1">
       <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
          <i class="fa-solid fa-spinner fa-spin fa-3x mb-4 text-primary"></i>
@@ -417,10 +476,16 @@
             return view.hasFocus;
          },
          undo() {
-            undo({state: view.state, dispatch: view.dispatch});
+            undo({
+               state: view.state,
+               dispatch: view.dispatch
+            });
          },
          redo() {
-            redo({state: view.state, dispatch: view.dispatch});
+            redo({
+               state: view.state,
+               dispatch: view.dispatch
+            });
          }
       };
 
@@ -434,102 +499,101 @@
 
 <!-- Enable BS Tooltips -->
 <script type="text/javascript">
-const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+   const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
 
-// Fade #codeToggle when codeEditorPanel is visible
-const codeEditorPanel = document.getElementById('codeEditorPanel');
-const codeToggle = document.getElementById('codeToggle');
-const codeEditorResizeHandle = document.getElementById('codeEditorResizeHandle');
+   // Fade #codeToggle when codeEditorPanel is visible
+   const codeEditorPanel = document.getElementById('codeEditorPanel');
+   const codeToggle = document.getElementById('codeToggle');
+   const codeEditorResizeHandle = document.getElementById('codeEditorResizeHandle');
 
-if (codeEditorPanel && codeToggle) {
-   codeEditorPanel.addEventListener('shown.bs.offcanvas', function () {
-      codeToggle.classList.add('opacity-0');
-      codeToggle.style.pointerEvents = 'none';
-   });
+   if (codeEditorPanel && codeToggle) {
+      codeEditorPanel.addEventListener('shown.bs.offcanvas', function() {
+         codeToggle.classList.add('opacity-0');
+         codeToggle.style.pointerEvents = 'none';
+      });
 
-   codeEditorPanel.addEventListener('hidden.bs.offcanvas', function () {
-      codeToggle.classList.remove('opacity-0');
-      codeToggle.style.pointerEvents = '';
-   });
-}
+      codeEditorPanel.addEventListener('hidden.bs.offcanvas', function() {
+         codeToggle.classList.remove('opacity-0');
+         codeToggle.style.pointerEvents = '';
+      });
+   }
 
-// Resize functionality for code editor panel
-if (codeEditorPanel && codeEditorResizeHandle) {
-   let isResizing = false;
-   let startX = 0;
-   let startWidth = 0;
+   // Resize functionality for code editor panel
+   if (codeEditorPanel && codeEditorResizeHandle) {
+      let isResizing = false;
+      let startX = 0;
+      let startWidth = 0;
 
-   codeEditorResizeHandle.addEventListener('mousedown', function(e) {
-      if (!codeEditorPanel.classList.contains('show')) return;
+      codeEditorResizeHandle.addEventListener('mousedown', function(e) {
+         if (!codeEditorPanel.classList.contains('show')) return;
 
-      isResizing = true;
-      startX = e.clientX;
-      startWidth = codeEditorPanel.offsetWidth;
-      document.body.style.cursor = 'ew-resize';
-      document.body.style.userSelect = 'none';
-      e.preventDefault();
-   });
+         isResizing = true;
+         startX = e.clientX;
+         startWidth = codeEditorPanel.offsetWidth;
+         document.body.style.cursor = 'ew-resize';
+         document.body.style.userSelect = 'none';
+         e.preventDefault();
+      });
 
-   document.addEventListener('mousemove', function(e) {
-      if (!isResizing) return;
+      document.addEventListener('mousemove', function(e) {
+         if (!isResizing) return;
 
-      const deltaX = startX - e.clientX; // Negative because we're dragging left
-      const newWidth = Math.max(320, Math.min(window.innerWidth * 0.95, startWidth + deltaX));
+         const deltaX = startX - e.clientX; // Negative because we're dragging left
+         const newWidth = Math.max(320, Math.min(window.innerWidth * 0.95, startWidth + deltaX));
 
-      codeEditorPanel.style.width = newWidth + 'px';
-      codeEditorPanel.style.setProperty('--bs-offcanvas-width', newWidth + 'px');
-   });
+         codeEditorPanel.style.width = newWidth + 'px';
+         codeEditorPanel.style.setProperty('--bs-offcanvas-width', newWidth + 'px');
+      });
 
-   document.addEventListener('mouseup', function() {
-      if (isResizing) {
-         isResizing = false;
-         document.body.style.cursor = '';
-         document.body.style.userSelect = '';
-      }
-   });
-}
+      document.addEventListener('mouseup', function() {
+         if (isResizing) {
+            isResizing = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+         }
+      });
+   }
 
-// Resize functionality for object library panel (vertical resize from top)
-const objLibResizeHandle = document.getElementById('objLibResizeHandle');
+   // Resize functionality for object library panel (vertical resize from top)
+   const objLibResizeHandle = document.getElementById('objLibResizeHandle');
 
-if (objLibPanel && objLibResizeHandle) {
-   let isResizingVertical = false;
-   let startY = 0;
-   let startHeight = 0;
+   if (objLibPanel && objLibResizeHandle) {
+      let isResizingVertical = false;
+      let startY = 0;
+      let startHeight = 0;
 
-   objLibResizeHandle.addEventListener('mousedown', function(e) {
-      if (!objLibPanel.classList.contains('show')) return;
+      objLibResizeHandle.addEventListener('mousedown', function(e) {
+         if (!objLibPanel.classList.contains('show')) return;
 
-      isResizingVertical = true;
-      startY = e.clientY;
-      startHeight = objLibPanel.offsetHeight;
-      document.body.style.cursor = 'ns-resize';
-      document.body.style.userSelect = 'none';
-      e.preventDefault();
-   });
+         isResizingVertical = true;
+         startY = e.clientY;
+         startHeight = objLibPanel.offsetHeight;
+         document.body.style.cursor = 'ns-resize';
+         document.body.style.userSelect = 'none';
+         e.preventDefault();
+      });
 
-   document.addEventListener('mousemove', function(e) {
-      if (!isResizingVertical) return;
+      document.addEventListener('mousemove', function(e) {
+         if (!isResizingVertical) return;
 
-      const deltaY = startY - e.clientY; // Positive when dragging up (increasing height)
-      const minHeight = 200; // Minimum height in pixels
-      const maxHeight = window.innerHeight * 0.9; // Maximum 90% of viewport height
-      const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY));
+         const deltaY = startY - e.clientY; // Positive when dragging up (increasing height)
+         const minHeight = 200; // Minimum height in pixels
+         const maxHeight = window.innerHeight * 0.9; // Maximum 90% of viewport height
+         const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY));
 
-      objLibPanel.style.height = newHeight + 'px';
-      objLibPanel.style.setProperty('--bs-offcanvas-height', newHeight + 'px');
-   });
+         objLibPanel.style.height = newHeight + 'px';
+         objLibPanel.style.setProperty('--bs-offcanvas-height', newHeight + 'px');
+      });
 
-   document.addEventListener('mouseup', function() {
-      if (isResizingVertical) {
-         isResizingVertical = false;
-         document.body.style.cursor = '';
-         document.body.style.userSelect = '';
-      }
-   });
-}
-
+      document.addEventListener('mouseup', function() {
+         if (isResizingVertical) {
+            isResizingVertical = false;
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+         }
+      });
+   }
 </script>
 
 </html>

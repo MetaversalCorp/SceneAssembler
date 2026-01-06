@@ -4357,6 +4357,23 @@ function checkUnsavedChangesBeforeEdit() {
     return true; // Allow the edit
 }
 
+function ShowDeleteWarning (sName)
+{
+   const modal = new bootstrap.Modal (document.getElementById ('deleteChangesModal'));
+   
+   $('.jsModalScene').find ('.jsSceneName').text (sName);
+   modal.show ();
+}
+
+function DismissDeleteWarning ()
+{
+    const modalElement = document.getElementById('deleteChangesModal');
+    const modal = bootstrap.Modal.getInstance(modalElement);
+
+    if (modal)
+        modal.hide ();
+}
+
 // Update JSON editor when scene changes
 function updateJSONEditorFromScene() {
     if (jsonEditor && !hasUnsavedChanges) {

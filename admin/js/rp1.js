@@ -16,7 +16,7 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
-class ExtractMap extends MV.MVMF.NOTIFICATION
+class ExtractMap extends MapUtil
 {
    #m_pFabric;
    #m_pLnG;
@@ -27,6 +27,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    #pLogin;
    #bIsObjectLibLoaded;
 
+   #jBody;
    #jPObject;
    #pRMXRoot;
    #pRMXPending;
@@ -53,12 +54,13 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
       super ();
       
+      this.#jBody = $('body');
+
       this.#bIsObjectLibLoaded = false;
       this.jSelector = jSelector;
 
       this.#pZone = new MV.MVMF.COOKIE.ZONE (pData, 'Origin');
 
-      this.nStack = 0;
       this.#twObjectIx_PendingDelete = 0;
 
       this.#m_wClass_Object = (wClass_Object == 0) ? 71 : wClass_Object;
@@ -71,11 +73,15 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       this.#bPending       = false;
       this.#pRMXPending    = null;
 
-      this.#jPObject = this.jSelector.find ('.jsPObject');
-      this.#jPObject.on ('change', this.onClick_Scene.bind (this));
+      this.#jPObject = this.jSelector.find ('.jsSceneList');
+      this.#jPObject.on ('click', '.jsSceneItem',    this.onClick_Scene.bind (this));
+      this.#jPObject.on ('click', '.jsDeleteScene',  this.onClick_DeleteScene.bind (this));
+
       this.jSelector.find ('.jsPublish').on ('click', this.onClick_Publish.bind (this));
-      this.jSelector.find ('.jsSceneAdd').on ('click', this.onClick_SceneAdd.bind (this));
       this.jSelector.find ('.jsDisconnect').on ('click', this.onClick_Disconnect.bind (this));
+      this.jSelector.find ('.jsNewScene').on ('click', this.onClick_AddScene.bind (this));
+      this.jSelector.find ('.jsDeleteOk').on ('click', this.onClick_DeleteOk.bind (this)); 
+      this.jSelector.find ('.jsDeleteCancel').on ('click', this.onClick_DeleteCancel.bind (this)); 
 
       this.#pLogin = {
          sUrl: this.#pZone.Get ('sUrl'),
@@ -162,15 +168,44 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
          ).join (''));
    }
   
+   InsertSceneItem (pRMCObject, bSelected)
+   {
+      let jTemplate = this.#jBody.find ('template#tmpl_scene');
+      let jItem = $(jTemplate[0].content.querySelector ('.jsSceneItem'));
+
+      jItem = jItem.clone ();
+
+      jItem.data ('object', pRMCObject);
+      jItem.attr ('twObjectIx', pRMCObject.twObjectIx);
+
+      if (bSelected)
+      {
+         jItem.addClass ('active');
+         this.#jBody.find ('.jsCurrentScene').text (pRMCObject.pName.wsRMPObjectId);
+      }
+
+      this.#jPObject.append (jItem);
+
+      jItem.find ('.jsSceneItemName').text (pRMCObject.pName.wsRMPObjectId);
+   }
+
    onInserted (pNotice)
    {
       if (this.IsReady ())
       {
          let pChild = pNotice.pData.pChild;
 
-         if (pChild && pChild.wClass_Object == 73 &&  pChild.twObjectIx == this.twObjectIx_Reparent)
+         if (pChild)
          {
-            this.nReparent--;
+            if (pChild.wClass_Object == 73 &&  pChild.twObjectIx == this.twObjectIx_Reparent)
+            {
+               this.nReparent--;
+            }
+
+            if (pChild.wClass_Parent == 70 && pChild.wClass_Object == 73)
+            {
+               this.InsertSceneItem (pChild, true);
+            }
          }
       }
    }
@@ -203,6 +238,12 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
                this.nReparent--;
             else if (pChild.twObjectIx == this.#twObjectIx_PendingDelete)
                this.#twObjectIx_PendingDelete = 0;
+
+            if (pChild.wClass_Parent == 70)
+            {
+               this.#jPObject.find ('.jsSceneItem[twObjectIx=' + pChild.twObjectIx + ']').remove ();
+// TODO: finish this               
+            }
          }
       }
    }
@@ -290,7 +331,27 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
    {
       let aEditor = [];
 
-      this.ParseTree (aEditor, this.#pRMXRoot);
+      if (this.#pRMXRoot)
+         this.ParseTree (aEditor, this.#pRMXRoot);
+      else
+      {
+         aEditor.push 
+         (
+            {
+               "sName": "<New Scene>",
+               "pTransform": {
+                  "aPosition": [0, 0, 0],
+                  "aRotation": [0, 0, 0, 1],
+                  "aScale": [1, 1, 1]
+               },
+               "aBound": [150, 150, 150],
+               "aChildren": [
+               ],
+               "wClass": 73,
+               "twObjectIx": 0
+            }
+         );
+      }
 
       const sResult = generateSceneJSONEx (JSON.stringify (aEditor, null, 2));
 
@@ -359,15 +420,15 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
                   for (let i=0; i < mpPObject.length; i++)
                   {
-                     let sSelected = '';
+                     let bSelected = false;
 
                      if (i == 0)
                      {
                         this.#pRMXRoot = mpPObject[i];
-                        sSelected = ' selected';
+                        bSelected = true;
                      }
 
-                     this.#jPObject.append ('<option value="' + mpPObject[i].twObjectIx + '"' + sSelected + '>' + mpPObject[i].pName.wsRMPObjectId + '</option>');
+                     this.InsertSceneItem (mpPObject[i], bSelected);
                   }
 
                   if (this.#pRMXRoot)
@@ -414,248 +475,8 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       }
    }
 
-   onClick_Scene (e)
-   {
-      let jOption = this.#jPObject.find ("option:selected");
-      let twObjectIx = jOption.val ();
-
-      if (this.#m_MapRMXItem['73' + '-' + twObjectIx] == undefined)
-      {
-         this.#m_MapRMXItem['73' + '-' + twObjectIx] = this.#m_pLnG.Model_Open ('RMPObject', twObjectIx);
-         this.#pRMXRoot = this.#m_MapRMXItem['73' + '-' + twObjectIx];
-         this.#m_MapRMXItem['73' + '-' + twObjectIx].Attach (this);
-      }
-      else
-      {
-         this.#pRMXRoot = this.#m_MapRMXItem['73' + '-' + twObjectIx];
-         this.UpdateScene ();
-      } 
-   }
-
    UpdateView ()
    {
-   }
-
-   RMCopy_Type (pJSON, pType, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.pType)
-      {
-         pType.bType     = pJSON.pType.bType;   
-         pType.bSubtype  = pJSON.pType.bSubtype;
-         pType.bFiction  = pJSON.pType.bFiction;
-         pType.bMovable  = pJSON.pType.bMovable;
-
-         if (pRMPObjectSrc &&
-             pRMPObjectSrc.pType.bType     == pType.bType    &&
-             pRMPObjectSrc.pType.bSubtype  == pType.bSubtype &&
-             pRMPObjectSrc.pType.bFiction  == pType.bFiction &&
-             pRMPObjectSrc.pType.bMovable  == pType.bMovable
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   RMCopy_Name (pJSON, pName, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.sName)
-      {
-         pName.wsRMPObjectId = pJSON.sName;
-
-         if (pRMPObjectSrc &&
-             pRMPObjectSrc.pName.wsRMPObjectId == pName.wsRMPObjectId
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   RMCopy_Owner (pJSON, pOwner, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.pOwner)
-      {
-         pOwner.twRPersonaIx = pJSON.pOwner.twRPersonaIx;
-
-         if (pRMPObjectSrc &&
-            pRMPObjectSrc.pOwner.twRPersonaIx == pOwner.twRPersonaIx
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   RMCopy_Resource (pResourceSrc, pJSON, pResource, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.pResource)
-      {
-         pResource.qwResource      = pResourceSrc.qwResource;
-         pResource.sName           = pResourceSrc.sName;
-         pResource.sReference      = pJSON.pResource.sReference;
-
-         if (pRMPObjectSrc && 
-             pRMPObjectSrc.pResource.qwResource == pResource.qwResource &&
-             pRMPObjectSrc.pResource.sName      == pResource.sName &&
-             pRMPObjectSrc.pResource.sReference == pResource.sReference
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   RMCopy_Transform (pJSON, pTransform, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.pTransform)
-      {
-         pTransform.vPosition.dX   = pJSON.pTransform.aPosition[0];
-         pTransform.vPosition.dY   = pJSON.pTransform.aPosition[1];
-         pTransform.vPosition.dZ   = pJSON.pTransform.aPosition[2];
-                                 
-         pTransform.qRotation.dX   = pJSON.pTransform.aRotation[0];
-         pTransform.qRotation.dY   = pJSON.pTransform.aRotation[1];
-         pTransform.qRotation.dZ   = pJSON.pTransform.aRotation[2];
-         pTransform.qRotation.dW   = pJSON.pTransform.aRotation[3];
-                                 
-         pTransform.vScale.dX      = pJSON.pTransform.aScale[0];
-         pTransform.vScale.dY      = pJSON.pTransform.aScale[1];
-         pTransform.vScale.dZ      = pJSON.pTransform.aScale[2];
-
-         if (pRMPObjectSrc &&
-            pRMPObjectSrc.pTransform.vPosition.dX == pTransform.vPosition.dX &&
-            pRMPObjectSrc.pTransform.vPosition.dY == pTransform.vPosition.dY &&
-            pRMPObjectSrc.pTransform.vPosition.dZ == pTransform.vPosition.dZ &&
-            pRMPObjectSrc.pTransform.qRotation.dX == pTransform.qRotation.dX &&
-            pRMPObjectSrc.pTransform.qRotation.dY == pTransform.qRotation.dY &&
-            pRMPObjectSrc.pTransform.qRotation.dZ == pTransform.qRotation.dZ &&
-            pRMPObjectSrc.pTransform.qRotation.dW == pTransform.qRotation.dW &&
-            pRMPObjectSrc.pTransform.vScale.dX    == pTransform.vScale.dX    &&
-            pRMPObjectSrc.pTransform.vScale.dY    == pTransform.vScale.dY    &&
-            pRMPObjectSrc.pTransform.vScale.dZ    == pTransform.vScale.dZ
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   RMCopy_Bound (pJSON, pBound, pRMPObjectSrc)
-   {
-      let bResult = true;
-
-      if (pJSON.pTransform)
-      {
-         pBound.dX    = pJSON.aBound[0];
-         pBound.dY    = pJSON.aBound[1];
-         pBound.dZ    = pJSON.aBound[2];
-
-         if (pRMPObjectSrc &&
-            pRMPObjectSrc.pBound.dX == pBound.dX &&
-            pRMPObjectSrc.pBound.dY == pBound.dY &&
-            pRMPObjectSrc.pBound.dZ == pBound.dZ
-         )
-            bResult = false;
-      }
-      else bResult = false;
-
-      return bResult;
-   }
-
-   onRSPEdit (pIAction, Param)
-   {
-      if (pIAction.pResponse.nResult == 0)
-      {
-      }
-      else
-      {
-         this.nStack--;
-         console.log ('ERROR: ' + pIAction.pResponse.nResult, pIAction);
-      }
-   }
-
-   RMPEditType (pRMPObject, pRMPObjectJSON)
-   {
-      let pIAction = pRMPObject.Request ('TYPE');
-      let Payload = pIAction.pRequest;
-
-      if (this.RMCopy_Type (pRMPObjectJSON, Payload.pType, pRMPObject))
-      {
-         this.nStack++;
-         pIAction.Send (this, this.onRSPEdit.bind (this));
-      }
-   }
-
-   RMPEditName (pRMPObject, pRMPObjectJSON)
-   {
-      let pIAction = pRMPObject.Request ('NAME');
-      let Payload = pIAction.pRequest;
-
-      if (this.RMCopy_Name (pRMPObjectJSON, Payload.pName, pRMPObject))
-      {
-         this.nStack++;
-         pIAction.Send (this, this.onRSPEdit.bind (this));
-      }
-   }
-
-   RMPEditResource (pRMPObject, pRMPObjectJSON)
-   {
-      let pIAction = pRMPObject.Request ('RESOURCE');
-      let Payload = pIAction.pRequest;
-
-      if (this.RMCopy_Resource (pRMPObject.pResource, pRMPObjectJSON, Payload.pResource, pRMPObject))
-      {
-         this.nStack++;
-         pIAction.Send (this, this.onRSPEdit.bind (this));
-      }
-   }
-
-   RMPEditBound (pRMPObject, pRMPObjectJSON)
-   {
-      let pIAction = pRMPObject.Request ('BOUND');
-      let Payload = pIAction.pRequest;
-
-      if (this.RMCopy_Bound (pRMPObjectJSON, Payload.pBound, pRMPObject))
-      {
-         this.nStack++;
-         pIAction.Send (this, this.onRSPEdit.bind (this));
-      }
-   }
-
-   RMPEditTransform (pRMPObject, pRMPObjectJSON)
-   {
-      let pIAction = pRMPObject.Request ('TRANSFORM');
-      let Payload = pIAction.pRequest;
-
-      if (this.RMCopy_Transform (pRMPObjectJSON, Payload.pTransform, pRMPObject))
-      {
-         this.nStack++;
-         pIAction.Send (this, this.onRSPEdit.bind (this));
-      }
-   }
-
-   RMPEditAll (pRMPObject, pJSON)
-   {
-      this.RMPEditName      (pRMPObject, pJSON);
-      this.RMPEditResource  (pRMPObject, pJSON);
-      this.RMPEditBound     (pRMPObject, pJSON);
-      this.RMPEditTransform (pRMPObject, pJSON);
    }
 
    onRSPOpen (pIAction, Param)
@@ -689,23 +510,6 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
          this.twObjectIx_Reparent = 0;
          this.nReparent = 0;
       }
-   }
-
-   async WaitForSingleObject (fnCond, interval)
-   {
-      return new Promise ((resolve) => {
-         const check = () => {
-            if (fnCond ())
-            {
-               resolve ();
-            }
-            else
-            {
-               setTimeout (check, interval);
-            }
-         };
-         check ();
-      })
    }
 
    CheckPending ()
@@ -805,7 +609,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
                {
                   this.RMPEditAll (pRMPObject, JSONItem);
 
-                  console.log ('Edit (WAITING)...');
+                   console.log ('Edit (WAITING)...');
                   await this.WaitForSingleObject (this.CheckStack.bind (this), 125);
                   console.log ('Edit (READY)');
 
@@ -855,6 +659,9 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
                   this.nStack--;
                   pRMPObject = this.#pRMXPending;
+
+                  if (this.#pRMXRoot == null)
+                     this.#pRMXRoot = this.#pRMXPending;
                }
                else
                {
@@ -907,7 +714,7 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       return Param.bDelete;
    }
 
-   async RemoveRMPObject (mpRemovedNodes, pJSONObjectX)
+   async RemoveRMPObject (mpRemovedNodes, pJSONObjectX, bSelectItem)
    {
       console.log ('Update (waiting)...');
       await this.WaitForSingleObject (this.CheckJSONX.bind (this, pJSONObjectX), 125);
@@ -963,17 +770,143 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
 
       this.jSelector.find ('.jsUnsaved').hide ();
       console.log ('Publish Complete!');
+   
+//      if (bSelectItem)
+      {
+         this.#jPObject.find ('.jsSceneItem[twObjectIx=' + this.#pRMXRoot.twObjectIx + ']')
+            .addClass ('active')
+            .find ('.jsSceneItemName').text (this.#pRMXRoot.pName.wsRMPObjectId);
+
+         this.#jBody.find ('.jsCurrentScene').text (this.#pRMXRoot.pName.wsRMPObjectId);
+      }
+   }
+
+   async #CreateRMPObject (pRMXObject_Parent, pJSONObject, pJSONObjectX)
+   {
+      let pIAction = pRMXObject_Parent.Request ('RMPOBJECT_OPEN');
+      let Payload = pIAction.pRequest;
+
+      let pResource = {
+         qwResource: 0,
+         sName:      pJSONObject[0].sName,
+         sReference: ''
+      };
+
+      this.RMCopy_Name (pJSONObject[0], Payload.pName);
+      this.RMCopy_Type ({ pType: { bType: 1, bSubtype: 0, bFiction: 0, bMovable: 0 } }, Payload.pType);
+      // Use the current UserIx
+      this.RMCopy_Owner ({ pOwner: { twRPersonaIx: 1 } }, Payload.pOwner);
+      this.RMCopy_Resource ({ qwResource: 0, sName: ''}, pResource, Payload.pResource);
+      this.RMCopy_Bound (pJSONObject[0], Payload.pBound);
+      this.RMCopy_Transform (pJSONObject[0], Payload.pTransform);
+
+      this.#bPending = true;
+      this.nStack++;
+
+      console.log ('Waiting on Add To.... ' + pRMXObject_Parent.twObjectIx);
+      pIAction.Send (this, this.onRSPOpen.bind (this));
+      await this.WaitForSingleObject (this.CheckPending.bind (this), 125);
+      console.log ('Waiting on Add To Complete.... ' + pRMXObject_Parent.twObjectIx);
+
+      this.nStack--;
+
+      if (this.#pRMXPending != null)
+      {
+         pJSONObject[0].twObjectIx = this.#pRMXPending.twObjectIx;
+
+         if (this.#pRMXRoot == null)
+         {
+            this.#pRMXRoot = this.#pRMXPending;
+         
+            let mpRemovedNodes = {};
+            this.UpdateRMPObject (pJSONObject[0], this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx], mpRemovedNodes, pJSONObjectX[0]);
+            this.RemoveRMPObject (mpRemovedNodes, pJSONObjectX[0], true);
+         }
+      }
+   }
+
+   onClick_Scene (e)
+   {
+      let jItem = $(e.currentTarget).closest ('.jsSceneItem');
+      let pRMCObject = jItem.data ('object');
+      let twObjectIx = pRMCObject.twObjectIx;
+
+      if (this.#m_MapRMXItem['73' + '-' + twObjectIx] == undefined)
+      {
+         this.#m_MapRMXItem['73' + '-' + twObjectIx] = this.#m_pLnG.Model_Open ('RMPObject', twObjectIx);
+         this.#pRMXRoot = this.#m_MapRMXItem['73' + '-' + twObjectIx];
+         this.ReadyState (this.eSTATE.LOADING); // Loading Children
+         this.#m_MapRMXItem['73' + '-' + twObjectIx].Attach (this);
+      }
+      else
+      {
+         this.#pRMXRoot = this.#m_MapRMXItem['73' + '-' + twObjectIx];
+         this.UpdateScene ();
+      }
+
+      this.#jPObject.find ('.jsSceneItem').removeClass ('active');
+      jItem.addClass ('active');
+
+      this.#jBody.find ('.jsCurrentScene').text (pRMCObject.pName.wsRMPObjectId);
+   }
+
+   onClick_AddScene (e)
+   {
+      this.#jPObject.find ('.jsSceneItem').removeClass ('active');
+      this.#jBody.find ('.jsCurrentScene').text ('<New Scene>');
+
+      this.#pRMXRoot = null;
+      this.UpdateEditor ();
+   }
+
+   onClick_DeleteScene (e)
+   {
+      let jItem = $(e.currentTarget).closest ('.jsSceneItem');
+      let pRMCObject = jItem.data ('object');
+
+      this.pTmpDelete = pRMCObject;
+      ShowDeleteWarning (pRMCObject.pName.wsRMPObjectId);
+
+      e.stopPropagation ();
+   }
+
+   onRSPClose2 (pIAction, Param)
+   {
+      if (pIAction.pResponse.nResult == 0)
+      {
+      }
+      else
+      {
+         console.log ('ERROR: ' + pIAction.pResponse.nResult, pIAction);
+      }
+
+      DismissDeleteWarning ();      
+   }
+
+   onClick_DeleteOk (e)
+   {
+      let pIAction = this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx].Request ('RMPOBJECT_CLOSE');
+      let Payload = pIAction.pRequest;
+      
+      Payload.twRMPObjectIx_Close = this.pTmpDelete.twObjectIx;
+      Payload.bDeleteAll    = 1;
+
+      pIAction.Send (this, this.onRSPClose2.bind (this));
+   }
+
+   onClick_DeleteCancel (e)
+   {
+      const modalElement = document.getElementById ('deleteChangesModal');
+      const modal = bootstrap.Modal.getInstance (modalElement);
+
+      if (modal) 
+         modal.hide();
    }
 
    onClick_Publish (e)
    {
       this.jSelector.find ('.jsUnsaved').show ();
       this.onPublish ();
-   }
-
-   onClick_SceneAdd (e)
-   {
-      this.jSelector.find ('select option.jsNewScene').prop ('disabled', false);
    }
 
    onClick_Disconnect (e)
@@ -994,19 +927,17 @@ class ExtractMap extends MV.MVMF.NOTIFICATION
       let pJSONObjectX = JSON.parse (sJSON);
 
       this.nStack = 0;
-      if (pJSONObject[0].twObjectIx == this.#pRMXRoot.twObjectIx)
+      if (this.#pRMXRoot && pJSONObject[0].twObjectIx == this.#pRMXRoot.twObjectIx)
       {
          let mpRemovedNodes = {};
 
          this.GetRemovedNodes (pJSONObject[0], this.#pRMXRoot, mpRemovedNodes);
          this.UpdateRMPObject (pJSONObject[0], this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx], mpRemovedNodes, pJSONObjectX[0]);
-         this.RemoveRMPObject (mpRemovedNodes, pJSONObjectX[0]);
+         this.RemoveRMPObject (mpRemovedNodes, pJSONObjectX[0], false);
       }
       else
       {
-         let mpRemovedNodes = {};
-
-         this.UpdateRMPObject (pJSONObject[0], this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx], mpRemovedNodes, pJSONObjectX[0]);
+         this.#CreateRMPObject (this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx], pJSONObject, pJSONObjectX);
       }
    }
 
