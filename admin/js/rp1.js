@@ -918,6 +918,7 @@ class ExtractMap extends MapUtil
 
       this.jSelector.find ('.jsLogin').show ();
       this.jSelector.find ('.jsSceneEditor').hide ();
+      this.#jPObject.html ('');
    }
 
    onPublish ()
