@@ -5333,7 +5333,7 @@ async function getObjectFiles (sRootUrl)
         // Construct URL relative to current page location to handle both http and file protocols
         // If running through server, use absolute path; otherwise construct from current location
         
-        let jsonUrl = new URL ('/objects/objects.json', sRootUrl).href;
+        let jsonUrl = new URL ('/objects.json', sRootUrl).href;
         
         console.log('Fetching objects.json from:', jsonUrl);
         const response = await fetch(jsonUrl);
