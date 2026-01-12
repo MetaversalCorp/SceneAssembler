@@ -5591,6 +5591,12 @@ async function loadObjectLibrary (sRootUrl)
     }
 }
 
+function loadScene (sJSONScene)
+{
+   setJSONEditorText (sJSONScene);
+   parseJSONAndUpdateScene (sJSONScene);
+}
+
 // Load object library when panel is shown
 if (objLibPanel)
 {

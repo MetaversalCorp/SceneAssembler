@@ -355,8 +355,7 @@ class ExtractMap extends MapUtil
 
       const sResult = generateSceneJSONEx (JSON.stringify (aEditor, null, 2));
 
-      setJSONEditorText (sResult);
-      parseJSONAndUpdateScene (sResult);
+      loadScene (sResult);
    }
 
    UpdateScene ()
