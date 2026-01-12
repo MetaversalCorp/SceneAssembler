@@ -1039,6 +1039,23 @@ function updateTransformButtonActiveState() {
     }
 }
 
+function clearUIStates() {
+    // Clear all Bootstrap tooltips
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    tooltipTriggerList.forEach(triggerEl => {
+        const tooltipInstance = bootstrap.Tooltip.getInstance(triggerEl);
+        if (tooltipInstance) {
+            tooltipInstance.hide();
+        }
+    });
+
+    // Clear focus states from buttons
+    const activeElement = document.activeElement;
+    if (activeElement && (activeElement.tagName === 'BUTTON' || activeElement.closest('button'))) {
+        activeElement.blur();
+    }
+}
+
 function createBoxHelperFor(model) {
     if (model.userData?.isCanvasRoot) {
         // Create special canvas bounding box
@@ -3221,6 +3238,9 @@ renderer.domElement.addEventListener("click", e => {
             // Only select the object, don't refocus camera (camera focusing is only on double-click)
             selectFromCanvas(topmostSelectable, e.shiftKey);
         }
+    } else {
+        // Clicked on empty space - clear tooltips, active, and focus button states
+        clearUIStates();
     }
 }
 );
