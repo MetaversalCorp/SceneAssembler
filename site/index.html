@@ -189,7 +189,7 @@
       </nav>
    </div>
 
-   <div class="ui position-fixed mt-5 pt-2 ms-3 h-100 z-1 jsSceneEditor" id="sidebar" style="display:none;">
+   <div class="ui position-fixed mt-5 pt-2 ms-3 h-100 pe-none z-1 jsSceneEditor" id="sidebar" style="display:none;">
       <div id="modelsPanel" class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;">
          <div class="card-body">
             <ul class="list-group list-group-flush rounded-3 pe-auto small" id="modelList">
@@ -197,7 +197,7 @@
          </div>
       </div>
 
-      <div class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;" id="propertiesPanel">
+      <div class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-auto user-select-none" style="width: 18rem;" id="propertiesPanel">
          <div class="card-body">
             <h6 class="card-title pe-none user-select-none">Properties</h6>
             <p class="card-text small" id="properties"></p>
@@ -234,10 +234,10 @@
       </nav>
    </div>
 
-   <template id="tmpl_scene">      
-      <li class="list-group-item list-group-item-action d-flex justify-content-between align-items-center jsSceneItem">
+   <template id="tmpl_scene">
+      <li class="scene list-group-item list-group-item-action d-flex justify-content-between align-items-center jsSceneItem">
          <span class="jsSceneItemName"></span>
-         <button class="btn btn-sm btn-outline-danger w-auto jsDeleteScene" type="button"><i class="fa-solid fa-trash"></i></button>
+         <button class="del-btn btn btn-sm btn-outline-light p-1 py-0 border-0 w-auto jsDeleteScene" type="button" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete Scene"><i class="fa-solid fa-trash fa-sm opacity-75"></i></button>
       </li>
    </template>
 
@@ -253,7 +253,7 @@
             <i class="fa-solid fa-plus"></i> New Scene
          </button>
          <!-- Scene List -->
-         <ul class="list-group jsSceneList">
+         <ul class="scene-list list-group jsSceneList">
          </ul>
       </div>
       <!-- Disconnect -->
@@ -300,19 +300,19 @@
          <div class="modal-content bg-dark text-light">
             <div class="modal-header border-0 pb-1">
                <h5 class="modal-title" id="deleteChangesModalLabel">
-                  <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete Scene
+                  <i class="fa-solid fa-triangle-exclamation me-2"></i>Delete scene?
                </h5>
                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body">
-               <p>You are about to delete <span class="jsSceneName"></span>. This can not be reverted.</p>
-               <p class="mb-0 text-center"><strong>Do you want to delete the scene?</strong></p>
+            <div class="modal-body text-center">
+               <p>You are about to delete: <br><span class="fs-4 link-offset-2 text-decoration-underline link-underline-danger jsSceneName"></span></p>
+               <p class="mb-0 text-center"><strong>This action cannot be reverted. Are you sure?</strong></p>
             </div>
             <div class="modal-footer d-flex justify-content-between border-0">
                <button type="button" class="btn btn-secondary rounded-5 jsDeleteCancel">
                   <i class="fa-solid fa-eraser me-1"></i>Cancel
                </button>
-               <button type="button" class="btn btn-primary rounded-5 jsDeleteOk">
+               <button type="button" class="btn btn-danger rounded-5 jsDeleteOk">
                   <i class="fa-solid fa-bomb  me-1"></i>Delete Scene
                </button>
             </div>
