@@ -486,6 +486,56 @@
                state: view.state,
                dispatch: view.dispatch
             });
+         },
+         clearHistory() {
+            // Clear CodeMirror history by creating a new state with the same document
+            // but fresh history extension
+            const currentDoc = view.state.doc;
+            const newState = EditorState.create({
+               doc: currentDoc,
+               extensions: [
+                  EditorState.allowMultipleSelections.of(true),
+                  oneDark,
+                  lineNumbers(),
+                  foldGutter(),
+                  highlightActiveLine(),
+                  drawSelection(),
+                  bracketMatching(),
+                  closeBrackets(),
+                  highlightSelectionMatches(),
+                  lintGutter(),
+                  linter(jsonParseLinter()),
+                  history(), // Fresh history extension
+                  keymap.of([
+                     ...defaultKeymap,
+                     ...historyKeymap,
+                     ...searchKeymap,
+                     ...foldKeymap,
+                     ...closeBracketsKeymap
+                  ]),
+                  syntaxHighlighting(defaultHighlightStyle, {
+                     fallback: true
+                  }),
+                  json(),
+                  EditorView.updateListener.of(
+                     v => {
+                        if (v.docChanged) {
+                           const value = v.state.doc.toString();
+                           container.dispatchEvent(new CustomEvent('json-change', {
+                              detail: {
+                                 value
+                              }
+                           }));
+                        }
+
+                        if (v.focusChanged && view.hasFocus) {
+                           container.dispatchEvent(new Event('focus'));
+                        }
+                     }
+                  )
+               ]
+            });
+            view.setState(newState);
          }
       };
 

@@ -3761,10 +3761,10 @@ function isCodeEditorFocused() {
 function saveSceneState(actionType = 'transform', affectedObjects = null) {
     if (isUndoRedoInProgress) return;
     
-    // Clear redo stack when new action is performed
+    // Clear redo stack when new action is performed after an undo
+    // This ensures that redo is only available for states that are still reachable
     if (redoStack.length > 0) {
         redoStack = [];
-        updateUndoRedoButtons();
     }
 
     const state = {
@@ -3796,20 +3796,17 @@ function undo() {
         return;
     }
 
-    if (undoStack.length === 0) return;
+    if (undoStack.length < 2) return; // Need at least 2 states to undo (current + previous)
 
     isUndoRedoInProgress = true;
     
-    // Save current state to redo stack
-    const currentState = {
-        type: 'undo',
-        timestamp: Date.now(),
-        sceneJSON: generateSceneJSON()
-    };
-    redoStack.push(currentState);
-
-    // Get the last undo state
-    const stateToRestore = undoStack.pop();
+    // The undoStack has the current state at the top
+    // Save the current state to redo stack BEFORE popping
+    const currentState = undoStack.pop(); // Pop the current state
+    redoStack.push(currentState); // Save it to redo stack so we can redo back to it
+    
+    // Get the previous state (now at the top of undoStack) to restore
+    const stateToRestore = undoStack[undoStack.length - 1];
     
     // Restore scene from JSON (skip state save to avoid infinite loop)
     parseJSONAndUpdateScene(stateToRestore.sceneJSON, true).then(() => {
@@ -3817,6 +3814,9 @@ function undo() {
         updateUndoRedoButtons();
     }).catch(error => {
         console.error('Error during undo:', error);
+        // On error, restore the state we just popped back to undo stack
+        undoStack.push(currentState);
+        redoStack.pop(); // Remove the state we just added
         isUndoRedoInProgress = false;
         updateUndoRedoButtons();
     });
@@ -3835,23 +3835,21 @@ function redo() {
 
     isUndoRedoInProgress = true;
     
-    // Save current state to undo stack
-    const currentState = {
-        type: 'redo',
-        timestamp: Date.now(),
-        sceneJSON: generateSceneJSON()
-    };
-    undoStack.push(currentState);
-
-    // Get the last redo state
+    // Get the state we're redoing TO (from redo stack)
     const stateToRestore = redoStack.pop();
     
     // Restore scene from JSON (skip state save to avoid infinite loop)
     parseJSONAndUpdateScene(stateToRestore.sceneJSON, true).then(() => {
+        // After restoring, push the restored state to undo stack
+        // This makes the restored state the new "current" state
+        // The previous current state is already in undoStack, so we don't need to push it again
+        undoStack.push(stateToRestore);
         isUndoRedoInProgress = false;
         updateUndoRedoButtons();
     }).catch(error => {
         console.error('Error during redo:', error);
+        // On error, restore the state we just popped back to redo stack
+        redoStack.push(stateToRestore);
         isUndoRedoInProgress = false;
         updateUndoRedoButtons();
     });
