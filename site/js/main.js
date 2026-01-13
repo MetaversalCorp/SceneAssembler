@@ -1,18 +1,18 @@
 /*
 ** Copyright 2025 Metaversal Corporation.
-** 
-** Licensed under the Apache License, Version 2.0 (the "License"); 
-** you may not use this file except in compliance with the License. 
-** You may obtain a copy of the License at 
-** 
+**
+** Licensed under the Apache License, Version 2.0 (the "License");
+** you may not use this file except in compliance with the License.
+** You may obtain a copy of the License at
+**
 **    https://www.apache.org/licenses/LICENSE-2.0
-** 
-** Unless required by applicable law or agreed to in writing, software 
-** distributed under the License is distributed on an "AS IS" BASIS, 
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-** See the License for the specific language governing permissions and 
+**
+** Unless required by applicable law or agreed to in writing, software
+** distributed under the License is distributed on an "AS IS" BASIS,
+** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+** See the License for the specific language governing permissions and
 ** limitations under the License.
-** 
+**
 ** SPDX-License-Identifier: Apache-2.0
 */
 
@@ -115,7 +115,7 @@ const loadingPromises = new Map();
 // Track ongoing loading operations
 
 // ===== URL and Model Loading Utilities =====
-function isUrl (sReference) 
+function isUrl (sReference)
 {
     let bResult = false;
 
@@ -193,7 +193,7 @@ function getCacheKey(sReference, scale=null, rotation=null) {
  * - Filenames: duck.glb (prepends /objects/)
  * - URLs: http://example.com/model.glb (returns as-is)
  */
-function normalizeReferencePath (sReference) 
+function normalizeReferencePath (sReference)
 {
    if (sReference && isUrl (sReference) == false)
    {
@@ -895,11 +895,11 @@ function aggregateTextureInfo(objects) {
 function updatePropertiesPanel(model) {
     // Filter out canvas root from selected objects for aggregation
     const validSelectedObjects = selectedObjects.filter(obj => obj && obj.userData?.properties && !obj.userData?.isCanvasRoot);
-    
+
     // Use aggregated data if multiple objects selected, otherwise use single model
     let totalTriangles = 0;
     let aggregatedTextureInfo = null;
-    
+
     if (validSelectedObjects.length > 1) {
         // Multiple objects selected - aggregate data
         totalTriangles = aggregateTriangleCount(validSelectedObjects);
@@ -924,7 +924,7 @@ function updatePropertiesPanel(model) {
     // Calculate texture information for #texCount
     let textureInfoText = "None";
     if (aggregatedTextureInfo && aggregatedTextureInfo.totalTextures > 0) {
-        if (aggregatedTextureInfo.maxResolution.width === aggregatedTextureInfo.minResolution.width && 
+        if (aggregatedTextureInfo.maxResolution.width === aggregatedTextureInfo.minResolution.width &&
             aggregatedTextureInfo.minResolution.width > 0) {
             // All textures same resolution
             textureInfoText = `${aggregatedTextureInfo.totalTextures} @ ${aggregatedTextureInfo.maxResolution.width}x${aggregatedTextureInfo.maxResolution.height}`;
@@ -947,13 +947,13 @@ function updatePropertiesPanel(model) {
         }
         return;
     }
-    
+
     // Show properties for single object or group
     if (!model || !model.userData?.properties) {
         propertiesPanel.textContent = "";
         return;
     }
-    
+
     const p = model.userData.properties;
     let propertiesText = `Position: (${p.pos.x.toFixed(2)}, ${p.pos.y.toFixed(2)}, ${p.pos.z.toFixed(2)})\n` + `Rotation: (${p.rot.x.toFixed(4)}, ${p.rot.y.toFixed(4)}, ${p.rot.z.toFixed(4)}, ${p.rot.w.toFixed(4)})\n` + `Scale: (${p.scl.x.toFixed(2)}, ${p.scl.y.toFixed(2)}, ${p.scl.z.toFixed(2)})\n` + `Bounds: (${p.size.x.toFixed(2)}, ${p.size.y.toFixed(2)}, ${p.size.z.toFixed(2)})`;
     propertiesPanel.textContent = propertiesText;
@@ -1360,7 +1360,7 @@ function selectObject(obj, additive=false, toggle=false) {
             return;
         }
     }
-    
+
     if (!additive && !toggle) {
         selectedObjects.forEach(o => {
             o.userData.listItem?.classList.remove("selected");
@@ -1811,7 +1811,7 @@ function createHumanGuide(heightMeters=HUMAN_HEIGHT) {
 function groupSelectedObjects() {
     if (selectedObjects.length < 2)
         return;
-    
+
     // Block grouping if there are unsaved changes
     if (!checkUnsavedChangesBeforeEdit()) {
         return;
@@ -1923,7 +1923,7 @@ function groupSelectedObjects() {
 function ungroupSelectedObject() {
     if (selectedObjects.length !== 1)
         return;
-    
+
     // Block ungrouping if there are unsaved changes
     if (!checkUnsavedChangesBeforeEdit()) {
         return;
@@ -2910,7 +2910,7 @@ function generateUniqueName(baseName) {
 function duplicateSelectedObjects() {
     if (selectedObjects.length === 0)
         return;
-    
+
     // Block duplication if there are unsaved changes
     if (!checkUnsavedChangesBeforeEdit()) {
         return;
@@ -2962,7 +2962,7 @@ function duplicateSelectedObjects() {
     if (duplicates.length > 0) {
         // Save state after duplication
         saveSceneState('duplicate', duplicates);
-        
+
         selectedObjects.forEach(obj => {
             obj.userData.listItem?.classList.remove("selected");
             setHelperVisible(obj, false);
@@ -2999,18 +2999,18 @@ function duplicateSelectedObjects() {
 function deleteObject(obj) {
     if (!obj || obj.userData?.isCanvasRoot)
         return;
-    
+
     // Block deletion if there are unsaved changes
     if (!checkUnsavedChangesBeforeEdit()) {
         return;
     }
-    
+
     // Save state before deletion
-    const objectsToDelete = obj instanceof THREE.Group ? 
-        [obj, ...obj.children.filter(child => !child.userData?.isCanvasRoot)] : 
+    const objectsToDelete = obj instanceof THREE.Group ?
+        [obj, ...obj.children.filter(child => !child.userData?.isCanvasRoot)] :
         [obj];
     saveSceneState('delete', objectsToDelete);
-    
+
     if (transform.object === obj)
         transform.detach();
 
@@ -3085,12 +3085,12 @@ function setCanvasSize() {
         }
         return;
     }
-    
+
     const newSize = parseFloat(canvasSizeInput.value) || 20;
     if (newSize === groundSize) {
         return; // No change needed
     }
-    
+
     groundSize = newSize;
     scene.remove(grid);
     grid = new THREE.GridHelper(groundSize,groundSize,0x888888,0x444444);
@@ -3157,7 +3157,7 @@ renderer.domElement.addEventListener("mousemove", e => {
     if (justFinishedTransform && !transform.dragging) {
         justFinishedTransform = false;
     }
-    
+
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1,-((e.clientY - rect.top) / rect.height) * 2 + 1);
     const raycaster = new THREE.Raycaster();
@@ -3203,14 +3203,14 @@ renderer.domElement.addEventListener("click", e => {
             return;
         }
     }
-    
+
     // Prevent selection changes immediately after a transform operation
     // This ensures the object being edited remains selected even if it overlaps with another object
     if (justFinishedTransform) {
         justFinishedTransform = false; // Clear the flag
         return; // Don't change selection
     }
-    
+
     const rect = renderer.domElement.getBoundingClientRect();
     const mouse = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1,-((e.clientY - rect.top) / rect.height) * 2 + 1);
     const raycaster = new THREE.Raycaster();
@@ -3286,7 +3286,7 @@ renderer.domElement.addEventListener("dblclick", e => {
 // ===== Keyboard shortcuts =====
 window.addEventListener
 (
-   "keydown", 
+   "keydown",
    e => {
       if (e.key)
       {
@@ -3305,7 +3305,7 @@ window.addEventListener
          }
 
          // Track Spacebar for camera panning
-         if (key === " " || e.code === "Space") 
+         if (key === " " || e.code === "Space")
          {
             e.preventDefault(); // Prevent page scroll
             isSpacePressed = true;
@@ -3322,59 +3322,59 @@ window.addEventListener
          }
 
          // Track Arrow keys for panning direction (only when Space is pressed)
-         if (isSpacePressed) 
+         if (isSpacePressed)
          {
-            if (e.key === "ArrowLeft" || e.code === "ArrowLeft") 
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
             {
                 e.preventDefault();
                 panDirection.left = true;
-            } 
-            else if (e.key === "ArrowRight" || e.code === "ArrowRight") 
+            }
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight")
             {
                 e.preventDefault();
                 panDirection.right = true;
-            } 
-            else if (e.key === "ArrowUp" || e.code === "ArrowUp") 
+            }
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp")
             {
                 e.preventDefault();
                 panDirection.up = true;
-            } 
-            else if (e.key === "ArrowDown" || e.code === "ArrowDown") 
+            }
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown")
             {
                 e.preventDefault();
                 panDirection.down = true;
             }
-         } 
-         else 
+         }
+         else
          {
             // Track Arrow keys for free camera movement (when Space is NOT pressed)
-            if (e.key === "ArrowLeft" || e.code === "ArrowLeft") 
+            if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
             {
                e.preventDefault();
                freeMoveDirection.left = true;
-            } 
-            else if (e.key === "ArrowRight" || e.code === "ArrowRight") 
+            }
+            else if (e.key === "ArrowRight" || e.code === "ArrowRight")
             {
                e.preventDefault();
                freeMoveDirection.right = true;
-            } 
-            else if (e.key === "ArrowUp" || e.code === "ArrowUp") 
+            }
+            else if (e.key === "ArrowUp" || e.code === "ArrowUp")
             {
                e.preventDefault();
                freeMoveDirection.up = true;
-            } 
-            else if (e.key === "ArrowDown" || e.code === "ArrowDown") 
+            }
+            else if (e.key === "ArrowDown" || e.code === "ArrowDown")
             {
                e.preventDefault();
                freeMoveDirection.down = true;
             }
          }
 
-         switch (key) 
+         switch (key)
          {
          case "w":
             if (!checkUnsavedChangesBeforeEdit()) break;
-            if (isEditingAllowed()) 
+            if (isEditingAllowed())
             {
                 transform.setMode("translate");
                 updateTransformButtonActiveState();
@@ -3383,7 +3383,7 @@ window.addEventListener
 
          case "e":
             if (!checkUnsavedChangesBeforeEdit()) break;
-            if (isEditingAllowed()) 
+            if (isEditingAllowed())
             {
                 transform.setMode("rotate");
                 updateTransformButtonActiveState();
@@ -3457,25 +3457,25 @@ window.addEventListener
              break;
          }
       }
-    } 
+    }
 );
 
 window.addEventListener
 (
-   "keyup", 
+   "keyup",
    e => {
       if (e.key)
       {
          const key = e.key.toLowerCase ();
 
          // Track Alt key release
-         if (key === "alt") 
+         if (key === "alt")
          {
             isAltPressed = false;
          }
 
          // Track Spacebar release
-         if (key === " " || e.code === "Space") 
+         if (key === " " || e.code === "Space")
          {
             isSpacePressed = false;
             // Transfer any active pan directions to free movement before resetting
@@ -3492,7 +3492,7 @@ window.addEventListener
          }
 
          // Track Arrow key releases for panning
-         if (isSpacePressed) 
+         if (isSpacePressed)
          {
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
                panDirection.left = false;
@@ -3502,9 +3502,9 @@ window.addEventListener
                panDirection.up = false;
             else if (e.key === "ArrowDown" || e.code === "ArrowDown")
                panDirection.down = false;
-             
-         } 
-         else 
+
+         }
+         else
          {
             // Track Arrow key releases for free movement
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
@@ -3516,7 +3516,7 @@ window.addEventListener
             else if (e.key === "ArrowDown" || e.code === "ArrowDown")
                freeMoveDirection.down = false;
          }
-      }  
+      }
    }
 );
 
@@ -3760,7 +3760,7 @@ function isCodeEditorFocused() {
 // Save complete scene state
 function saveSceneState(actionType = 'transform', affectedObjects = null) {
     if (isUndoRedoInProgress) return;
-    
+
     // Clear redo stack when new action is performed after an undo
     // This ensures that redo is only available for states that are still reachable
     if (redoStack.length > 0) {
@@ -3778,7 +3778,7 @@ function saveSceneState(actionType = 'transform', affectedObjects = null) {
     };
 
     undoStack.push(state);
-    
+
     // Limit stack size
     if (undoStack.length > MAX_UNDO_HISTORY) {
         undoStack.shift();
@@ -3799,15 +3799,15 @@ function undo() {
     if (undoStack.length < 2) return; // Need at least 2 states to undo (current + previous)
 
     isUndoRedoInProgress = true;
-    
+
     // The undoStack has the current state at the top
     // Save the current state to redo stack BEFORE popping
     const currentState = undoStack.pop(); // Pop the current state
     redoStack.push(currentState); // Save it to redo stack so we can redo back to it
-    
+
     // Get the previous state (now at the top of undoStack) to restore
     const stateToRestore = undoStack[undoStack.length - 1];
-    
+
     // Restore scene from JSON (skip state save to avoid infinite loop)
     parseJSONAndUpdateScene(stateToRestore.sceneJSON, true).then(() => {
         isUndoRedoInProgress = false;
@@ -3834,10 +3834,10 @@ function redo() {
     if (redoStack.length === 0) return;
 
     isUndoRedoInProgress = true;
-    
+
     // Get the state we're redoing TO (from redo stack)
     const stateToRestore = redoStack.pop();
-    
+
     // Restore scene from JSON (skip state save to avoid infinite loop)
     parseJSONAndUpdateScene(stateToRestore.sceneJSON, true).then(() => {
         // After restoring, push the restored state to undo stack
@@ -3863,13 +3863,15 @@ function updateUndoRedoButtons() {
             // CodeMirror always has undo available (it manages its own history)
             canUndo = true;
         } else {
-            canUndo = undoStack.length > 0;
+            // Need at least 2 states to undo (current + previous)
+            // This matches the check in the undo() function
+            canUndo = undoStack.length > 1;
         }
         btnUndo.disabled = !canUndo;
         btnUndo.classList.toggle('opacity-50', !canUndo);
         btnUndo.style.cursor = canUndo ? 'pointer' : 'not-allowed';
     }
-    
+
     if (btnRedo) {
         let canRedo = false;
         if (isCodeEditorFocused()) {
@@ -3887,7 +3889,7 @@ function updateUndoRedoButtons() {
 // Legacy saveState function for backward compatibility (now saves full scene)
 function saveState() {
     if (isUndoRedoInProgress) return;
-    
+
     const affectedObjects = selectedObject ? [selectedObject] : selectedObjects.length > 0 ? selectedObjects : null;
     saveSceneState('transform', affectedObjects);
 }
@@ -4378,7 +4380,7 @@ function checkUnsavedChangesBeforeEdit() {
 function ShowDeleteWarning (sName)
 {
    const modal = new bootstrap.Modal (document.getElementById ('deleteChangesModal'));
-   
+
    $('.jsModalScene').find ('.jsSceneName').text (sName);
    modal.show ();
 }
@@ -4411,12 +4413,12 @@ function discardCodeEditorChanges() {
     if (!jsonEditor || !originalJSON) {
         return;
     }
-    
+
     isProgrammaticUpdate = true;
     setJSONEditorText(originalJSON);
     hasUnsavedChanges = false;
     applyChanges.style.display = 'none';
-    
+
     // Use setTimeout to ensure the json-change event has been processed
     setTimeout( () => {
         isProgrammaticUpdate = false;
@@ -4577,7 +4579,7 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
         // Update JSON editor to reflect any changes (including canvas size changes)
         // This will also update originalJSON and hide the apply button
         updateJSONEditor();
-        
+
         // Save state after applying changes from code editor (unless it's from undo/redo)
         if (!skipStateSave && !isUndoRedoInProgress) {
             saveSceneState('code-edit', null);
@@ -5258,23 +5260,23 @@ if (jsonEditor) {
         // State is saved in parseJSONAndUpdateScene
     }
     );
-    
+
     // Wire up modal's "Apply Changes" button
     const applyChangesFromModal = document.getElementById('applyChangesFromModal');
     if (applyChangesFromModal) {
         applyChangesFromModal.addEventListener('click', async () => {
             const modalElement = document.getElementById('unsavedChangesModal');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            
+
             // Disable button during processing
             applyChangesFromModal.disabled = true;
             applyChangesFromModal.innerHTML = '<i class="fa-solid fa-spinner fa-spin me-2"></i>Applying...';
-            
+
             try {
                 // Apply changes
                 await parseJSONAndUpdateScene(getJSONEditorText());
                 // State is saved in parseJSONAndUpdateScene
-                
+
                 // Close modal after successful apply
                 if (modal) {
                     modal.hide();
@@ -5289,17 +5291,17 @@ if (jsonEditor) {
             }
         });
     }
-    
+
     // Wire up modal's "Discard Changes" button
     const discardChangesFromModal = document.getElementById('discardChangesFromModal');
     if (discardChangesFromModal) {
         discardChangesFromModal.addEventListener('click', () => {
             const modalElement = document.getElementById('unsavedChangesModal');
             const modal = bootstrap.Modal.getInstance(modalElement);
-            
+
             // Discard changes
             discardCodeEditorChanges();
-            
+
             // Close modal after discarding
             if (modal) {
                 modal.hide();
@@ -5345,25 +5347,25 @@ if (objLibPanel && objLibToggle) {
 }
 
 // Fetch object list from JSON file in /objects directory
-async function getObjectFiles (sRootUrl) 
+async function getObjectFiles (sRootUrl)
 {
     try {
         // Construct URL relative to current page location to handle both http and file protocols
         // If running through server, use absolute path; otherwise construct from current location
-        
+
         let jsonUrl = new URL ('/objects.json', sRootUrl).href;
-        
+
         console.log('Fetching objects.json from:', jsonUrl);
         const response = await fetch(jsonUrl);
         console.log('Fetch status:', response.status, response.statusText);
-        
+
         if (!response.ok) {
             console.error('Failed to fetch objects.json:', response.status, response.statusText);
             const text = await response.text();
             console.error('Response body:', text);
             return [];
         }
-        
+
         const text = await response.text();
         console.log('Raw response text:', text);
         let data;
@@ -5374,13 +5376,13 @@ async function getObjectFiles (sRootUrl)
             console.error('Failed to parse JSON:', parseError, 'Text was:', text);
             return [];
         }
-        
+
         // Support both array format and object with array property
         const objectList = Array.isArray(data) ? data : (data.objects || data.files || []);
         console.log('Extracted object list:', objectList);
-        
+
         if (Array.isArray(objectList) && objectList.length > 0) {
-            const filtered = objectList.filter(file => 
+            const filtered = objectList.filter(file =>
                 typeof file === 'string' && (file.endsWith('.glb') || file.endsWith('.gltf'))
             );
             console.log('Filtered object files:', filtered);
@@ -5394,7 +5396,7 @@ async function getObjectFiles (sRootUrl)
             console.error('CORS error detected. Make sure you are accessing the page through the web server, not via file:// protocol');
         }
     }
-    
+
     // Return empty array if JSON file not found or invalid
     return [];
 }
@@ -5403,15 +5405,15 @@ async function getObjectFiles (sRootUrl)
 function createObjectPreview(objectPath, container) {
     const width = 100;
     const height = 100;
-    
+
     // Create a small scene for preview
     const previewScene = new THREE.Scene();
     previewScene.background = new THREE.Color(0x2a2a2a);
-    
+
     const previewCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     previewCamera.position.set(2, 2, 2);
     previewCamera.lookAt(0, 0, 0);
-    
+
     const previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     previewRenderer.setSize(width, height);
     previewRenderer.setPixelRatio(window.devicePixelRatio);
@@ -5420,32 +5422,32 @@ function createObjectPreview(objectPath, container) {
     canvas.style.height = '100%';
     canvas.style.display = 'block';
     container.appendChild(canvas);
-    
+
     // Add lights
     previewScene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
     const dirLight = new THREE.DirectionalLight(0xffffff, 1);
     dirLight.position.set(5, 10, 7);
     previewScene.add(dirLight);
-    
+
     // Load the model
     loader.load(objectPath, (gltf) => {
         const model = gltf.scene;
-        
+
         // Calculate bounding box and center the model
         const box = new THREE.Box3().setFromObject(model);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-        
+
         // Center the model
         model.position.sub(center);
-        
+
         // Scale to fit in preview (max dimension should be ~1.5)
         const maxDim = Math.max(size.x, size.y, size.z);
         const scale = 1.5 / maxDim;
         model.scale.multiplyScalar(scale);
-        
+
         previewScene.add(model);
-        
+
         // Animate rotation
         let angle = 0;
         function animate() {
@@ -5459,14 +5461,14 @@ function createObjectPreview(objectPath, container) {
             requestAnimationFrame(animate);
         }
         animate();
-        
+
         // Store renderer for cleanup
         objectLibraryCache.set(objectPath, { renderer: previewRenderer, scene: previewScene, camera: previewCamera });
     }, undefined, (error) => {
         console.error(`Failed to load preview for ${objectPath}:`, error);
         container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-triangle-exclamation"></i><br>Failed to load</div>';
     });
-    
+
     return previewRenderer;
 }
 
@@ -5474,44 +5476,44 @@ function createObjectPreview(objectPath, container) {
 function createObjectLibraryItem(objectPath) {
     const col = document.createElement('div');
     col.className = 'col-4 col-md-2 col-xxl-1';
-    
+
     const card = document.createElement('div');
     card.className = 'card bg-dark bg-opacity-50 border-secondary h-100 user-select-none';
     card.style.cursor = 'pointer';
     card.style.transition = 'transform 0.2s, box-shadow 0.2s';
-    
+
     card.addEventListener('mouseenter', () => {
         card.style.transform = 'translateY(-5px)';
         card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
     });
-    
+
     card.addEventListener('mouseleave', () => {
         card.style.transform = '';
         card.style.boxShadow = '';
     });
-    
+
     // Preview container
     const previewContainer = document.createElement('div');
     previewContainer.className = 'card-img-top bg-dark';
     previewContainer.style.height = '100px';
     previewContainer.style.overflow = 'hidden';
     previewContainer.style.position = 'relative';
-    
+
     // Object name
     const objectName = objectPath.replace(/^.*[\\\/]/, '').replace(/\.[^/.]+$/, '');
     const cardBody = document.createElement('div');
     cardBody.className = 'card-body p-2';
-    
+
     const cardTitle = document.createElement('h6');
     cardTitle.className = 'card-title mb-0 text-center small text-truncate';
     cardTitle.textContent = objectName;
     cardTitle.title = objectName;
-    
+
     cardBody.appendChild(cardTitle);
-    
+
     card.appendChild(previewContainer);
     card.appendChild(cardBody);
-    
+
     // Click handler to add object to scene
     card.addEventListener('click', async () => {
         try {
@@ -5519,11 +5521,11 @@ function createObjectLibraryItem(objectPath) {
             const gltf = await new Promise((resolve, reject) => {
                 loader.load(fullPath, resolve, undefined, reject);
             });
-            
+
             const model = gltf.scene;
             model.userData.isSelectable = true;
             model.name = objectName;
-            
+
             // Track original source - use full path format /objects/filename.glb for sReference
             const referencePath = `/objects/${objectPath}`;
             model.userData.sourceRef = {
@@ -5531,13 +5533,13 @@ function createObjectLibraryItem(objectPath) {
                 baseName: objectName,
                 reference: referencePath
             };
-            
+
             // Cache the model using the normalized reference path for consistency with loadModelFromReference
             modelCache.set(referencePath, model);
-            
+
             // Position at origin or camera focus point
             model.position.set(0, 0, 0);
-            
+
             createBoxHelperFor(model);
             canvasRoot.add(model);
             addModelToList(model, model.name);
@@ -5547,7 +5549,7 @@ function createObjectLibraryItem(objectPath) {
             frameCameraOn(model);
             saveSceneState('create', [model]);
             updateJSONEditorFromScene();
-            
+
             // Close the offcanvas
             const bsOffcanvas = bootstrap.Offcanvas.getInstance(objLibPanel);
             if (bsOffcanvas) {
@@ -5558,43 +5560,43 @@ function createObjectLibraryItem(objectPath) {
             alert(`Failed to load object: ${objectName}`);
         }
     });
-    
+
     col.appendChild(card);
-    
+
     // Create preview after adding to DOM
     setTimeout(() => {
         createObjectPreview (normalizeReferencePath ('/objects/' + objectPath), previewContainer);
     }, 100);
-    
+
     return col;
 }
 
 // Load and display objects in the library
-async function loadObjectLibrary (sRootUrl) 
+async function loadObjectLibrary (sRootUrl)
 {
     if (!objLibGrid) {
         console.error('objLibGrid element not found');
         return;
     }
-    
+
     objLibGrid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-spinner fa-spin fa-2x mb-3"></i><p class="mb-0">Loading objects...</p></div>';
-    
+
     try {
         console.log('Loading object library...');
         const objectFiles = await getObjectFiles (sRootUrl);
         console.log('Received object files:', objectFiles);
-        
+
         if (objectFiles.length === 0) {
             console.warn('No object files found');
             // Check if we're on file:// protocol and show appropriate message
             if (window.location.protocol === 'file:') {
                 objLibGrid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-triangle-exclamation fa-2x mb-3"></i><p class="mb-0">Cannot load objects</p><p class="small mt-2">Page must be accessed through the web server<br>(e.g., http://localhost:PORT)<br>not via file:// protocol</p></div>';
             } else {
-                objLibGrid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-folder-open fa-2x mb-3"></i><p class="mb-0">No objects found</p><p class="small mt-2">Check that /objects/objects.json exists</p></div>';
+                objLibGrid.innerHTML = '<div class="col-12 text-center text-muted py-5"><i class="fa-solid fa-folder-open fa-2x mb-3"></i><p class="mb-0">No objects found</p><p class="small mt-2">Check that you have .glb or .gltf files in your /objects/ directory</p></div>';
             }
             return;
         }
-        
+
         console.log(`Creating ${objectFiles.length} object library items`);
         objLibGrid.innerHTML = '';
         objectFiles.forEach(objectPath => {
@@ -5609,10 +5611,58 @@ async function loadObjectLibrary (sRootUrl)
     }
 }
 
-function loadScene (sJSONScene)
+async function loadScene (sJSONScene, clearHistory = true)
 {
-   setJSONEditorText (sJSONScene);
-   parseJSONAndUpdateScene (sJSONScene);
+   if (clearHistory) {
+      // Clear undo/redo history for scene editor
+      undoStack = [];
+      redoStack = [];
+
+      // Clear CodeMirror history (code editor undo/redo)
+      if (window.jsonEditorAPI && window.jsonEditorAPI.clearHistory) {
+         window.jsonEditorAPI.clearHistory();
+      }
+
+      // Deselect all objects before loading new scene
+      deselectAllSidebar();
+
+      // Reset camera to default position (not to selected object since we just deselected)
+      animateCamera(new THREE.Vector3(groundSize, groundSize, groundSize), new THREE.Vector3(0, 0, 0));
+   }
+
+   // Load the scene (skip state save since this is a scene load/refresh)
+   // parseJSONAndUpdateScene will call updateJSONEditor which will:
+   // - Set the JSON editor text
+   // - Update originalJSON to the generated JSON
+   // - Reset hasUnsavedChanges to false
+   await parseJSONAndUpdateScene(sJSONScene, true);
+
+   if (clearHistory) {
+      // Clear CodeMirror history again after the JSON is set to ensure it's cleared
+      if (window.jsonEditorAPI && window.jsonEditorAPI.clearHistory) {
+         window.jsonEditorAPI.clearHistory();
+      }
+
+      // After scene is loaded, save the initial state to undo stack
+      // This allows the first undo to go back to the loaded state
+      if (!isUndoRedoInProgress) {
+         const initialState = {
+            type: 'load',
+            timestamp: Date.now(),
+            sceneJSON: generateSceneJSON()
+         };
+         undoStack.push(initialState);
+      }
+   }
+
+   // Update undo/redo buttons
+   updateUndoRedoButtons();
+}
+
+// Refresh scene without clearing undo/redo history (e.g., after publishing)
+async function refreshScene (sJSONScene)
+{
+   await loadScene(sJSONScene, false);
 }
 
 // Load object library when panel is shown
@@ -5621,7 +5671,7 @@ if (objLibPanel)
     objLibPanel.addEventListener ('shown.bs.offcanvas', function () {
         g_pMap.LoadObjectLibrary ();
     });
-    
+
     // Cleanup previews when panel is hidden
     objLibPanel.addEventListener('hidden.bs.offcanvas', function () {
         // Cleanup preview renderers to free memory

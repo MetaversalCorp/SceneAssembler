@@ -327,7 +327,7 @@ class ExtractMap extends MapUtil
          this.ParseTree (Node.aChildren, apRMXObject[n]);
    }
 
-   UpdateEditor ()
+   UpdateEditor (clearHistory = true)
    {
       let aEditor = [];
 
@@ -355,7 +355,7 @@ class ExtractMap extends MapUtil
 
       const sResult = generateSceneJSONEx (JSON.stringify (aEditor, null, 2));
 
-      loadScene (sResult);
+      loadScene (sResult, clearHistory);
    }
 
    UpdateScene ()
@@ -765,7 +765,8 @@ class ExtractMap extends MapUtil
          delete this.#m_MapRMXItem['73' + '-' + aNodes[i].twObjectIx];
       }
 
-      this.UpdateEditor ();
+      // Refresh scene without clearing undo/redo history after publishing
+      this.UpdateEditor (false);
 
       this.jSelector.find ('.jsUnsaved').hide ();
       console.log ('Publish Complete!');
@@ -829,6 +830,22 @@ class ExtractMap extends MapUtil
       let jItem = $(e.currentTarget).closest ('.jsSceneItem');
       let pRMCObject = jItem.data ('object');
       let twObjectIx = pRMCObject.twObjectIx;
+
+      // Check if the clicked scene is already the active scene
+      if (this.#pRMXRoot && this.#pRMXRoot.twObjectIx === twObjectIx)
+      {
+         // Scene is already active, just close the offcanvas panel
+         const sceneManagerPanel = document.getElementById('sceneManagerPanel');
+         if (sceneManagerPanel)
+         {
+            const bsOffcanvas = bootstrap.Offcanvas.getInstance(sceneManagerPanel);
+            if (bsOffcanvas)
+            {
+               bsOffcanvas.hide();
+            }
+         }
+         return;
+      }
 
       if (this.#m_MapRMXItem['73' + '-' + twObjectIx] == undefined)
       {
