@@ -74,7 +74,7 @@
 <body>
 
    <!-- Login Modal -->
-   <div class="login-modal vh-100 vw-100 bg-dark position-relative z-3 jsLogin" style="display:none;" tabindex="-1">
+   <div class="login-modal vh-100 vw-100 bg-dark position-absolute z-3 jsLogin" style="display:none;" tabindex="-1">
       <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
          <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">Scene Assembler</h1>
          <small class="mb-4 pe-none">Please enter your admin key to edit your scene.</small>
@@ -147,8 +147,8 @@
                         <div class="dropdown-item mx-auto py-2">
                            <div class="fabric-url input-group">
                               <div class="form-floating flex-grow-1">
-                                 <input type="text" class="form-control form-control-sm" id="fabricUrl" placeholder="Publish a scene to generate this URL" value="" readonly>
-                                 <label for="fabricUrl">Attachment Point URL</label>
+                                 <input type="text" class="form-control form-control-sm" id="fabricUrl" placeholder="Publish a scene for URL" value="" readonly>
+                                 <label for="fabricUrl">Spatial Fabric URL</label>
                               </div>
                               <button class="btn btn-outline-light" type="button" id="copyFabricUrl" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Copy URL" disabled>
                                  <i class="fa-solid fa-copy"></i>
