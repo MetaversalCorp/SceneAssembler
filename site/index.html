@@ -145,14 +145,14 @@
                      </li>
                      <li>
                         <div class="dropdown-item mx-auto py-2">
-                           <div class="fabric-url input-group">
-                              <div class="form-floating flex-grow-1">
+                           <div class="fabric-url">
+                              <label class="small" for="fabricUrl">Spatial Fabric URL</label>
+                              <div class="input-group flex-grow-1">
                                  <input type="text" class="form-control form-control-sm" id="fabricUrl" placeholder="Publish a scene for URL" value="" readonly>
-                                 <label for="fabricUrl">Spatial Fabric URL</label>
+                                 <button class="btn btn-outline-light" type="button" id="copyFabricUrl" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Copy URL" disabled>
+                                    <i class="fa-solid fa-copy"></i>
+                                 </button>
                               </div>
-                              <button class="btn btn-outline-light" type="button" id="copyFabricUrl" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Copy URL" disabled>
-                                 <i class="fa-solid fa-copy"></i>
-                              </button>
                            </div>
                         </div>
                      </li>
