@@ -1069,7 +1069,7 @@ class ExtractMap extends MapUtil
 
    GetRootUrl ()
    {
-      let sResult = this.#m_pFabric.GetMapRootUrl ();
+      let sResult = this.#m_pFabric.pMSF_Map.sRootUrl;
 
       if (sResult.length > 0)
       {
