@@ -372,6 +372,7 @@ class ExtractMap extends MapUtil
          this.UpdateEditor ();
 
          this.ReadyState (this.eSTATE.READY);
+         this.UpdateAttachmentPointUrl ();
       }
    }
 
@@ -779,6 +780,8 @@ class ExtractMap extends MapUtil
 
          this.#jBody.find ('.jsCurrentScene').text (this.#pRMXRoot.pName.wsRMPObjectId);
       }
+
+      this.UpdateAttachmentPointUrl ();
    }
 
    async #CreateRMPObject (pRMXObject_Parent, pJSONObject, pJSONObjectX)
@@ -864,6 +867,7 @@ class ExtractMap extends MapUtil
       jItem.addClass ('active');
 
       this.#jBody.find ('.jsCurrentScene').text (pRMCObject.pName.wsRMPObjectId);
+      this.UpdateAttachmentPointUrl ();
    }
 
    onClick_AddScene (e)
@@ -873,6 +877,7 @@ class ExtractMap extends MapUtil
 
       this.#pRMXRoot = null;
       this.UpdateEditor ();
+      this.UpdateAttachmentPointUrl ();
    }
 
    onClick_DeleteScene (e)
@@ -978,6 +983,7 @@ class ExtractMap extends MapUtil
 
          this.jSelector.find ('.jsLogin').hide ();
          this.jSelector.find ('.jsSceneEditor').show ();
+         this.UpdateAttachmentPointUrl ();
 
          if (this.#m_wClass_Object == 70)
             sID = 'RMRoot';
@@ -1038,6 +1044,27 @@ class ExtractMap extends MapUtil
          loadObjectLibrary (this.GetRootUrl ());
          this.#bIsObjectLibLoaded = true;
       }
+   }
+
+   UpdateAttachmentPointUrl ()
+   {
+      let sUrl = '';
+
+      if (this.#m_pFabric)
+      {
+         const sRootUrl = this.GetRootUrl ();
+         const wClass = this.#pRMXRoot?.wClass_Object;
+         const twObjectIx = this.#pRMXRoot?.twObjectIx;
+
+         // Only generate the URL if the scene has been published at least once
+         // (i.e., it exists in Fabric and has a non-zero twObjectIx).
+         if (sRootUrl && wClass && twObjectIx && twObjectIx > 0)
+         {
+            sUrl = sRootUrl + 'fabric/' + wClass + '/' + twObjectIx;
+         }
+      }
+
+      document.dispatchEvent (new CustomEvent ('attachment-point-url', { detail: { url: sUrl } }));
    }
 
    GetRootUrl ()

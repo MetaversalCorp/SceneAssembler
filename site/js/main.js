@@ -322,6 +322,8 @@ const objControls = document.getElementById("objControls");
 const btnUndo = document.getElementById("undo");
 const btnRedo = document.getElementById("redo");
 const btnResetCamera = document.getElementById("resetCamera");
+const fabricUrlInput = document.getElementById("fabricUrl");
+const copyFabricUrlBtn = document.getElementById("copyFabricUrl");
 const jsonEditor = document.getElementById("jsonEditor");
 function getJSONEditorText() {
     if (window.jsonEditorAPI && typeof window.jsonEditorAPI.getValue === 'function') {
@@ -350,6 +352,90 @@ function setJSONEditorText(text) {
 }
 const exportJson = document.getElementById("exportJson");
 const applyChanges = document.getElementById("applyChanges");
+
+// ===== Attachment Point URL copy-link UX =====
+function setAttachmentPointUrl(url) {
+    const value = url || '';
+    if (fabricUrlInput) {
+        fabricUrlInput.value = value;
+    }
+    if (copyFabricUrlBtn) {
+        copyFabricUrlBtn.disabled = !value;
+
+        // Reset tooltip state/title when URL changes
+        copyFabricUrlBtn.setAttribute('data-bs-original-title', 'Copy URL');
+        if (window.bootstrap && bootstrap.Tooltip) {
+            const tip = bootstrap.Tooltip.getInstance(copyFabricUrlBtn);
+            if (tip)
+                tip.hide();
+        }
+    }
+}
+
+document.addEventListener('attachment-point-url', (e) => {
+    setAttachmentPointUrl(e?.detail?.url);
+}
+);
+
+if (fabricUrlInput) {
+    fabricUrlInput.addEventListener('click', () => {
+        if (fabricUrlInput.value)
+            fabricUrlInput.select();
+    }
+    );
+}
+
+async function copyAttachmentPointUrlToClipboard() {
+    const value = fabricUrlInput?.value || '';
+    if (!value)
+        return;
+
+    let copied = false;
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            await navigator.clipboard.writeText(value);
+            copied = true;
+        }
+    } catch (err) {
+        copied = false;
+    }
+
+    // Fallback copy if Clipboard API isn't available (or fails)
+    if (!copied && fabricUrlInput && document.queryCommandSupported && document.queryCommandSupported('copy')) {
+        try {
+            fabricUrlInput.select();
+            copied = document.execCommand('copy');
+        } catch (err) {
+            copied = false;
+        }
+    }
+
+    if (copied && copyFabricUrlBtn && window.bootstrap && bootstrap.Tooltip) {
+        copyFabricUrlBtn.setAttribute('data-bs-original-title', 'Copied!');
+        const tip = bootstrap.Tooltip.getOrCreateInstance(copyFabricUrlBtn);
+        tip.show();
+        setTimeout(() => {
+            try {
+                copyFabricUrlBtn.setAttribute('data-bs-original-title', 'Copy URL');
+                tip.hide();
+            } catch (err) {}
+        }
+        , 900);
+    }
+}
+
+if (copyFabricUrlBtn) {
+    copyFabricUrlBtn.addEventListener('click', () => {
+        copyAttachmentPointUrlToClipboard();
+    }
+    );
+}
+
+// If the fabric layer already computed the URL before this script loaded,
+// request a refresh so we populate the field.
+if (window.g_pMap && typeof window.g_pMap.UpdateAttachmentPointUrl === 'function') {
+    window.g_pMap.UpdateAttachmentPointUrl();
+}
 
 let modelCounter = 1;
 

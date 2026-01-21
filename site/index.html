@@ -140,6 +140,22 @@
                            <button type="submit" class="btn btn-outline-light" id="setCanvasSize">Set</button>
                         </div>
                      </li>
+                     <li>
+                        <hr class="dropdown-divider">
+                     </li>
+                     <li>
+                        <div class="dropdown-item mx-auto py-2">
+                           <div class="fabric-url input-group">
+                              <div class="form-floating flex-grow-1">
+                                 <input type="text" class="form-control form-control-sm" id="fabricUrl" placeholder="Publish a scene to generate this URL" value="" readonly>
+                                 <label for="fabricUrl">Attachment Point URL</label>
+                              </div>
+                              <button class="btn btn-outline-light" type="button" id="copyFabricUrl" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Copy URL" disabled>
+                                 <i class="fa-solid fa-copy"></i>
+                              </button>
+                           </div>
+                        </div>
+                     </li>
                   </ul>
                </li>
                <li class="nav-item border-start my-1">
