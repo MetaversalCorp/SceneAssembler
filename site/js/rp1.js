@@ -99,7 +99,7 @@ class ExtractMap extends MapUtil
       {
          this.jSelector.find ('.jsLogin').show ();
          this.jSelector.find ('.jsSceneEditor').hide ();
-         this.jSelector.find ('.jsUrl').val (window.location.origin + '/fabric/fabric.msf');
+         this.jSelector.find ('.jsUrl').val (window.location.origin + '/fabric/');
 
          this.#m_pFabric = null;
       }
