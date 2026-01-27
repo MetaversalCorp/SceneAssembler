@@ -130,6 +130,27 @@ body, .dropdown-item{
 
 #modelList li.selected { background: #444; }
 
+#modelList{
+   min-height:35vh;
+   max-height:65vh;
+   overflow: scroll;
+}
+
+#modelsPanel::before{
+   content: "";
+   position: absolute;
+   bottom: 0;
+   left: 0;
+   width: 100%;
+   height: 2rem;
+   min-height: 2rem;
+   border-radius: 5rem;
+   background: -webkit-linear-gradient(0deg,rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
+   background: linear-gradient(0deg,rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
+   pointer-events: none;
+   z-index:0;
+}
+
 #contextMenu {
   position: absolute;
   display: none;
