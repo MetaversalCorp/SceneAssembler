@@ -3390,8 +3390,8 @@ window.addEventListener
              isAltPressed = true;
          }
 
-         // Track Spacebar for camera panning
-         if (key === " " || e.code === "Space")
+         // Track Spacebar for camera panning (skip when typing in input/textarea, e.g. model label)
+         if (!inForm && (key === " " || e.code === "Space"))
          {
             e.preventDefault(); // Prevent page scroll
             isSpacePressed = true;
@@ -3408,7 +3408,7 @@ window.addEventListener
          }
 
          // Track Arrow keys for panning direction (only when Space is pressed)
-         if (isSpacePressed)
+         if (isSpacePressed && !inForm)
          {
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
             {
@@ -3431,7 +3431,7 @@ window.addEventListener
                 panDirection.down = true;
             }
          }
-         else
+         else if (!inForm)
          {
             // Track Arrow keys for free camera movement (when Space is NOT pressed)
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
