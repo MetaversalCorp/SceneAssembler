@@ -20,6 +20,10 @@
   .offcanvas {
     --bs-offcanvas-width: min(95vw, 480px);
   }
+
+  /* .offcanvas.offcanvas-bottom {
+     --bs-offcanvas-height: 35vh;
+ } */
 }
 
 .btn{border-radius:5rem;}
@@ -310,3 +314,17 @@ body, .dropdown-item{
 #hotkeys kbd{
    padding:.1rem .25rem;
 }
+
+/* Triangle & scene checker (stat-viewer) */
+#triStats .stat-viewer summary {
+  cursor: pointer;
+  list-style: none;
+}
+#triStats .stat-viewer summary::-webkit-details-marker { display: none; }
+#triStats .stat-viewer summary::before {
+  content: "\25B6\00a0";
+  font-size: 0.65rem;
+  color: var(--bs-secondary);
+}
+#triStats .stat-viewer details[open] summary::before { transform: rotate(90deg); display: inline-block; }
+#triStats .tri-gauge .progress-bar { transition: width 0.2s ease; }

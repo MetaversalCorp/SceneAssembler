@@ -275,21 +275,61 @@
       <div class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-auto user-select-none" style="width: 18rem;" id="propertiesPanel">
          <div class="card-body">
             <h6 class="card-title pe-none user-select-none">Properties</h6>
-            <p class="card-text small" id="properties"></p>
-            <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
-            <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
+            <p class="card-text small mb-2" id="properties"></p>
+            <div class="d-flex gap-1 align-items-center mb-2">
+               <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
+               <div id="triStats" class="btn-group dropend">
+                  <button id="triStatus" class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 20rem; max-height: 85vh; overflow-y: auto;">
+                     <h6 class="pe-none user-select-none mb-2"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangle Analyzer</h6>
+                     <p class="small text-body-secondary mb-2 pe-none user-select-none">
+                        Keep scenes under <strong>200K</strong> triangles and <strong>20MB</strong>. Higher = not good for streaming.
+                     </p>
+                     <div class="tri-gauge">
+                        <div class="d-flex gap-1 justify-content-start small mb-1">
+                           <span class="text-bold" id="triGaugeCount">0</span>
+                           <span>Triangles (selected)</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triGaugeBar">
+                           <div class="progress-bar" id="triGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="small mt-1 text-body-tertiary text-end" id="triGaugeStatus">Within limit</div>
+                     </div>
+                     <details class="small">
+                        <summary class="text-body-secondary cursor-pointer">Strategies</summary>
+                        <ul class="list-unstyled mt-1 mb-0 ps-2 small text-body-secondary">
+                           <li>· Few triangles, reuse materials, unify normals, tile textures.</li>
+                           <li>· Build to real scale; avoid seats; group by proximity, not material.</li>
+                           <li>· Keep high-density away from area boundaries.</li>
+                        </ul>
+                     </details>
+                  </div>
+               </div>
+            </div>
+            <div class="d-flex gap-1 align-items-center">
+               <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
+               <div id="texStats" class="btn-group dropend">
+                  <button class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 18rem;">
+                     <h6 class="pe-none user-select-none"><i class="fa-solid fa-image fa-sm"></i> Texture Stats</h6>
+                     <small>
+                        And this is more example text.
+                     </small>
+                     <div class="progress" role="progressbar" aria-label="Tecture Count" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="height: 1rem">
+                        <div class="progress-bar" style="width: 25%"></div>
+                     </div>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
-
    </div>
 
-   <div class="ui position-absolute bottom-0 w-100 user-select-none pe-none z-1 jsSceneEditor" style="display:none;">
-      <nav class="main navbar navbar-expand py-1 pe-auto">
-         <div class="container-lg">
-            <ul class="d-flex justify-content-center w-100">
-               <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
+   <div class="ui position-absolute bottom-0 w-100 user-select-none z-1 pe-none jsSceneEditor" style="display:none;">
+      <nav class="main navbar navbar-expand py-1 pe-none">
+            <ul class="d-flex justify-content-center w-50 mx-auto">
+               <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5 pe-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
             </ul>
-         </div>
       </nav>
    </div>
 

@@ -310,6 +310,16 @@ const modelList = document.getElementById("modelList");
 const propertiesPanel = document.getElementById("properties");
 const propertiesPanelCard = document.getElementById("propertiesPanel");
 const triCountElement = document.getElementById("triCount");
+const triBadge = document.getElementById("triBadge");
+const triGaugeCount = document.getElementById("triGaugeCount");
+const triGaugeFill = document.getElementById("triGaugeFill");
+const triGaugeBar = document.getElementById("triGaugeBar");
+const triGaugeStatus = document.getElementById("triGaugeStatus");
+const triStatsStatViewer = document.querySelector("#triStats .stat-viewer");
+const triStatusBtn = document.getElementById("triStatus");
+const triStatusIcon = triStatusBtn ? triStatusBtn.querySelector("i") : null;
+const TRI_LIMIT_200M = 200000;
+let lastTriTier = -1; // 0=ok, 1=warning, 2=danger; skip DOM updates when unchanged
 const texCountElement = document.getElementById("texCount");
 const snapCheckbox = document.getElementById("snap");
 const canvasSizeInput = document.getElementById("canvasSize");
@@ -1002,9 +1012,43 @@ function updatePropertiesPanel(model) {
         aggregatedTextureInfo = p.textures || null;
     }
 
-    // Update triangle count in #triCount
-    if (triCountElement) {
-        triCountElement.textContent = totalTriangles.toLocaleString();
+    // Triangle analyser: one percentage, one tier (0=ok, 1=warning, 2=danger)
+    const pctRaw = (totalTriangles / TRI_LIMIT_200M) * 100;
+    const triTier = pctRaw > 100 ? 2 : pctRaw > 80 ? 1 : 0;
+
+    if (triCountElement) triCountElement.textContent = totalTriangles.toLocaleString();
+    if (triGaugeCount) triGaugeCount.textContent = totalTriangles.toLocaleString();
+    if (triGaugeFill && triGaugeBar) {
+        triGaugeFill.style.width = Math.min(100, pctRaw) + "%";
+        triGaugeFill.classList.remove("bg-success", "bg-warning", "bg-danger");
+        triGaugeFill.classList.add(triTier === 0 ? "bg-success" : triTier === 1 ? "bg-warning" : "bg-danger");
+        triGaugeBar.setAttribute("aria-valuenow", totalTriangles);
+    }
+    if (triGaugeStatus) {
+        triGaugeStatus.textContent = triTier === 0 ? "Within limit" : triTier === 1 ? "Near limit (200K)" : "Over 200K — reduce for performance";
+    }
+
+    if (lastTriTier !== triTier) {
+        lastTriTier = triTier;
+        if (triBadge) {
+            triBadge.classList.toggle("text-bg-secondary", triTier < 2);
+            triBadge.classList.toggle("text-bg-danger", triTier === 2);
+        }
+        if (triStatsStatViewer) {
+            triStatsStatViewer.classList.remove("alert", "alert-warning", "alert-danger");
+            if (triTier === 2) triStatsStatViewer.classList.add("alert", "alert-danger");
+            else if (triTier === 1) triStatsStatViewer.classList.add("alert", "alert-warning");
+        }
+        if (triStatusBtn) {
+            triStatusBtn.classList.remove("btn-outline-warning", "btn-outline-danger");
+            triStatusBtn.classList.toggle("btn-outline-secondary", triTier === 0);
+            triStatusBtn.classList.toggle("btn-outline-warning", triTier === 1);
+            triStatusBtn.classList.toggle("btn-outline-danger", triTier === 2);
+        }
+        if (triStatusIcon) {
+            triStatusIcon.classList.toggle("fa-info-circle", triTier !== 2);
+            triStatusIcon.classList.toggle("fa-circle-exclamation", triTier === 2);
+        }
     }
 
     // Calculate texture information for #texCount
