@@ -160,16 +160,75 @@
                </li>
                <li class="nav-item border-start my-1">
                </li>
+               <li class="nav-item dropdown">
+                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                     <i class="fa-solid fa-graduation-cap" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Help"></i>
+                  </button>
+                  <div class="dropdown-menu p-3 text-body-secondary" style="min-width: 20rem; max-width: 100%;">
+                     <div id="hotkeys" class="small">
+                        <strong class="d-block mb-1">Hotkeys</strong>
+                        <span class="text-body-tertiary my-2">Transform</span>
+                        <div class="row gy-2 gx-3 mb-2">
+                           <div class="col-auto">
+                              <kbd>W</kbd> Move
+                           </div>
+                           <div class="col-auto">
+                              <kbd>E</kbd> Rotate
+                           </div>
+                           <div class="col-auto">
+                              <kbd>R</kbd> Scale
+                           </div>
+                        </div>
+                        <span class="text-body-tertiary my-2">Utilities</span>
+                        <div class="row gy-2 gx-3 mb-2">
+                           <div class="col-auto">
+                              <kbd>Delete</kbd> Delete
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Ctrl</kbd> + <kbd>D</kbd> Duplicate
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Q</kbd> Detach gizmo
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Shift</kbd> + <kbd>Q</kbd> Re‑attach
+                           </div>
+                        </div>
+                        <span class="text-body-tertiary my-2">History</span>
+                        <div class="row gy-2 gx-3 mb-2">
+                           <div class="col-auto">
+                              <kbd>Ctrl</kbd> + <kbd>Z</kbd> Undo
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd> Redo
+                           </div>
+                        </div>
+                        <span class="text-body-tertiary my-2">Camera</span>
+                        <div class="row gy-2 gx-3">
+                           <div class="col-auto">
+                              <kbd>F</kbd> Frame on selected objects
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Space</kbd> + <kbd>Arrows</kbd> Pan
+                           </div>
+                           <div class="col-auto">
+                              <kbd>Arrows</kbd> Move
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </li>
+               <li class="nav-item border-start my-1">
                <li class="nav-item">
                   <button class="nav-link" id="undo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Undo (ctrl+z)"><i class="fa-solid fa-rotate-left"></i></button>
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="redo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+y)"><i class="fa-solid fa-rotate-right"></i></button>
+                  <button class="nav-link" id="redo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+shift+z)"><i class="fa-solid fa-rotate-right"></i></button>
                </li>
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item">
-                  <button class="nav-link" id="delete" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete Selected Object"><i class="fa-solid fa-trash"></i></button>
+                  <button class="nav-link" id="delete" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Delete Selected"><i class="fa-solid fa-trash"></i></button>
                </li>
                <li class="nav-item">
                   <button class="nav-link" id="resetCamera" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Reset Camera"><i class="fa-solid fa-camera"></i></button>
@@ -219,22 +278,6 @@
             <p class="card-text small" id="properties"></p>
             <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
             <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
-         </div>
-      </div>
-
-      <div class="card rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;" id="helpOverlay">
-         <div class="card-body small">
-            <strong>Hotkeys</strong><br>
-            W – Move<br>
-            E – Rotate<br>
-            R – Scale<br>
-            Q – Detach gizmo<br>
-            Shift+Q – Re‑attach gizmo<br>
-            F – Frame selected<br>
-            Ctrl+Z – Undo<br>
-            Click model – Focus it<br>
-            Double‑click empty – Reset to canvas<br>
-            H – Toggle this help
          </div>
       </div>
 

@@ -83,10 +83,6 @@ body, .dropdown-item{
   transform: translateZ(0);
 }
 
-#helpOverlay{
-  display: none;
-}
-
 .offcanvas .btn-close{
   background-image:none !important;
   padding: .25rem 1rem .75rem .5rem !important;
@@ -309,4 +305,8 @@ body, .dropdown-item{
 
 #sceneManagerPanel .scene-list > .scene{
   cursor: pointer;
+}
+
+#hotkeys kbd{
+   padding:.1rem .25rem;
 }
