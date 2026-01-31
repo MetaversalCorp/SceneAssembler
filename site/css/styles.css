@@ -328,3 +328,29 @@ body, .dropdown-item{
 }
 #triStats .stat-viewer details[open] summary::before { transform: rotate(90deg); display: inline-block; }
 #triStats .tri-gauge .progress-bar { transition: width 0.2s ease; }
+
+/* Shared: user-friendly analyzer layout (new to advanced) */
+.stat-viewer .stat-viewer-lead {
+  color: var(--bs-body-color);
+  line-height: 1.4;
+}
+.stat-viewer .stat-viewer-status {
+  font-variant-numeric: tabular-nums;
+}
+.stat-viewer .stat-viewer-details summary {
+  margin-bottom: 0.25rem;
+}
+
+/* Texture & tier checker (stat-viewer) */
+#texStats .stat-viewer summary {
+  cursor: pointer;
+  list-style: none;
+}
+#texStats .stat-viewer summary::-webkit-details-marker { display: none; }
+#texStats .stat-viewer summary::before {
+  content: "\25B6\00a0";
+  font-size: 0.65rem;
+  color: var(--bs-secondary);
+}
+#texStats .stat-viewer details[open] summary::before { transform: rotate(90deg); display: inline-block; }
+#texStats .tex-gauge .progress-bar { transition: width 0.2s ease; }

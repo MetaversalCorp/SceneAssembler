@@ -276,31 +276,44 @@
          <div class="card-body">
             <h6 class="card-title pe-none user-select-none">Properties</h6>
             <p class="card-text small mb-2" id="properties"></p>
+
             <div class="d-flex gap-1 align-items-center mb-2">
                <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
                <div id="triStats" class="btn-group dropend">
                   <button id="triStatus" class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
-                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 20rem; max-height: 85vh; overflow-y: auto;">
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 22rem; max-height: 80vh; overflow-y: auto;">
                      <h6 class="pe-none user-select-none mb-2"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangle Analyzer</h6>
-                     <p class="small text-body-secondary mb-2 pe-none user-select-none">
-                        Keep scenes under <strong>200K</strong> triangles and <strong>20MB</strong>. Higher = not good for streaming.
+                     <p class="stat-viewer-lead small mb-1 pe-none user-select-none text-muted">
+                        It's best to keep scenes under <strong><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 200K</strong> (and 20MB). Fewer <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> = better performance.
                      </p>
-                     <div class="tri-gauge">
-                        <div class="d-flex gap-1 justify-content-start small mb-1">
-                           <span class="text-bold" id="triGaugeCount">0</span>
-                           <span>Triangles (selected)</span>
+                     <div class="tri-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Selected:</span>
+                           <span><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i></span>
+                           <span class="fw-medium" id="triGaugeCount">0</span>
                         </div>
                         <div class="progress" role="progressbar" aria-label="Triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triGaugeBar">
                            <div class="progress-bar" id="triGaugeFill" style="width: 0%"></div>
                         </div>
-                        <div class="small mt-1 text-body-tertiary text-end" id="triGaugeStatus">Within limit</div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="triGaugeStatus">Good</div>
                      </div>
-                     <details class="small">
-                        <summary class="text-body-secondary cursor-pointer">Strategies</summary>
-                        <ul class="list-unstyled mt-1 mb-0 ps-2 small text-body-secondary">
-                           <li>· Few triangles, reuse materials, unify normals, tile textures.</li>
-                           <li>· Build to real scale; avoid seats; group by proximity, not material.</li>
-                           <li>· Keep high-density away from area boundaries.</li>
+                     <details class="stat-viewer-details small mb-1">
+                        <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
+                        <p class="small text-body-secondary mt-1 mb-1">Efficient scenes load faster and run better on all devices.</p>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>· Use fewer triangles; reuse materials; unify normals; tile textures.</li>
+                           <li>· Build to real scale; group by proximity, not material; keep dense detail away from area edges.</li>
+                        </ul>
+                     </details>
+                     <details class="stat-viewer-details small">
+                        <summary class="text-body-secondary cursor-pointer">Tier specs (advanced)</summary>
+                        <p class="small text-body-secondary mt-1 mb-1">Pick the tier that fits your object size and how many can appear at once.</p>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>T1: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 500 · <i class="fa-solid fa-image fa-sm"></i> 64×64 · <i class="fa-solid fa-shapes"></i> 200</li>
+                           <li>T2: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 2K · <i class="fa-solid fa-image fa-sm"></i> 128×128 · <i class="fa-solid fa-shapes"></i> 50 </li>
+                           <li>T3: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 10K · <i class="fa-solid fa-image fa-sm"></i> 256×256 · <i class="fa-solid fa-shapes"></i> 10</li>
+                           <li>T4: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 1024×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                           <li>T5 Solo: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 2048×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
                         </ul>
                      </details>
                   </div>
@@ -309,15 +322,42 @@
             <div class="d-flex gap-1 align-items-center">
                <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
                <div id="texStats" class="btn-group dropend">
-                  <button class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
-                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 18rem;">
-                     <h6 class="pe-none user-select-none"><i class="fa-solid fa-image fa-sm"></i> Texture Stats</h6>
-                     <small>
-                        And this is more example text.
-                     </small>
-                     <div class="progress" role="progressbar" aria-label="Tecture Count" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100" style="height: 1rem">
-                        <div class="progress-bar" style="width: 25%"></div>
+                  <button id="texStatus" class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 22rem; max-height: 80vh; overflow-y: auto;">
+                     <h6 class="pe-none user-select-none mb-2"><i class="fa-solid fa-image fa-sm"></i> Texture Analyzer</h6>
+                     <p class="stat-viewer-lead small mb-1 pe-none user-select-none text-muted">
+                        It's best to keep total scene textures under <strong>2&nbsp;MP</strong>. Less/smaller <i class="fa-solid fa-image fa-sm"></i> = smoother rendering.
+                     </p>
+                     <div class="tex-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Selected:</span>
+                           <span><i class="fa-solid fa-image fa-sm"></i></span>
+                           <span id="texGaugeDims">—</span>
+                           <span>MP</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Texture MP vs 2 MP limit" aria-valuemin="0" aria-valuemax="2" style="height: 0.5rem" id="texGaugeBar">
+                           <div class="progress-bar" id="texGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="texGaugeStatus">Good</div>
                      </div>
+                     <details class="stat-viewer-details small mb-1">
+                        <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>· Reuse textures, use smaller resolutions, and tile instead of unique large images</li>
+                           <li>· Prefer single-texture materials; max 2 UV sets. PBR or alpha = higher tier.</li>
+                        </ul>
+                     </details>
+                     <details class="stat-viewer-details small">
+                        <summary class="text-body-secondary cursor-pointer">Tier specs (advanced)</summary>
+                        <p class="small text-body-secondary mt-1 mb-1">Pick the tier that fits your object size and how many can appear at once.</p>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>T1: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 500 · <i class="fa-solid fa-image fa-sm"></i> 64×64 · <i class="fa-solid fa-shapes"></i> 200</li>
+                           <li>T2: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 2K · <i class="fa-solid fa-image fa-sm"></i> 128×128 · <i class="fa-solid fa-shapes"></i> 50 </li>
+                           <li>T3: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 10K · <i class="fa-solid fa-image fa-sm"></i> 256×256 · <i class="fa-solid fa-shapes"></i> 10</li>
+                           <li>T4: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 1024×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                           <li>T5 Solo: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 2048×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                        </ul>
+                     </details>
                   </div>
                </div>
             </div>

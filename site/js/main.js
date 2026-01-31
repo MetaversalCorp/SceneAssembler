@@ -321,6 +321,18 @@ const triStatusIcon = triStatusBtn ? triStatusBtn.querySelector("i") : null;
 const TRI_LIMIT_200M = 200000;
 let lastTriTier = -1; // 0=ok, 1=warning, 2=danger; skip DOM updates when unchanged
 const texCountElement = document.getElementById("texCount");
+const texBadge = document.getElementById("texBadge");
+const texGaugeFill = document.getElementById("texGaugeFill");
+const texGaugeBar = document.getElementById("texGaugeBar");
+const texGaugeStatus = document.getElementById("texGaugeStatus");
+const texGaugeDims = document.getElementById("texGaugeDims");
+const texStatsStatViewer = document.querySelector("#texStats .stat-viewer");
+const texStatusBtn = document.getElementById("texStatus");
+const texStatusIcon = texStatusBtn ? texStatusBtn.querySelector("i") : null;
+const TEX_SCENE_MAX_MP = 2;
+let lastTexTier = -1;
+let lastTotalMegapixels = -1;
+let lastTexDimsString = null;
 const snapCheckbox = document.getElementById("snap");
 const canvasSizeInput = document.getElementById("canvasSize");
 const btnSetCanvasSize = document.getElementById("setCanvasSize");
@@ -872,6 +884,7 @@ function getTextureResolutionInfo(model) {
         };
     }
 
+    textureInfo.totalPixels = textureInfo.textures.reduce((sum, t) => sum + t.width * t.height, 0);
     return textureInfo;
 }
 
@@ -946,6 +959,7 @@ function aggregateTriangleCount(objects) {
 function aggregateTextureInfo(objects) {
     const aggregated = {
         totalTextures: 0,
+        totalPixels: 0,
         maxResolution: {
             width: 0,
             height: 0
@@ -961,6 +975,7 @@ function aggregateTextureInfo(objects) {
             const texInfo = obj.userData.properties.textures;
             if (texInfo.totalTextures > 0) {
                 aggregated.totalTextures += texInfo.totalTextures;
+                aggregated.totalPixels += texInfo.totalPixels || 0;
 
                 // Update max resolution
                 if (texInfo.maxResolution.width > aggregated.maxResolution.width || texInfo.maxResolution.height > aggregated.maxResolution.height) {
@@ -1025,7 +1040,7 @@ function updatePropertiesPanel(model) {
         triGaugeBar.setAttribute("aria-valuenow", totalTriangles);
     }
     if (triGaugeStatus) {
-        triGaugeStatus.textContent = triTier === 0 ? "Within limit" : triTier === 1 ? "Near limit (200K)" : "Over 200K — reduce for performance";
+        triGaugeStatus.textContent = triTier === 0 ? "Good" : triTier === 1 ? "Consider simplifying/reducing objects" : "This is too much — reduce for better performance";
     }
 
     if (lastTriTier !== triTier) {
@@ -1051,22 +1066,72 @@ function updatePropertiesPanel(model) {
         }
     }
 
-    // Calculate texture information for #texCount
+    // Texture: one pass for badge + analyzer (avoid duplicate resolution branching)
+    const totalMegapixels = aggregatedTextureInfo && aggregatedTextureInfo.totalPixels
+        ? aggregatedTextureInfo.totalPixels / 1e6
+        : 0;
+    const texPctRaw = (totalMegapixels / TEX_SCENE_MAX_MP) * 100;
+    const texTier = texPctRaw > 100 ? 2 : texPctRaw > 80 ? 1 : 0;
+
+    const a = aggregatedTextureInfo;
+    const hasTex = a && a.totalTextures > 0;
+    const sameRes = hasTex && a.maxResolution.width === a.minResolution.width && a.minResolution.width > 0;
+    const mixedRes = hasTex && a.minResolution.width > 0 && !sameRes;
+
     let textureInfoText = "None";
-    if (aggregatedTextureInfo && aggregatedTextureInfo.totalTextures > 0) {
-        if (aggregatedTextureInfo.maxResolution.width === aggregatedTextureInfo.minResolution.width &&
-            aggregatedTextureInfo.minResolution.width > 0) {
-            // All textures same resolution
-            textureInfoText = `${aggregatedTextureInfo.totalTextures} @ ${aggregatedTextureInfo.maxResolution.width}x${aggregatedTextureInfo.maxResolution.height}`;
-        } else if (aggregatedTextureInfo.minResolution.width > 0) {
-            // Mixed resolutions
-            textureInfoText = `${aggregatedTextureInfo.totalTextures} (${aggregatedTextureInfo.minResolution.width}x${aggregatedTextureInfo.minResolution.height} - ${aggregatedTextureInfo.maxResolution.width}x${aggregatedTextureInfo.maxResolution.height})`;
-        }
+    let texDimsString = "—";
+    if (sameRes) {
+        const w = a.maxResolution.width, h = a.maxResolution.height;
+        textureInfoText = `${a.totalTextures} @ ${w}x${h}`;
+        texDimsString = `${a.totalTextures} @ ${w}×${h} = ${totalMegapixels.toFixed(2)}`;
+    } else if (mixedRes) {
+        const mw = a.minResolution.width, mh = a.minResolution.height, xw = a.maxResolution.width, xh = a.maxResolution.height;
+        textureInfoText = `${a.totalTextures} (${mw}x${mh} - ${xw}x${xh})`;
+        texDimsString = `${a.totalTextures} (${mw}×${mh}–${xw}×${xh}) = ${totalMegapixels.toFixed(2)}`;
+    } else if (hasTex) {
+        textureInfoText = String(a.totalTextures);
+        texDimsString = `${a.totalTextures} = ${totalMegapixels.toFixed(2)}`;
     }
 
-    // Update texture info in #texCount
-    if (texCountElement) {
-        texCountElement.textContent = textureInfoText;
+    if (texCountElement) texCountElement.textContent = textureInfoText;
+
+    const texGaugeChanged = totalMegapixels !== lastTotalMegapixels || texTier !== lastTexTier;
+    const texDimsChanged = texDimsString !== lastTexDimsString;
+    if (texGaugeChanged) lastTotalMegapixels = totalMegapixels;
+    if (texDimsChanged) lastTexDimsString = texDimsString;
+
+    if (texGaugeChanged && texGaugeFill && texGaugeBar) {
+        texGaugeFill.style.width = Math.min(100, texPctRaw) + "%";
+        texGaugeFill.classList.remove("bg-success", "bg-warning", "bg-danger");
+        texGaugeFill.classList.add(texTier === 0 ? "bg-success" : texTier === 1 ? "bg-warning" : "bg-danger");
+        texGaugeBar.setAttribute("aria-valuenow", Math.round(totalMegapixels * 100) / 100);
+    }
+    if (texGaugeChanged && texGaugeStatus) {
+        texGaugeStatus.textContent = texTier === 0 ? "Good" : texTier === 1 ? "Consider reducing size/number of textures" : "This is too much — reduce for smoother rendering";
+    }
+    if (texDimsChanged && texGaugeDims) texGaugeDims.textContent = texDimsString;
+
+    if (lastTexTier !== texTier) {
+        lastTexTier = texTier;
+        if (texBadge) {
+            texBadge.classList.toggle("text-bg-secondary", texTier < 2);
+            texBadge.classList.toggle("text-bg-danger", texTier === 2);
+        }
+        if (texStatsStatViewer) {
+            texStatsStatViewer.classList.remove("alert", "alert-warning", "alert-danger");
+            if (texTier === 2) texStatsStatViewer.classList.add("alert", "alert-danger");
+            else if (texTier === 1) texStatsStatViewer.classList.add("alert", "alert-warning");
+        }
+        if (texStatusBtn) {
+            texStatusBtn.classList.remove("btn-outline-warning", "btn-outline-danger");
+            texStatusBtn.classList.toggle("btn-outline-secondary", texTier === 0);
+            texStatusBtn.classList.toggle("btn-outline-warning", texTier === 1);
+            texStatusBtn.classList.toggle("btn-outline-danger", texTier === 2);
+        }
+        if (texStatusIcon) {
+            texStatusIcon.classList.toggle("fa-info-circle", texTier !== 2);
+            texStatusIcon.classList.toggle("fa-circle-exclamation", texTier === 2);
+        }
     }
 
     // Update properties panel text (only show for single selection)
