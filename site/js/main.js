@@ -3364,8 +3364,7 @@ renderer.domElement.addEventListener("dblclick", e => {
     if (target) {
         selectFromCanvas(target, false);
         frameCameraOn(target);
-    } else
-        resetCamera();
+    }
 }
 );
 
@@ -3379,7 +3378,7 @@ window.addEventListener
          const key = e.key.toLowerCase();
          const inForm = (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
          const isJSONEditor = jsonEditor && (jsonEditor === e.target || (jsonEditor.contains && jsonEditor.contains(e.target)));
-         const isHotkey = ["w", "e", "r", "q", "f", "h", "z", "delete", "d", "alt", " "].includes(key);
+         const isHotkey = ["w", "e", "r", "q", "f", "z", "delete", "d", "alt", " "].includes(key);
          // Block all hotkeys when JSON editor is focused
          if (isJSONEditor)
              return;
@@ -3390,8 +3389,8 @@ window.addEventListener
              isAltPressed = true;
          }
 
-         // Track Spacebar for camera panning
-         if (key === " " || e.code === "Space")
+         // Track Spacebar for camera panning (skip when typing in input/textarea, e.g. model label)
+         if (!inForm && (key === " " || e.code === "Space"))
          {
             e.preventDefault(); // Prevent page scroll
             isSpacePressed = true;
@@ -3408,7 +3407,7 @@ window.addEventListener
          }
 
          // Track Arrow keys for panning direction (only when Space is pressed)
-         if (isSpacePressed)
+         if (isSpacePressed && !inForm)
          {
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
             {
@@ -3431,7 +3430,7 @@ window.addEventListener
                 panDirection.down = true;
             }
          }
-         else
+         else if (!inForm)
          {
             // Track Arrow keys for free camera movement (when Space is NOT pressed)
             if (e.key === "ArrowLeft" || e.code === "ArrowLeft")
@@ -3495,13 +3494,6 @@ window.addEventListener
              if (selectedObject)
                  frameCameraOn(selectedObject);
              break;
-         case "h":
-             {
-                 const helpOverlay = document.getElementById("helpOverlay");
-                 if (helpOverlay)
-                     helpOverlay.style.display = (helpOverlay.style.display === "none" || helpOverlay.style.display === "") ? "block" : "none";
-                 break;
-             }
          case "delete":
              if (!checkUnsavedChangesBeforeEdit()) break;
              // Filter out canvas root from deletion
@@ -3534,10 +3526,6 @@ window.addEventListener
                          // Ctrl+Z or Cmd+Z for undo
                          undo();
                      }
-                 } else if ((e.ctrlKey || e.metaKey) && key === "y") {
-                     e.preventDefault();
-                     // Ctrl+Y or Cmd+Y for redo
-                     redo();
                  }
              }
              break;
