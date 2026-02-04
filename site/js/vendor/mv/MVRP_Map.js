@@ -14,7 +14,7 @@ require ('@metaversalcorp/mvrest');
 require ('@metaversalcorp/mvio');
 */
 
-MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.23.11');
+MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.23.13');
 
 MV.MVRP.Map.Class.RMCOMMON_TYPE = class extends MV.MVMF.Class.BASE
 {
@@ -785,7 +785,8 @@ MV.MVRP.Map.SB_RMCOBJECT.apAction =
                            ({
                               twRMCObjectIx        : MV.MVSB.MAP.FIELD.TWORD8,
                               abReserved_A         : MV.MVSB.MAP.FIELD.PAD (8),
-                              pTransform           : MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_SB.MAP
+                              pTransform           : MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_SB.MAP,
+                              pCoord               : MV.MVRP.Class.DCOORD.MAP
                            })
                         ),
 
@@ -921,7 +922,7 @@ MV.MVRP.Map.SB_RMTOBJECT.apAction =
                               twRMTObjectIx                    : MV.MVSB.MAP.FIELD.TWORD8,
                               abReserved_A                     : MV.MVSB.MAP.FIELD.PAD (8),
                               pTransform                       : MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_SB.MAP,
-                              pCoord                           : MV.MVRP.Class.DCOORD.MAP,
+                              pCoord                           : MV.MVRP.Class.DCOORD.MAP
                            })
                         ),
 
@@ -2257,13 +2258,15 @@ MV.MVRP.Map.IO_RMCOBJECT.apAction =
                                     "RMCObject:transform",
                                     {
                                        twRMCObjectIx           : 0,
-                                       pTransform              : MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_IO.MAP
+                                       pTransform              : MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_IO.MAP,
+                                       pCoord                  : MV.MVRP.Map.Class.DCOORD_IO.MAP
                                     },
                                     function (pRequest_Out, pRequest_In)
                                     {
                                        pRequest_Out.twRMCObjectIx = pRequest_In.twRMCObjectIx;
 
                                        MV.MVRP.Map.Class.RMCOMMON_TRANSFORM_IO.Convert   (pRequest_Out, pRequest_In);
+                                       MV.MVRP.Map.Class.DCOORD_IO.Convert               (pRequest_Out, pRequest_In);
                                     }
                                  ),
 
