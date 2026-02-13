@@ -35,6 +35,11 @@ scene.background = new THREE.Color(0x202020);
 const camera = new THREE.PerspectiveCamera(60,window.innerWidth / window.innerHeight,0.1,1000);
 camera.position.set(3, 3, 6);
 
+function updateCameraFarPlane() {
+    camera.far = Math.max(1000, groundSize * 3);
+    camera.updateProjectionMatrix();
+}
+
 const renderer = new THREE.WebGLRenderer({
     antialias: true
 });
@@ -48,6 +53,7 @@ orbit.enableDamping = true;
 let groundSize = 20;
 orbit.minDistance = 1;
 orbit.maxDistance = groundSize * 1.5;
+updateCameraFarPlane();
 
 const transform = new THREE.TransformControls(camera,renderer.domElement);
 transform.setSpace('local');
@@ -3433,6 +3439,7 @@ function setCanvasSize() {
         scene.add(ruler);
     }
     orbit.maxDistance = groundSize * 1.5;
+    updateCameraFarPlane();
     selectedObjects.forEach(o => updateAllVisuals(o));
 
     // Update canvas root box helper if it exists
@@ -4812,6 +4819,7 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
 
                 // Update camera orbit controls
                 orbit.maxDistance = groundSize * 1.5;
+                updateCameraFarPlane();
 
                 // Update Object Root aBound and properties to reflect new canvas size
                 canvasRoot.userData.aBound = [groundSize, groundSize, groundSize];
