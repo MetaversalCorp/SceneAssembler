@@ -312,9 +312,14 @@ const propertiesPanelCard = document.getElementById("propertiesPanel");
 const triCountElement = document.getElementById("triCount");
 const triBadge = document.getElementById("triBadge");
 const triGaugeCount = document.getElementById("triGaugeCount");
+const vertCountElement = document.getElementById("vertCount");
 const triGaugeFill = document.getElementById("triGaugeFill");
 const triGaugeBar = document.getElementById("triGaugeBar");
 const triGaugeStatus = document.getElementById("triGaugeStatus");
+const triSceneCount = document.getElementById("triSceneCount");
+const triSceneGaugeFill = document.getElementById("triSceneGaugeFill");
+const triSceneGaugeBar = document.getElementById("triSceneGaugeBar");
+const triSceneGaugeStatus = document.getElementById("triSceneGaugeStatus");
 const triStatsStatViewer = document.querySelector("#triStats .stat-viewer");
 const triStatusBtn = document.getElementById("triStatus");
 const triStatusIcon = triStatusBtn ? triStatusBtn.querySelector("i") : null;
@@ -326,6 +331,11 @@ const texGaugeFill = document.getElementById("texGaugeFill");
 const texGaugeBar = document.getElementById("texGaugeBar");
 const texGaugeStatus = document.getElementById("texGaugeStatus");
 const texGaugeDims = document.getElementById("texGaugeDims");
+const texSceneCount = document.getElementById("texSceneCount");
+const texSceneGaugeFill = document.getElementById("texSceneGaugeFill");
+const texSceneGaugeBar = document.getElementById("texSceneGaugeBar");
+const texSceneGaugeStatus = document.getElementById("texSceneGaugeStatus");
+const texList = document.getElementById("texList");
 const texStatsStatViewer = document.querySelector("#texStats .stat-viewer");
 const texStatusBtn = document.getElementById("texStatus");
 const texStatusIcon = texStatusBtn ? texStatusBtn.querySelector("i") : null;
@@ -578,6 +588,25 @@ function getTriangleCount(obj) {
     );
 
     return Math.floor(triangleCount);
+}
+
+function getVertexCount(obj) {
+    let vertexCount = 0;
+
+    if (obj.userData?.isCanvasRoot) {
+        obj.children.forEach(child => {
+            vertexCount += getVertexCount(child);
+        });
+        return vertexCount;
+    }
+
+    obj.traverse((child) => {
+        if (child.isMesh && child.geometry?.attributes?.position) {
+            vertexCount += child.geometry.attributes.position.count;
+        }
+    });
+
+    return vertexCount;
 }
 
 function updateAllVisuals(obj) {
@@ -845,12 +874,23 @@ function getTextureResolutionInfo(model) {
                         const height = texture.image.height || texture.image.videoHeight || 0;
 
                         if (width > 0 && height > 0) {
+                            const img = texture.image;
+                            const fileName = texture.name || (img.src ? img.src.replace(/^.*[/\\]/, '') : null) || (img.currentSrc ? img.currentSrc.replace(/^.*[/\\]/, '') : null) || '';
+                            const fileExtension = fileName && fileName.includes('.') ? '.' + fileName.split('.').pop() : '';
+                            // Identifiable info for cached textures (blob/data URLs or no filename)
+                            const rawSrc = img.src || img.currentSrc || '';
+                            const sourceHint = rawSrc.indexOf('blob:') === 0 ? 'blob' : rawSrc.indexOf('data:') === 0 ? 'data' : undefined;
                             textureInfo.textures.push({
                                 type: name,
                                 width: width,
                                 height: height,
                                 resolution: `${width}x${height}`,
-                                materialName: material.name || 'Unnamed Material'
+                                materialName: material.name || 'Unnamed Material',
+                                fileName: fileName || undefined,
+                                fileExtension: fileExtension || undefined,
+                                megapixels: (width * height) / 1e6,
+                                sourceHint: sourceHint,
+                                textureName: (texture.name && texture.name.trim()) ? texture.name.trim() : undefined
                             });
 
                             textureInfo.totalTextures++;
@@ -917,6 +957,7 @@ function updateModelProperties(model) {
             rot: worldQuaternion.clone(),
             size: canvasSize.clone(),
             triangles: triangleCount,
+            vertices: getVertexCount(model),
             textures: textureInfo
         };
         return;
@@ -942,6 +983,7 @@ function updateModelProperties(model) {
         rot: localQuaternion.clone(),
         size: size.clone(),
         triangles: triangleCount,
+        vertices: getVertexCount(model),
         textures: textureInfo
     };
 }
@@ -954,6 +996,16 @@ function aggregateTriangleCount(objects) {
         }
     });
     return totalTriangles;
+}
+
+function aggregateVertexCount(objects) {
+    let totalVertices = 0;
+    objects.forEach(obj => {
+        if (obj && obj.userData?.properties) {
+            totalVertices += obj.userData.properties.vertices || 0;
+        }
+    });
+    return totalVertices;
 }
 
 function aggregateTextureInfo(objects) {
@@ -1003,29 +1055,46 @@ function aggregateTextureInfo(objects) {
     return aggregated;
 }
 
+/** Returns a flat list of texture entries for the given objects (for #texList). */
+function getSelectedTextureList(objects) {
+    const list = [];
+    (objects || []).forEach(obj => {
+        const tex = obj?.userData?.properties?.textures;
+        if (tex && Array.isArray(tex.textures))
+            tex.textures.forEach(t => list.push(t));
+    });
+    return list;
+}
+
 function updatePropertiesPanel(model) {
     // Filter out canvas root from selected objects for aggregation
     const validSelectedObjects = selectedObjects.filter(obj => obj && obj.userData?.properties && !obj.userData?.isCanvasRoot);
 
     // Use aggregated data if multiple objects selected, otherwise use single model
     let totalTriangles = 0;
+    let totalVertices = 0;
     let aggregatedTextureInfo = null;
 
     if (validSelectedObjects.length > 1) {
         // Multiple objects selected - aggregate data
         totalTriangles = aggregateTriangleCount(validSelectedObjects);
+        totalVertices = aggregateVertexCount(validSelectedObjects);
         aggregatedTextureInfo = aggregateTextureInfo(validSelectedObjects);
     } else if (validSelectedObjects.length === 1) {
         // Single valid object selected - use its data
         const p = validSelectedObjects[0].userData.properties;
         totalTriangles = p.triangles || 0;
+        totalVertices = p.vertices || 0;
         aggregatedTextureInfo = p.textures || null;
     } else if (model && model.userData?.properties) {
         // Fallback to model parameter if provided (for backward compatibility)
         const p = model.userData.properties;
         totalTriangles = p.triangles || 0;
+        totalVertices = p.vertices || 0;
         aggregatedTextureInfo = p.textures || null;
     }
+
+    if (vertCountElement) vertCountElement.textContent = totalVertices.toLocaleString();
 
     // Triangle analyser: one percentage, one tier (0=ok, 1=warning, 2=danger)
     const pctRaw = (totalTriangles / TRI_LIMIT_200M) * 100;
@@ -1041,6 +1110,21 @@ function updatePropertiesPanel(model) {
     }
     if (triGaugeStatus) {
         triGaugeStatus.textContent = triTier === 0 ? "Good" : triTier === 1 ? "Consider simplifying/reducing objects" : "This is too much — reduce for better performance";
+    }
+
+    // Scene total triangle gauge
+    const sceneTotalTriangles = getTriangleCount(canvasRoot);
+    const scenePctRaw = (sceneTotalTriangles / TRI_LIMIT_200M) * 100;
+    const sceneTriTier = scenePctRaw > 100 ? 2 : scenePctRaw > 80 ? 1 : 0;
+    if (triSceneCount) triSceneCount.textContent = sceneTotalTriangles.toLocaleString();
+    if (triSceneGaugeFill && triSceneGaugeBar) {
+        triSceneGaugeFill.style.width = Math.min(100, scenePctRaw) + "%";
+        triSceneGaugeFill.classList.remove("bg-success", "bg-warning", "bg-danger");
+        triSceneGaugeFill.classList.add(sceneTriTier === 0 ? "bg-success" : sceneTriTier === 1 ? "bg-warning" : "bg-danger");
+        triSceneGaugeBar.setAttribute("aria-valuenow", sceneTotalTriangles);
+    }
+    if (triSceneGaugeStatus) {
+        triSceneGaugeStatus.textContent = sceneTriTier === 0 ? "Good" : sceneTriTier === 1 ? "Consider simplifying/reducing objects" : "This is too much — reduce for better performance";
     }
 
     if (lastTriTier !== triTier) {
@@ -1093,7 +1177,8 @@ function updatePropertiesPanel(model) {
         texDimsString = `${a.totalTextures} = ${totalMegapixels.toFixed(2)}`;
     }
 
-    if (texCountElement) texCountElement.textContent = textureInfoText;
+    // Badge shows selected megapixel total
+    if (texCountElement) texCountElement.textContent = hasTex ? `${totalMegapixels.toFixed(2)} MP` : "None";
 
     const texGaugeChanged = totalMegapixels !== lastTotalMegapixels || texTier !== lastTexTier;
     const texDimsChanged = texDimsString !== lastTexDimsString;
@@ -1110,6 +1195,54 @@ function updatePropertiesPanel(model) {
         texGaugeStatus.textContent = texTier === 0 ? "Good" : texTier === 1 ? "Consider reducing size/number of textures" : "This is too much — reduce for smoother rendering";
     }
     if (texDimsChanged && texGaugeDims) texGaugeDims.textContent = texDimsString;
+
+    // Scene total texture gauge: compute from scene graph so it's always correct
+    // (avoids double-counting and missing objects that don't have userData.properties yet)
+    const sceneTexInfo = getTextureResolutionInfo(canvasRoot);
+    const sceneTotalMegapixels = (sceneTexInfo.totalPixels || 0) / 1e6;
+    const sceneTexPctRaw = (sceneTotalMegapixels / TEX_SCENE_MAX_MP) * 100;
+    const sceneTexTier = sceneTexPctRaw > 100 ? 2 : sceneTexPctRaw > 80 ? 1 : 0;
+    if (texSceneCount) texSceneCount.textContent = sceneTotalMegapixels.toFixed(2);
+    if (texSceneGaugeFill && texSceneGaugeBar) {
+        texSceneGaugeFill.style.width = Math.min(100, sceneTexPctRaw) + "%";
+        texSceneGaugeFill.classList.remove("bg-success", "bg-warning", "bg-danger");
+        texSceneGaugeFill.classList.add(sceneTexTier === 0 ? "bg-success" : sceneTexTier === 1 ? "bg-warning" : "bg-danger");
+        texSceneGaugeBar.setAttribute("aria-valuenow", Math.round(sceneTotalMegapixels * 100) / 100);
+    }
+    if (texSceneGaugeStatus) {
+        texSceneGaugeStatus.textContent = sceneTexTier === 0 ? "Good" : sceneTexTier === 1 ? "Consider reducing size/number of textures" : "This is too much — reduce for smoother rendering";
+    }
+
+    // Texture list: selected objects' textures, or full scene when nothing selected
+    const textureListForDisplay = validSelectedObjects.length > 0
+        ? getSelectedTextureList(validSelectedObjects)
+        : (sceneTexInfo.textures || []);
+    if (texList) {
+        if (textureListForDisplay.length === 0) {
+            texList.innerHTML = '<ul class="list-group list-group-flush small mb-2"><li class="list-group-item text-muted py-1">No textures</li></ul>';
+        } else {
+            texList.innerHTML = '<ul class="list-group list-group-flush small mb-2">' +
+                textureListForDisplay.map((t, i) => {
+                    const num = i + 1;
+                    // Identifiable label: extension, else loader name, else blob/data hint (for cache)
+                    const label = t.fileExtension ||
+                        (t.textureName && t.textureName.length > 0 ? t.textureName : null) ||
+                        (t.sourceHint ? t.sourceHint : null) ||
+                        '—';
+                    const title = [t.fileName, t.textureName, t.sourceHint && ('src: ' + t.sourceHint)].filter(Boolean).join(' · ') || label;
+                    const dims = t.resolution || (t.width && t.height ? t.width + '×' + t.height : '—');
+                    const mp = t.megapixels != null ? (t.megapixels.toFixed(2) + ' MP') : (t.width && t.height ? ((t.width * t.height) / 1e6).toFixed(2) + ' MP' : '');
+                    const dimsAndMp = mp ? dims + ' · ' + mp : dims;
+                    return '<li class="list-group-item d-flex justify-content-between align-items-start py-1">' +
+                        '<span class="me-2 flex-shrink-0 text-muted">' + num + '</span>' +
+                        '<span class="me-2 text-break" title="' + (title.replace(/"/g, '&quot;')) + '">' + (label.replace(/</g, '&lt;')) + '</span>' +
+                        '<span class="badge text-bg-secondary flex-shrink-0">' + (t.type || '') + '</span>' +
+                        '<span class="text-body-secondary flex-shrink-0 ms-1">' + dimsAndMp + '</span>' +
+                        '</li>';
+                }).join('') +
+                '</ul>';
+        }
+    }
 
     if (lastTexTier !== texTier) {
         lastTexTier = texTier;
@@ -5511,7 +5644,10 @@ setInterval(() => {
 const objLibGrid = document.getElementById('objLibGrid');
 const objLibPanel = document.getElementById('objLibPanel');
 const objLibToggle = document.getElementById('objLibToggle');
-const objectLibraryCache = new Map(); // Cache for preview renderers
+const objectLibraryCache = new Map(); // Cache for preview scenes (shared renderer used)
+let sharedPreviewRenderer = null;
+let sharedPreviewRenderTarget = null;
+const PREVIEW_SIZE = 100;
 
 // Fade #objLibToggle when objLibPanel is visible
 if (objLibPanel && objLibToggle) {
@@ -5584,10 +5720,67 @@ async function getObjectFiles (sRootUrl)
     return [];
 }
 
-// Create a preview renderer for an object
+// Get or create the single shared WebGL renderer for object library previews
+function getSharedPreviewRenderer() {
+    if (!sharedPreviewRenderer) {
+        sharedPreviewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        sharedPreviewRenderer.setSize(PREVIEW_SIZE, PREVIEW_SIZE);
+        sharedPreviewRenderer.setPixelRatio(1); // Use 1 for consistent preview size
+        sharedPreviewRenderer.domElement.style.display = 'none';
+        sharedPreviewRenderTarget = new THREE.WebGLRenderTarget(PREVIEW_SIZE, PREVIEW_SIZE);
+    }
+    return sharedPreviewRenderer;
+}
+
+// Global animation loop for all object library previews (single shared renderer)
+let previewAnimationId = null;
+const previewPixelBuffer = new Uint8Array(PREVIEW_SIZE * PREVIEW_SIZE * 4);
+
+function runPreviewAnimationLoop() {
+    if (objectLibraryCache.size === 0 || !sharedPreviewRenderer) return;
+    const renderer = sharedPreviewRenderer;
+    const rt = sharedPreviewRenderTarget;
+
+    objectLibraryCache.forEach(({ scene, camera, model, displayCanvas }) => {
+        if (model) model.rotation.y += 0.01;
+        if (!displayCanvas) return;
+
+        renderer.setRenderTarget(rt);
+        renderer.render(scene, camera);
+        renderer.setRenderTarget(null);
+
+        renderer.readRenderTargetPixels(rt, 0, 0, PREVIEW_SIZE, PREVIEW_SIZE, previewPixelBuffer);
+
+        const ctx = displayCanvas.getContext('2d');
+        if (ctx) {
+            const imgData = ctx.createImageData(PREVIEW_SIZE, PREVIEW_SIZE);
+            for (let y = PREVIEW_SIZE - 1; y >= 0; y--) {
+                const srcRow = (PREVIEW_SIZE - 1 - y) * PREVIEW_SIZE * 4;
+                const dstRow = y * PREVIEW_SIZE * 4;
+                for (let x = 0; x < PREVIEW_SIZE * 4; x++) {
+                    imgData.data[dstRow + x] = previewPixelBuffer[srcRow + x];
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+    });
+
+    previewAnimationId = requestAnimationFrame(runPreviewAnimationLoop);
+}
+
+// Create a preview for an object (uses shared WebGL renderer to avoid context limit)
 function createObjectPreview(objectPath, container) {
-    const width = 100;
-    const height = 100;
+    const width = PREVIEW_SIZE;
+    const height = PREVIEW_SIZE;
+
+    // Create a 2D canvas for display (no WebGL context)
+    const displayCanvas = document.createElement('canvas');
+    displayCanvas.width = width;
+    displayCanvas.height = height;
+    displayCanvas.style.width = '100%';
+    displayCanvas.style.height = '100%';
+    displayCanvas.style.display = 'block';
+    container.appendChild(displayCanvas);
 
     // Create a small scene for preview
     const previewScene = new THREE.Scene();
@@ -5596,15 +5789,6 @@ function createObjectPreview(objectPath, container) {
     const previewCamera = new THREE.PerspectiveCamera(45, width / height, 0.1, 100);
     previewCamera.position.set(2, 2, 2);
     previewCamera.lookAt(0, 0, 0);
-
-    const previewRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    previewRenderer.setSize(width, height);
-    previewRenderer.setPixelRatio(window.devicePixelRatio);
-    const canvas = previewRenderer.domElement;
-    canvas.style.width = '100%';
-    canvas.style.height = '100%';
-    canvas.style.display = 'block';
-    container.appendChild(canvas);
 
     // Add lights
     previewScene.add(new THREE.HemisphereLight(0xffffff, 0x444444, 1.2));
@@ -5631,28 +5815,20 @@ function createObjectPreview(objectPath, container) {
 
         previewScene.add(model);
 
-        // Animate rotation
-        let angle = 0;
-        function animate() {
-            if (!container.parentElement) {
-                previewRenderer.dispose();
-                return; // Container removed, stop animation
-            }
-            angle += 0.01;
-            model.rotation.y = angle;
-            previewRenderer.render(previewScene, previewCamera);
-            requestAnimationFrame(animate);
-        }
-        animate();
+        // Ensure shared renderer exists
+        getSharedPreviewRenderer();
 
-        // Store renderer for cleanup
-        objectLibraryCache.set(objectPath, { renderer: previewRenderer, scene: previewScene, camera: previewCamera });
+        // Store for shared animation loop (no per-preview renderer)
+        objectLibraryCache.set(objectPath, { scene: previewScene, camera: previewCamera, model, displayCanvas });
+
+        // Start animation loop if not already running
+        if (!previewAnimationId) {
+            runPreviewAnimationLoop();
+        }
     }, undefined, (error) => {
         console.error(`Failed to load preview for ${objectPath}:`, error);
         container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-triangle-exclamation"></i><br>Failed to load</div>';
     });
-
-    return previewRenderer;
 }
 
 // Create object library item
@@ -5857,9 +6033,13 @@ if (objLibPanel)
 
     // Cleanup previews when panel is hidden
     objLibPanel.addEventListener('hidden.bs.offcanvas', function () {
-        // Cleanup preview renderers to free memory
-        objectLibraryCache.forEach(({ renderer, scene, camera }) => {
-            // Dispose of geometries and materials
+        // Stop animation loop
+        if (previewAnimationId) {
+            cancelAnimationFrame(previewAnimationId);
+            previewAnimationId = null;
+        }
+        // Dispose of geometries and materials in preview scenes
+        objectLibraryCache.forEach(({ scene }) => {
             scene.traverse((object) => {
                 if (object.geometry) object.geometry.dispose();
                 if (object.material) {
@@ -5874,8 +6054,14 @@ if (objLibPanel)
                     }
                 }
             });
-            renderer.dispose();
         });
         objectLibraryCache.clear();
+        // Dispose shared renderer and render target
+        if (sharedPreviewRenderer) {
+            sharedPreviewRenderTarget?.dispose();
+            sharedPreviewRenderer.dispose();
+            sharedPreviewRenderer = null;
+            sharedPreviewRenderTarget = null;
+        }
     });
 }

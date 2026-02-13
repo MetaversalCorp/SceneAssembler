@@ -291,16 +291,30 @@
                            <span>Selected:</span>
                            <span><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i></span>
                            <span class="fw-medium" id="triGaugeCount">0</span>
+                           <span>/</span>
+                           <span><i class="fa-solid fa-cube fa-sm"></i></span>
+                           <span class="fw-medium" id="vertCount"></span>
                         </div>
                         <div class="progress" role="progressbar" aria-label="Triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triGaugeBar">
                            <div class="progress-bar" id="triGaugeFill" style="width: 0%"></div>
                         </div>
                         <div class="stat-viewer-status small mt-1 text-start fw-medium" id="triGaugeStatus">Good</div>
                      </div>
+                     <div class="tri-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Scene total:</span>
+                           <span><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i></span>
+                           <span class="fw-medium" id="triSceneCount">0</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Scene triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triSceneGaugeBar">
+                           <div class="progress-bar" id="triSceneGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="triSceneGaugeStatus">Good</div>
+                     </div>
                      <details class="stat-viewer-details small mb-1">
                         <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
-                        <p class="small text-body-secondary mt-1 mb-1">Efficient scenes load faster and run better on all devices.</p>
                         <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>· Efficient scenes load faster and run better on all devices.</li>
                            <li>· Use fewer triangles; reuse materials; unify normals; tile textures.</li>
                            <li>· Build to real scale; group by proximity, not material; keep dense detail away from area edges.</li>
                         </ul>
@@ -328,6 +342,8 @@
                      <p class="stat-viewer-lead small mb-1 pe-none user-select-none text-muted">
                         It's best to keep total scene textures under <strong>2&nbsp;MP</strong>. Less/smaller <i class="fa-solid fa-image fa-sm"></i> = smoother rendering.
                      </p>
+                     <p class="small fw-medium mb-1 pe-none user-select-none">Textures</p>
+                     <div id="texList"></div>
                      <div class="tex-gauge mb-2">
                         <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
                            <span>Selected:</span>
@@ -339,6 +355,18 @@
                            <div class="progress-bar" id="texGaugeFill" style="width: 0%"></div>
                         </div>
                         <div class="stat-viewer-status small mt-1 text-start fw-medium" id="texGaugeStatus">Good</div>
+                     </div>
+                     <div class="tex-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Scene total:</span>
+                           <span><i class="fa-solid fa-image fa-sm"></i></span>
+                           <span class="fw-medium" id="texSceneCount">0</span>
+                           <span>MP</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Scene texture MP vs 2 MP limit" aria-valuemin="0" aria-valuemax="2" style="height: 0.5rem" id="texSceneGaugeBar">
+                           <div class="progress-bar" id="texSceneGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="texSceneGaugeStatus">Good</div>
                      </div>
                      <details class="stat-viewer-details small mb-1">
                         <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
