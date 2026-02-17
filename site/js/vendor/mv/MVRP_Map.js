@@ -14,7 +14,7 @@ require ('@metaversalcorp/mvrest');
 require ('@metaversalcorp/mvio');
 */
 
-MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.23.13');
+MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.23.14');
 
 MV.MVRP.Map.Class.RMCOMMON_TYPE = class extends MV.MVMF.Class.BASE
 {
@@ -1662,7 +1662,7 @@ MV.MVRP.Map.Class.DCOORD_IO = class extends MV.MVRP.Class.DCOORD
       pRequest_Out.bCoord   = pRequest_In.pCoord.bCoord;
       pRequest_Out.dA       = pRequest_In.pCoord.dA;
       pRequest_Out.dB       = pRequest_In.pCoord.dB;
-      pRequest_Out.dC       = pRequest_In.pCoord.dB;
+      pRequest_Out.dC       = pRequest_In.pCoord.dC;
    };
 }
 
@@ -1725,11 +1725,10 @@ MV.MVRP.Map.Class.RMTOBJECT_PROPERTIES_IO = class extends MV.MVRP.Map.Class.RMTO
 
    static Convert (pRequest_Out, pRequest_In)
    {
-      pRequest_Out.Properties_fMass         = pRequest_In.pProperties.fMass;
-      pRequest_Out.Properties_fGravity      = pRequest_In.pProperties.fGravity;
-      pRequest_Out.Properties_fColor        = pRequest_In.pProperties.fColor;
-      pRequest_Out.Properties_fBrightness   = pRequest_In.pProperties.fBrightness;
-      pRequest_Out.Properties_fReflectivity = pRequest_In.pProperties.fReflectivity;
+      pRequest_Out.Properties_bLockToGround = pRequest_In.pProperties.bLockToGround;
+      pRequest_Out.Properties_bYouth        = pRequest_In.pProperties.bYouth;
+      pRequest_Out.Properties_bAdult        = pRequest_In.pProperties.bAdult;
+      pRequest_Out.Properties_bAvatar       = pRequest_In.pProperties.bAvatar;
    }
 }
 
