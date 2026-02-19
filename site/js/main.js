@@ -5653,9 +5653,10 @@ const objLibGrid = document.getElementById('objLibGrid');
 const objLibPanel = document.getElementById('objLibPanel');
 const objLibToggle = document.getElementById('objLibToggle');
 const objectLibraryCache = new Map(); // Cache for preview scenes (shared renderer used)
+const hoveredPreviewPaths = new Set(); // Object paths whose cards are currently hovered
 let sharedPreviewRenderer = null;
 let sharedPreviewRenderTarget = null;
-const PREVIEW_SIZE = 100;
+const PREVIEW_SIZE = 256;
 
 // Fade #objLibToggle when objLibPanel is visible
 if (objLibPanel && objLibToggle) {
@@ -5745,13 +5746,16 @@ let previewAnimationId = null;
 const previewPixelBuffer = new Uint8Array(PREVIEW_SIZE * PREVIEW_SIZE * 4);
 
 function runPreviewAnimationLoop() {
-    if (objectLibraryCache.size === 0 || !sharedPreviewRenderer) return;
+    if (hoveredPreviewPaths.size === 0 || !sharedPreviewRenderer) return;
     const renderer = sharedPreviewRenderer;
     const rt = sharedPreviewRenderTarget;
 
-    objectLibraryCache.forEach(({ scene, camera, model, displayCanvas }) => {
-        if (model) model.rotation.y += 0.01;
+    hoveredPreviewPaths.forEach((objectPath) => {
+        const entry = objectLibraryCache.get(objectPath);
+        if (!entry) return;
+        const { scene, camera, model, displayCanvas } = entry;
         if (!displayCanvas) return;
+        if (model) model.rotation.y += 0.03;
 
         renderer.setRenderTarget(rt);
         renderer.render(scene, camera);
@@ -5774,6 +5778,32 @@ function runPreviewAnimationLoop() {
     });
 
     previewAnimationId = requestAnimationFrame(runPreviewAnimationLoop);
+}
+
+function renderPreviewToCanvas(objectPath) {
+    const entry = objectLibraryCache.get(objectPath);
+    if (!entry || !sharedPreviewRenderer) return;
+    const { scene, camera, model, displayCanvas } = entry;
+    if (!displayCanvas) return;
+
+    sharedPreviewRenderer.setRenderTarget(sharedPreviewRenderTarget);
+    sharedPreviewRenderer.render(scene, camera);
+    sharedPreviewRenderer.setRenderTarget(null);
+
+    sharedPreviewRenderer.readRenderTargetPixels(sharedPreviewRenderTarget, 0, 0, PREVIEW_SIZE, PREVIEW_SIZE, previewPixelBuffer);
+
+    const ctx = displayCanvas.getContext('2d');
+    if (ctx) {
+        const imgData = ctx.createImageData(PREVIEW_SIZE, PREVIEW_SIZE);
+        for (let y = PREVIEW_SIZE - 1; y >= 0; y--) {
+            const srcRow = (PREVIEW_SIZE - 1 - y) * PREVIEW_SIZE * 4;
+            const dstRow = y * PREVIEW_SIZE * 4;
+            for (let x = 0; x < PREVIEW_SIZE * 4; x++) {
+                imgData.data[dstRow + x] = previewPixelBuffer[srcRow + x];
+            }
+        }
+        ctx.putImageData(imgData, 0, 0);
+    }
 }
 
 // Create a preview for an object (uses shared WebGL renderer to avoid context limit)
@@ -5829,10 +5859,8 @@ function createObjectPreview(objectPath, container) {
         // Store for shared animation loop (no per-preview renderer)
         objectLibraryCache.set(objectPath, { scene: previewScene, camera: previewCamera, model, displayCanvas });
 
-        // Start animation loop if not already running
-        if (!previewAnimationId) {
-            runPreviewAnimationLoop();
-        }
+        // Initial static render so preview is visible before hover
+        renderPreviewToCanvas(objectPath);
     }, undefined, (error) => {
         console.error(`Failed to load preview for ${objectPath}:`, error);
         container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-triangle-exclamation"></i><br>Failed to load</div>';
@@ -5849,14 +5877,26 @@ function createObjectLibraryItem(objectPath) {
     card.style.cursor = 'pointer';
     card.style.transition = 'transform 0.2s, box-shadow 0.2s';
 
+    const refPath = normalizeReferencePath('/objects/' + objectPath);
+    card.dataset.objectRef = refPath;
+
     card.addEventListener('mouseenter', () => {
         card.style.transform = 'translateY(-5px)';
         card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.3)';
+        hoveredPreviewPaths.add(refPath);
+        if (!previewAnimationId) {
+            runPreviewAnimationLoop();
+        }
     });
 
     card.addEventListener('mouseleave', () => {
         card.style.transform = '';
         card.style.boxShadow = '';
+        hoveredPreviewPaths.delete(refPath);
+        if (hoveredPreviewPaths.size === 0 && previewAnimationId) {
+            cancelAnimationFrame(previewAnimationId);
+            previewAnimationId = null;
+        }
     });
 
     // Preview container
@@ -5930,10 +5970,7 @@ function createObjectLibraryItem(objectPath) {
 
     col.appendChild(card);
 
-    // Create preview after adding to DOM
-    setTimeout(() => {
-        createObjectPreview (normalizeReferencePath ('/objects/' + objectPath), previewContainer);
-    }, 100);
+    createObjectPreview(normalizeReferencePath('/objects/' + objectPath), previewContainer);
 
     return col;
 }
@@ -6045,6 +6082,13 @@ if (objLibPanel)
         if (previewAnimationId) {
             cancelAnimationFrame(previewAnimationId);
             previewAnimationId = null;
+        }
+        hoveredPreviewPaths.clear();
+        // Clear grid so old cards don't flash when panel is reopened
+        if (objLibGrid) objLibGrid.innerHTML = '';
+        // Reset so library reloads when panel is shown again
+        if (typeof g_pMap?.ResetObjectLibLoaded === 'function') {
+            g_pMap.ResetObjectLibLoaded();
         }
         // Dispose of geometries and materials in preview scenes
         objectLibraryCache.forEach(({ scene }) => {

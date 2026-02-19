@@ -1071,6 +1071,11 @@ class ExtractMap extends MapUtil
       }
    }
 
+   ResetObjectLibLoaded ()
+   {
+      this.#bIsObjectLibLoaded = false;
+   }
+
    UpdateAttachmentPointUrl ()
    {
       let sUrl = '';
