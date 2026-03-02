@@ -21,18 +21,6 @@ const SNAP_STEP = 1;
 const LABEL_SIZE = 0.2;
 const LABEL_OFFSET = 0.5;
 const HUMAN_HEIGHT = 1.75;
-// Performance: cap grid and ruler complexity for large canvases
-const MAX_GRID_DIVISIONS = 100;
-const MAX_RULER_LABELS = 100;
-const CULL_DISTANCE_MULTIPLIER = 2.5;   // For small scenes: threshold = camDist * this
-const MIN_CULL_DISTANCE = 500;         // Fade starts at 500m for vast distances
-const LARGE_SCENE_CULL_RATIO = 0.15;   // For large scenes: threshold = groundSize * this
-const LARGE_SCENE_THRESHOLD = 100;     // groundSize >= this uses distance-based culling
-const MAX_SCENE_SIZE = 1000000;        // Supported up to 1000km; ratio scales down above 100km
-const PLACEHOLDER_OPACITY_NEAR = 0.35; // Faded placeholder opacity at cull boundary
-const PLACEHOLDER_OPACITY_FAR = 0.1;   // Faintest placeholder opacity when very far
-const PLACEHOLDER_COLOR = 0x6688aa;   // Muted blue-gray for culled object placeholders
-const CULL_FADE_ZONE = 0.15;          // Fraction of threshold for smooth fade in/out (15%)
 // meters (5'9")
 const BOX_COLORS = {
     hover: 0x99ccff,
@@ -48,8 +36,7 @@ const camera = new THREE.PerspectiveCamera(60,window.innerWidth / window.innerHe
 camera.position.set(3, 3, 6);
 
 function updateCameraFarPlane() {
-    const scale = groundSize >= MAX_SCENE_SIZE * 0.1 ? 5 : 3;
-    camera.far = Math.max(1000, groundSize * scale);
+    camera.far = Math.max(1000, groundSize * 3);
     camera.updateProjectionMatrix();
 }
 
@@ -102,21 +89,7 @@ const dirLight = new THREE.DirectionalLight(0xffffff,1);
 dirLight.position.set(5, 10, 7);
 scene.add(dirLight);
 
-function getGridDivisions(size) {
-    return Math.min(Math.max(1, Math.floor(size)), MAX_GRID_DIVISIONS);
-}
-function getRulerStep(size) {
-    if (size <= 50) return 1;
-    if (size <= 200) return 5;
-    if (size <= 500) return 10;
-    if (size <= 2000) return 50;
-    if (size <= 10000) return 100;
-    if (size <= 50000) return 500;
-    if (size <= 200000) return 2000;
-    if (size <= 500000) return 10000;
-    return Math.max(10000, Math.floor(size / MAX_RULER_LABELS));
-}
-let grid = new THREE.GridHelper(groundSize, getGridDivisions(groundSize), 0x888888, 0x444444);
+let grid = new THREE.GridHelper(groundSize,groundSize,0x888888,0x444444);
 grid.userData.isSelectable = false;
 grid.raycast = () => {}
 ;
@@ -512,9 +485,8 @@ let loadedFont = null;
 const fontLoader = new THREE.FontLoader();
 fontLoader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', font => {
     loadedFont = font;
-    const rulerStep = getRulerStep(groundSize);
-    ruler = createRuler(groundSize, rulerStep);
-    addRulerLabels(ruler, groundSize, rulerStep, loadedFont);
+    ruler = createRuler(groundSize, 1);
+    addRulerLabels(ruler, groundSize, 1, loadedFont);
     ruler.userData.isSelectable = false;
     scene.add(ruler);
 }
@@ -914,9 +886,6 @@ function getTextureResolutionInfo(model) {
                             // Identifiable info for cached textures (blob/data URLs or no filename)
                             const rawSrc = img.src || img.currentSrc || '';
                             const sourceHint = rawSrc.indexOf('blob:') === 0 ? 'blob' : rawSrc.indexOf('data:') === 0 ? 'data' : undefined;
-                            let p = child;
-                            while (p && p !== model && !p.userData?.sourceRef) p = p.parent;
-                            const sReference = p?.userData?.sourceRef?.reference || p?.name || '—';
                             textureInfo.textures.push({
                                 type: name,
                                 width: width,
@@ -927,8 +896,7 @@ function getTextureResolutionInfo(model) {
                                 fileExtension: fileExtension || undefined,
                                 megapixels: (width * height) / 1e6,
                                 sourceHint: sourceHint,
-                                textureName: (texture.name && texture.name.trim()) ? texture.name.trim() : undefined,
-                                sReference: sReference
+                                textureName: (texture.name && texture.name.trim()) ? texture.name.trim() : undefined
                             });
 
                             textureInfo.totalTextures++;
@@ -1093,27 +1061,15 @@ function aggregateTextureInfo(objects) {
     return aggregated;
 }
 
-/** Returns a list of texture entries for the given objects (for #texList), with sReference for grouping. */
+/** Returns a flat list of texture entries for the given objects (for #texList). */
 function getSelectedTextureList(objects) {
     const list = [];
     (objects || []).forEach(obj => {
         const tex = obj?.userData?.properties?.textures;
-        const sRef = obj?.userData?.sourceRef?.reference || obj?.name || '—';
         if (tex && Array.isArray(tex.textures))
-            tex.textures.forEach(t => list.push({ ...t, sReference: t.sReference ?? sRef }));
+            tex.textures.forEach(t => list.push(t));
     });
     return list;
-}
-
-/** Groups texture entries by sReference (model file). Returns Map<sReference, textures[]>. */
-function groupTexturesByModel(textures) {
-    const map = new Map();
-    (textures || []).forEach(t => {
-        const key = t.sReference || '—';
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push(t);
-    });
-    return map;
 }
 
 function updatePropertiesPanel(model) {
@@ -1263,22 +1219,18 @@ function updatePropertiesPanel(model) {
         texSceneGaugeStatus.textContent = sceneTexTier === 0 ? "Good" : sceneTexTier === 1 ? "Consider reducing size/number of textures" : "This is too much — reduce for smoother rendering";
     }
 
-    // Texture list: selected objects' textures, or full scene when nothing selected; grouped by model (sReference)
+    // Texture list: selected objects' textures, or full scene when nothing selected
     const textureListForDisplay = validSelectedObjects.length > 0
         ? getSelectedTextureList(validSelectedObjects)
-        : (sceneTexInfo.textures || []).map(t => ({ ...t, sReference: t.sReference || '—' }));
-    const textureGroups = groupTexturesByModel(textureListForDisplay);
+        : (sceneTexInfo.textures || []);
     if (texList) {
         if (textureListForDisplay.length === 0) {
             texList.innerHTML = '<ul class="list-group list-group-flush small mb-2"><li class="list-group-item text-muted py-1">No textures</li></ul>';
         } else {
-            let globalNum = 0;
-            const groupHtml = Array.from(textureGroups.entries()).map(([sRef, texs]) => {
-                const displayRef = (sRef === '—' ? 'Unknown' : sRef.replace(/^.*[/\\]/, ''));
-                const header = '<li class="list-group-item list-group-item-secondary py-1 px-2 small fw-semibold">' +
-                    '<i class="fa-solid fa-cube me-1"></i>' + (displayRef.replace(/</g, '&lt;')) + ' <span class="text-muted fw-normal">(' + texs.length + ')</span></li>';
-                const items = texs.map(t => {
-                    globalNum++;
+            texList.innerHTML = '<ul class="list-group list-group-flush small mb-2">' +
+                textureListForDisplay.map((t, i) => {
+                    const num = i + 1;
+                    // Identifiable label: extension, else loader name, else blob/data hint (for cache)
                     const label = t.fileExtension ||
                         (t.textureName && t.textureName.length > 0 ? t.textureName : null) ||
                         (t.sourceHint ? t.sourceHint : null) ||
@@ -1288,15 +1240,13 @@ function updatePropertiesPanel(model) {
                     const mp = t.megapixels != null ? (t.megapixels.toFixed(2) + ' MP') : (t.width && t.height ? ((t.width * t.height) / 1e6).toFixed(2) + ' MP' : '');
                     const dimsAndMp = mp ? dims + ' · ' + mp : dims;
                     return '<li class="list-group-item d-flex justify-content-between align-items-start py-1">' +
-                        '<span class="me-2 flex-shrink-0 text-muted">' + globalNum + '</span>' +
+                        '<span class="me-2 flex-shrink-0 text-muted">' + num + '</span>' +
                         '<span class="me-2 text-break" title="' + (title.replace(/"/g, '&quot;')) + '">' + (label.replace(/</g, '&lt;')) + '</span>' +
                         '<span class="badge text-bg-secondary flex-shrink-0">' + (t.type || '') + '</span>' +
                         '<span class="text-body-secondary flex-shrink-0 ms-1">' + dimsAndMp + '</span>' +
                         '</li>';
-                }).join('');
-                return header + items;
-            }).join('');
-            texList.innerHTML = '<ul class="list-group list-group-flush small mb-2">' + groupHtml + '</ul>';
+                }).join('') +
+                '</ul>';
         }
     }
 
@@ -3477,15 +3427,14 @@ function setCanvasSize() {
 
     groundSize = newSize;
     scene.remove(grid);
-    grid = new THREE.GridHelper(groundSize, getGridDivisions(groundSize), 0x888888, 0x444444);
+    grid = new THREE.GridHelper(groundSize,groundSize,0x888888,0x444444);
     grid.userData.isSelectable = false;
     scene.add(grid);
     if (ruler)
         scene.remove(ruler);
     if (loadedFont) {
-        const rulerStep = getRulerStep(groundSize);
-        ruler = createRuler(groundSize, rulerStep);
-        addRulerLabels(ruler, groundSize, rulerStep, loadedFont);
+        ruler = createRuler(groundSize, 1);
+        addRulerLabels(ruler, groundSize, 1, loadedFont);
         ruler.userData.isSelectable = false;
         scene.add(ruler);
     }
@@ -4268,85 +4217,9 @@ function saveState() {
     saveSceneState('transform', affectedObjects);
 }
 
-// ===== Distance-based culling (performance for large canvases) =====
-const _cullCameraPos = new THREE.Vector3();
-const _cullObjPos = new THREE.Vector3();
-function setObjectOpacity(obj, opacity) {
-    obj.traverse(o => {
-        if (!o.isMesh || !o.material) return;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        mats.forEach(m => {
-            m.transparent = true;
-            m.opacity = opacity;
-        });
-    });
-}
-function getCullThreshold(camDist) {
-    const cameraBased = camDist * CULL_DISTANCE_MULTIPLIER;
-    if (groundSize < LARGE_SCENE_THRESHOLD) {
-        return cameraBased;
-    }
-    const ratio = groundSize >= MAX_SCENE_SIZE * 0.1
-        ? LARGE_SCENE_CULL_RATIO * (MAX_SCENE_SIZE * 0.1 / groundSize)
-        : LARGE_SCENE_CULL_RATIO;
-    const sceneBased = Math.max(MIN_CULL_DISTANCE, groundSize * ratio);
-    return Math.max(sceneBased, cameraBased);
-}
-function updateDistanceCulling() {
-    camera.getWorldPosition(_cullCameraPos);
-    const camDist = _cullCameraPos.distanceTo(orbit.target);
-    const cullThreshold = getCullThreshold(camDist);
-    const fadeStart = cullThreshold * (1 - CULL_FADE_ZONE);
-    const fadeEnd = cullThreshold * (1 + CULL_FADE_ZONE);
-    canvasRoot.traverse(obj => {
-        if (!obj.userData?.isSelectable || obj === canvasRoot) return;
-        if (selectedObjects.includes(obj) || obj === hoveredObject) {
-            obj.visible = true;
-            setObjectOpacity(obj, 1);
-            if (obj.userData.boxHelper) {
-                obj.userData.boxHelper.visible = true;
-                const color = selectedObjects.includes(obj) ? BOX_COLORS.selected : BOX_COLORS.hover;
-                obj.userData.boxHelper.material.color.setHex(color);
-                obj.userData.boxHelper.material.opacity = selectedObjects.includes(obj) ? 0.9 : 0.5;
-            }
-            if (obj.userData.parentBoxHelper) obj.userData.parentBoxHelper.visible = true;
-            if (obj.userData.dimGroup) obj.userData.dimGroup.visible = true;
-            return;
-        }
-        obj.getWorldPosition(_cullObjPos);
-        const dist = _cullCameraPos.distanceTo(_cullObjPos);
-        const tRaw = (dist - fadeStart) / (fadeEnd - fadeStart);
-        const t = THREE.MathUtils.smoothstep(tRaw, 0, 1);
-        const showObject = t < 1;
-        const showPlaceholder = t > 0;
-        obj.visible = showObject;
-        if (showObject) setObjectOpacity(obj, 1 - t);
-        if (obj.userData.dimGroup) obj.userData.dimGroup.visible = showObject && t < 0.5;
-        if (obj.userData.parentBoxHelper) obj.userData.parentBoxHelper.visible = showObject && t < 0.5;
-        if (obj.userData.boxHelper) {
-            const helper = obj.userData.boxHelper;
-            if (showPlaceholder) {
-                helper.visible = true;
-                helper.update();
-                helper.material.transparent = true;
-                helper.material.color.setHex(PLACEHOLDER_COLOR);
-                const placeT = t < 1 ? t * PLACEHOLDER_OPACITY_NEAR : (() => {
-                    const farT = Math.min(1, (dist - fadeEnd) / (cullThreshold * 1.5));
-                    return THREE.MathUtils.lerp(PLACEHOLDER_OPACITY_NEAR, PLACEHOLDER_OPACITY_FAR, farT);
-                })();
-                helper.material.opacity = placeT;
-            } else {
-                helper.visible = false;
-            }
-        }
-    });
-}
-
 // ===== Render loop =====
 function animate() {
     requestAnimationFrame(animate);
-
-    updateDistanceCulling();
 
     // Smooth camera panning with spacebar + arrow keys
     if (isSpacePressed) {
@@ -4930,7 +4803,7 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
 
                 // Update grid
                 scene.remove(grid);
-                grid = new THREE.GridHelper(groundSize, getGridDivisions(groundSize), 0x888888, 0x444444);
+                grid = new THREE.GridHelper(groundSize,groundSize,0x888888,0x444444);
                 grid.userData.isSelectable = false;
                 scene.add(grid);
 
@@ -4938,9 +4811,8 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
                 if (ruler)
                     scene.remove(ruler);
                 if (loadedFont) {
-                    const rulerStep = getRulerStep(groundSize);
-                    ruler = createRuler(groundSize, rulerStep);
-                    addRulerLabels(ruler, groundSize, rulerStep, loadedFont);
+                    ruler = createRuler(groundSize, 1);
+                    addRulerLabels(ruler, groundSize, 1, loadedFont);
                     ruler.userData.isSelectable = false;
                     scene.add(ruler);
                 }
