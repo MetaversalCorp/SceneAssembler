@@ -134,9 +134,12 @@
                         <hr class="dropdown-divider">
                      </li>
                      <li>
-                        <div class="px-3 py-2 d-flex align-items-center w-100 gap-3">
-                           <label for="canvasSize" class="form-label w-100 m-0">Canvas&nbsp;Size</label>
-                           <input type="text" class="form-control" id="canvasSize" placeholder="20" value="20" style="width:5rem">
+                        <div class="px-3 py-2 d-flex align-items-end w-100 gap-2">
+                           <div class="input-group">
+                              <label for="canvasSize" class="form-label w-100 m-0 small"><i class="fa-solid fa-ruler-combined"></i> Canvas&nbsp;Size</label>
+                              <input type="text" class="form-control" id="canvasSize" placeholder="200" value="200" maxlength="4" style="width:2rem">
+                             <span class="input-group-text">m.</span>
+                           </div>
                            <button type="submit" class="btn btn-outline-light" id="setCanvasSize">Set</button>
                         </div>
                      </li>
