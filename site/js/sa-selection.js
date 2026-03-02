@@ -39,6 +39,7 @@ function selectObject(obj, additive = false, toggle = false) {
             if (o.userData.dimGroup) scene.remove(o.userData.dimGroup);
         });
         selectedObjects = [];
+        updateModelListCount();
         updateTransformButtonStates();
     }
 
@@ -50,6 +51,7 @@ function selectObject(obj, additive = false, toggle = false) {
         if (obj.userData?.isEditorGroup) showChildBoundingBoxes(obj, false);
         if (obj.userData?.isCanvasRoot) showObjectRootChildrenBoundingBoxes(obj, false);
         updatePropertiesPanel(selectedObjects[selectedObjects.length - 1] || null);
+        updateModelListCount();
         updateTransformButtonStates();
         return;
     }
@@ -77,17 +79,70 @@ function selectObject(obj, additive = false, toggle = false) {
     addBoundingBoxDimensions(obj);
     updateModelProperties(obj);
     updatePropertiesPanel(obj);
+    updateModelListCount();
     updateTransformButtonStates();
+}
+
+function updateModelListCount() {
+    const el = document.getElementById("modelListCount");
+    if (el) el.textContent = selectedObjects.length > 1 ? `${selectedObjects.length} selected` : "";
+}
+
+function getVisibleListItemsInOrder(container) {
+    const items = [];
+    function walk(ul) {
+        if (!ul || ul.tagName !== "UL") return;
+        for (const li of ul.children) {
+            if (li.tagName !== "LI") continue;
+            items.push(li);
+            const childList = li.nextSibling;
+            if (childList?.tagName === "UL" && !childList.classList.contains("children-collapsed")) {
+                walk(childList);
+            }
+        }
+    }
+    walk(container);
+    return items;
 }
 
 function selectFromSidebar(obj, li, e) {
     const additive = !!(e && (e.shiftKey || e.ctrlKey || e.metaKey));
     const toggle = !!(e && (e.ctrlKey || e.metaKey));
+
+    if (additive && !toggle && selectedObjects.length > 0) {
+        const visibleItems = getVisibleListItemsInOrder(modelList);
+        const clickedIdx = visibleItems.indexOf(li);
+        const anchorObj = selectedObjects[selectedObjects.length - 1];
+        const anchorLi = anchorObj?.userData?.listItem;
+        const anchorIdx = anchorLi ? visibleItems.indexOf(anchorLi) : -1;
+
+        if (clickedIdx >= 0 && anchorIdx >= 0 && clickedIdx !== anchorIdx) {
+            const [lo, hi] = clickedIdx < anchorIdx ? [clickedIdx, anchorIdx] : [anchorIdx, clickedIdx];
+            const toAdd = [];
+            for (let i = lo; i <= hi; i++) {
+                const itemObj = findObjectByListItem(visibleItems[i]);
+                if (itemObj && itemObj.userData?.isSelectable && !selectedObjects.includes(itemObj)) {
+                    toAdd.push(itemObj);
+                }
+            }
+            if (obj && !selectedObjects.includes(obj) && !toAdd.includes(obj)) toAdd.push(obj);
+            const idx = toAdd.indexOf(obj);
+            if (idx >= 0 && toAdd.length > 1) {
+                toAdd.splice(idx, 1);
+                toAdd.push(obj);
+            }
+            toAdd.forEach(o => selectObject(o, true, false));
+            return;
+        }
+    }
+
     selectObject(obj, additive, toggle);
 }
 
-function selectFromCanvas(obj, additive) {
-    selectObject(obj, !!additive, false);
+function selectFromCanvas(obj, e) {
+    const additive = !!(e && e.shiftKey);
+    const toggle = !!(e && (e.ctrlKey || e.metaKey));
+    selectObject(obj, additive, toggle);
 }
 
 function selectAllSidebar() {
@@ -113,6 +168,7 @@ function selectAllSidebar() {
         updateModelProperties(selectedObject);
         updatePropertiesPanel(selectedObject);
     }
+    updateModelListCount();
     updateTransformButtonStates();
 }
 
@@ -129,5 +185,6 @@ function deselectAllSidebar() {
     selectedObject = null;
     transform.detach();
     updatePropertiesPanel(null);
+    updateModelListCount();
     updateTransformButtonStates();
 }

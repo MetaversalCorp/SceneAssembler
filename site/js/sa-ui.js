@@ -109,7 +109,7 @@ renderer.domElement.addEventListener("click", e => {
                 if (current.parent.userData.isSelectable) topmostSelectable = current.parent;
                 current = current.parent;
             }
-            selectFromCanvas(topmostSelectable, e.shiftKey);
+            selectFromCanvas(topmostSelectable, e);
         }
     } else clearUIStates();
 });
@@ -137,7 +137,7 @@ renderer.domElement.addEventListener("dblclick", e => {
         }
     }
     if (target) {
-        selectFromCanvas(target, false);
+        selectFromCanvas(target, e);
         frameCameraOn(target);
     }
 });
@@ -182,6 +182,12 @@ window.addEventListener("keydown", e => {
     }
 
     switch (key) {
+        case "escape":
+            if (selectedObjects.length > 0) {
+                e.preventDefault();
+                deselectAllSidebar();
+            }
+            break;
         case "w":
             if (!checkUnsavedChangesBeforeEdit()) break;
             if (isEditingAllowed()) { transform.setMode("translate"); updateTransformButtonActiveState(); }
