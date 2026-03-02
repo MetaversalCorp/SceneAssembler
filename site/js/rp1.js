@@ -339,7 +339,7 @@ class ExtractMap extends MapUtil
          aEditor.push
          (
             {
-               "sName": "<New Scene>",
+               "sName": "New Scene",
                "pTransform": {
                   "aPosition": [0, 0, 0],
                   "aRotation": [0, 0, 0, 1],
@@ -875,7 +875,7 @@ class ExtractMap extends MapUtil
    onClick_AddScene (e)
    {
       this.#jPObject.find ('.jsSceneItem').removeClass ('active');
-      this.#jBody.find ('.jsCurrentScene').text ('<New Scene>');
+      this.#jBody.find ('.jsCurrentScene').text ('New Scene');
 
       this.#pRMXRoot = null;
       this.UpdateEditor ();

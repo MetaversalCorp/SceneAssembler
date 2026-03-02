@@ -16,202 +16,53 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
-@media (min-width: 992px) { /* For large screens and up */
-  .offcanvas {
-    --bs-offcanvas-width: min(95vw, 480px);
-  }
+/* ==========================================================================
+   Base & Typography
+   ========================================================================== */
 
-  /* .offcanvas.offcanvas-bottom {
-     --bs-offcanvas-height: 35vh;
- } */
-}
-
-.btn{border-radius:5rem;}
-
-canvas {
-  opacity: 0;
-  filter: blur(1rem);
-  animation: fadeInBlur 1s ease forwards;
-  animation-delay: 1s;
-}
-
-@keyframes fadeInBlur {
-  from {
-    opacity: 0;
-    filter: blur(1rem);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0rem);
-  }
-}
-
-.ui{
-    opacity: 1; /* always visible */
-}
-
-.login-modal, .ui .blur, .ui #codeToggle, .ui #objLibToggle{
-   animation: fadeIn 750ms ease forwards;
-   animation-delay: 500ms;
-    opacity: 0;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.bg-none{
-   background:none !important;
-   background-color:none !important;
-   background-image:none !important;
-}
-
-body, .dropdown-item{
+body, .dropdown-item {
   font-family: "Outfit", sans-serif !important;
   font-optical-sizing: auto;
   font-weight: 200;
   font-style: normal;
 }
 
-.blur{
-  backdrop-filter: saturate(180%) blur(1rem);
-  -webkit-backdrop-filter: saturate(180%) blur(1rem);
-  isolation: isolate;
-  position: relative;
-  will-change: backdrop-filter;
-  transform: translateZ(0);
+.btn {
+  border-radius: 5rem;
 }
 
-.offcanvas .btn-close{
-  background-image:none !important;
-  padding: .25rem 1rem .75rem .5rem !important;
+.bg-none {
+  background: none !important;
+  background-color: none !important;
+  background-image: none !important;
+}
+
+#hotkeys kbd {
+  padding: 0.1rem 0.25rem;
+}
+
+/* ==========================================================================
+   Layout
+   ========================================================================== */
+
+.ui {
+  opacity: 1; /* always visible */
+}
+
+/* ==========================================================================
+   Offcanvas
+   ========================================================================== */
+
+@media (min-width: 992px) {
+  .offcanvas {
+    --bs-offcanvas-width: min(95vw, 480px);
+  }
+}
+
+.offcanvas .btn-close {
+  background-image: none !important;
+  padding: 0.25rem 1rem 0.75rem 0.5rem !important;
   margin: 0rem !important;
-}
-
-#jsonEditor {
-  flex: 1;
-  height: 100%;
-  color: #ffffff;
-  border: 1px solid #555;
-  border-radius: 3px;
-  font-family: 'Courier New', monospace;
-  font-size: 11px;
-  line-height: 1.4;
-  resize: vertical;
-  white-space: pre;
-  overflow: auto;
-}
-
-.cm-editor{
-   height: 100%;
-   background: #22222290;
-}
-
-#modelList {
-  list-style: none;
-  padding: 0;
-  margin: 0px 0 0 0;
-}
-
-#modelList li {
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-#properties {
-  font-size: 12px;
-  white-space: pre-wrap;
-}
-
-#modelList li.selected { background: #444; }
-
-#modelList{
-   min-height:35vh;
-   max-height:65vh;
-   overflow: scroll;
-}
-
-#modelsPanel::before{
-   content: "";
-   position: absolute;
-   bottom: 0;
-   left: 0;
-   width: 100%;
-   height: 2rem;
-   min-height: 2rem;
-   border-radius: 5rem;
-   background: -webkit-linear-gradient(0deg,rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
-   background: linear-gradient(0deg,rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
-   pointer-events: none;
-   z-index:0;
-}
-
-#contextMenu {
-  position: absolute;
-  display: none;
-  background: #11111190;
-  border: 1px solid #555;
-  border-radius: .5rem;
-  padding: 4px;
-  list-style: none;
-  z-index: 1000;
-  backdrop-filter:blur(1rem);
-}
-
-/* Caret (disclosure) for groups */
-.caret {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  margin-right: 6px;
-  cursor: pointer;
-  user-select: none;
-}
-.caret::before {
-  content: "\25B6"; /* ▶ */
-  font-size: 10px;
-  line-height: 1;
-  color: #ccc;
-  transition: transform 0.12s ease;
-}
-.caret.expanded::before {
-  transform: rotate(90deg);
-}
-.children-collapsed {
-  display: none;
-}
-
-/* Drag and drop styles */
-#modelList li.dragging {
-  opacity: 0.5;
-  background: #333;
-  border-left: 3px solid #99ccff;
-}
-
-#modelList li.drag-over {
-  background: #555;
-  border: 2px dashed #99ccff;
-  border-radius: 3px;
-}
-
-#modelList li[draggable="true"]:hover {
-  background: #444;
-  cursor: grab;
-}
-
-#modelList li[draggable="true"]:active {
-  cursor: grabbing;
-}
-
-#codeToggle {
-  transition: opacity 0.15s ease-in-out;
 }
 
 /* Resize handle for code editor panel */
@@ -227,6 +78,7 @@ body, .dropdown-item{
   z-index: 1056;
   background: transparent;
   transition: background 0.2s ease;
+  -webkit-transition: background 0.2s ease;
   display: none;
 }
 
@@ -255,6 +107,7 @@ body, .dropdown-item{
   z-index: 1056;
   background: transparent;
   transition: background 0.2s ease;
+  -webkit-transition: background 0.2s ease;
   display: none;
 }
 
@@ -270,15 +123,248 @@ body, .dropdown-item{
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* ==========================================================================
+   Canvas / 3D Viewport
+   ========================================================================== */
+
+canvas {
+  opacity: 0;
+  filter: blur(1rem);
+  -webkit-filter: blur(1rem);
+  animation: fadeInBlur 1s ease forwards;
+  -webkit-animation: fadeInBlur 1s ease forwards;
+  animation-delay: 1s;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeInBlur {
+  from {
+    opacity: 0;
+    filter: blur(1rem);
+    -webkit-filter: blur(1rem);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0rem);
+    -webkit-filter: blur(0rem);
+  }
+}
+
+@-webkit-keyframes fadeInBlur {
+  from {
+    opacity: 0;
+    filter: blur(1rem);
+    -webkit-filter: blur(1rem);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0rem);
+    -webkit-filter: blur(0rem);
+  }
+}
+
+.login-modal, .ui .blur, .ui #codeToggle, .ui #objLibToggle {
+  animation: fadeIn 750ms ease forwards;
+  -webkit-animation: fadeIn 750ms ease forwards;
+  animation-delay: 500ms;
+  opacity: 0;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@-webkit-keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Blur / Glass Effect
+   ========================================================================== */
+
+.blur {
+  backdrop-filter: saturate(180%) blur(1rem);
+  -webkit-backdrop-filter: saturate(180%) blur(1rem);
+  isolation: isolate;
+  position: relative;
+  will-change: backdrop-filter;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* ==========================================================================
+   Code Editor
+   ========================================================================== */
+
+#jsonEditor {
+  flex: 1;
+  height: 100%;
+  color: #ffffff;
+  border: 1px solid #555;
+  border-radius: 3px;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  resize: vertical;
+  white-space: pre;
+  overflow: auto;
+}
+
+.cm-editor {
+  height: 100%;
+  background: #22222290;
+}
+
+#codeToggle {
+  transition: opacity 0.15s ease-in-out;
+  -webkit-transition: opacity 0.15s ease-in-out;
+}
+
+/* ==========================================================================
+   Object Sidebar List / Outliner
+   ========================================================================== */
+
+#modelList {
+  list-style: none;
+  padding: 0;
+  margin: 0px 0 0 0;
+  min-height: 35vh;
+  max-height: 65vh;
+  overflow: scroll;
+  -webkit-overflow-scrolling: touch;
+}
+
+#modelList li {
+  cursor: pointer;
+  border-radius: 3px;
+}
+
+#modelList li.selected {
+  background: #444;
+}
+
+#modelsPanel::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2rem;
+  min-height: 2rem;
+  border-radius: 5rem;
+  background: -webkit-linear-gradient(0deg, rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
+  background: linear-gradient(0deg, rgba(33, 37, 41, 1) 0%, rgba(33, 37, 41, 0) 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Caret (disclosure) for groups */
+.caret {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 12px;
+  height: 12px;
+  margin-right: 6px;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.caret::before {
+  content: "\25B6"; /* ▶ */
+  font-size: 10px;
+  line-height: 1;
+  color: #ccc;
+  transition: transform 0.12s ease;
+  -webkit-transition: -webkit-transform 0.12s ease;
+}
+
+.caret.expanded::before {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+}
+
+.children-collapsed {
+  display: none;
+}
+
+/* Drag and drop styles */
+#modelList li.dragging {
+  opacity: 0.5;
+  background: #333;
+  border-left: 3px solid #99ccff;
+}
+
+#modelList li.drag-over {
+  background: #555;
+  border: 2px dashed #99ccff;
+  border-radius: 3px;
+}
+
+#modelList li[draggable="true"]:hover {
+  background: #444;
+  cursor: grab;
+  cursor: -webkit-grab;
+}
+
+#modelList li[draggable="true"]:active {
+  cursor: grabbing;
+  cursor: -webkit-grabbing;
+}
+
 /* Multi-select drag feedback */
 #modelList li.dragging.multi-select {
   border-left: 3px solid #ffcc00;
   background: #444;
 }
 
-/* Object Library Styles */
+/* ==========================================================================
+   Properties Panel
+   ========================================================================== */
+
+#properties {
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+/* ==========================================================================
+   Context Menu
+   ========================================================================== */
+
+#contextMenu {
+  position: absolute;
+  display: none;
+  background: #11111190;
+  border: 1px solid #555;
+  border-radius: 0.5rem;
+  padding: 4px;
+  list-style: none;
+  z-index: 1000;
+  backdrop-filter: blur(1rem);
+  -webkit-backdrop-filter: blur(1rem);
+}
+
+/* ==========================================================================
+   Object Library
+   ========================================================================== */
+
 #objLibToggle {
   transition: opacity 0.15s ease-in-out;
+  -webkit-transition: opacity 0.15s ease-in-out;
 }
 
 #objLibGrid .card {
@@ -295,49 +381,70 @@ body, .dropdown-item{
   width: 100% !important;
   height: 100% !important;
   object-fit: contain;
+  -webkit-object-fit: contain;
   animation: fadeInBlur 0.5s ease forwards;
+  -webkit-animation: fadeInBlur 0.5s ease forwards;
 }
 
 #objLibContent {
   max-height: 70vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-/* Scene Manager Styles */
-#sceneManagerPanel .scene-list > .scene:not(.active) > .del-btn{
+/* ==========================================================================
+   Scene Manager
+   ========================================================================== */
+
+#sceneManagerPanel .scene-list > .scene:not(.active) > .del-btn {
   display: none;
 }
 
-#sceneManagerPanel .scene-list > .scene{
+#sceneManagerPanel .scene-list > .scene {
   cursor: pointer;
 }
 
-#hotkeys kbd{
-   padding:.1rem .25rem;
-}
+/* ==========================================================================
+   Stats Viewer (Triangle & Texture)
+   ========================================================================== */
 
 /* Triangle & scene checker (stat-viewer) */
 #triStats .stat-viewer summary {
   cursor: pointer;
   list-style: none;
 }
-#triStats .stat-viewer summary::-webkit-details-marker { display: none; }
+
+#triStats .stat-viewer summary::-webkit-details-marker {
+  display: none;
+}
+
 #triStats .stat-viewer summary::before {
   content: "\25B6\00a0";
   font-size: 0.65rem;
   color: var(--bs-secondary);
 }
-#triStats .stat-viewer details[open] summary::before { transform: rotate(90deg); display: inline-block; }
-#triStats .tri-gauge .progress-bar { transition: width 0.2s ease; }
+
+#triStats .stat-viewer details[open] summary::before {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+  display: inline-block;
+}
+
+#triStats .tri-gauge .progress-bar {
+  transition: width 0.2s ease;
+  -webkit-transition: width 0.2s ease;
+}
 
 /* Shared: user-friendly analyzer layout (new to advanced) */
 .stat-viewer .stat-viewer-lead {
   color: var(--bs-body-color);
   line-height: 1.4;
 }
+
 .stat-viewer .stat-viewer-status {
   font-variant-numeric: tabular-nums;
 }
+
 .stat-viewer .stat-viewer-details summary {
   margin-bottom: 0.25rem;
 }
@@ -347,11 +454,24 @@ body, .dropdown-item{
   cursor: pointer;
   list-style: none;
 }
-#texStats .stat-viewer summary::-webkit-details-marker { display: none; }
+
+#texStats .stat-viewer summary::-webkit-details-marker {
+  display: none;
+}
+
 #texStats .stat-viewer summary::before {
   content: "\25B6\00a0";
   font-size: 0.65rem;
   color: var(--bs-secondary);
 }
-#texStats .stat-viewer details[open] summary::before { transform: rotate(90deg); display: inline-block; }
-#texStats .tex-gauge .progress-bar { transition: width 0.2s ease; }
+
+#texStats .stat-viewer details[open] summary::before {
+  transform: rotate(90deg);
+  -webkit-transform: rotate(90deg);
+  display: inline-block;
+}
+
+#texStats .tex-gauge .progress-bar {
+  transition: width 0.2s ease;
+  -webkit-transition: width 0.2s ease;
+}
