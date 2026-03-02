@@ -69,3 +69,7 @@ const MAX_UNDO_HISTORY = 50;
 // ===== UI Layout =====
 const MIN_CODE_EDITOR_WIDTH = 320;
 const MIN_OBJECT_LIBRARY_HEIGHT = 200;
+
+// ===== Clamping =====
+/** When true, objects are clamped to canvas bounds on the Y axis during transforms. When false, Y is free (use Drop to Floor to snap down). */
+const CLAMP_Y_AXIS = false;

@@ -56,7 +56,10 @@ function wouldExceedBounds(obj) {
       , worldMaxZ = worldCenter.z + worldSize.z / 2;
 
     // Check if any part of the object would exceed the bounds
-    return (worldMinX < rootMinX || worldMaxX > rootMaxX || worldMinY < rootMinY || worldMaxY > rootMaxY || worldMinZ < rootMinZ || worldMaxZ > rootMaxZ);
+    const exceedsX = worldMinX < rootMinX || worldMaxX > rootMaxX;
+    const exceedsY = CLAMP_Y_AXIS && (worldMinY < rootMinY || worldMaxY > rootMaxY);
+    const exceedsZ = worldMinZ < rootMinZ || worldMaxZ > rootMaxZ;
+    return exceedsX || exceedsY || exceedsZ;
 }
 
 function getBox(obj) {
@@ -281,12 +284,14 @@ function clampToCanvas(obj) {
         adjustmentX = rootMaxX - worldMaxX;
     }
 
-    // Clamp Y axis
-    if (worldMinY < rootMinY) {
-        adjustmentY = rootMinY - worldMinY;
-    }
-    if (worldMaxY > rootMaxY) {
-        adjustmentY = rootMaxY - worldMaxY;
+    // Clamp Y axis (only when CLAMP_Y_AXIS is enabled in sa-config)
+    if (CLAMP_Y_AXIS) {
+        if (worldMinY < rootMinY) {
+            adjustmentY = rootMinY - worldMinY;
+        }
+        if (worldMaxY > rootMaxY) {
+            adjustmentY = rootMaxY - worldMaxY;
+        }
     }
 
     // Clamp Z axis

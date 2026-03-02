@@ -315,7 +315,18 @@ function dropToFloor(obj) {
     const box = new THREE.Box3().setFromObject(obj);
     if (box.isEmpty())
         return;
-    obj.position.y -= box.min.y;
+    const worldDelta = new THREE.Vector3(0, -box.min.y, 0);
+    if (obj.parent && obj.parent !== scene) {
+        obj.parent.updateMatrixWorld(true);
+        const parentScale = new THREE.Vector3();
+        obj.parent.getWorldScale(parentScale);
+        if (parentScale.x !== 0) worldDelta.x /= parentScale.x;
+        if (parentScale.y !== 0) worldDelta.y /= parentScale.y;
+        if (parentScale.z !== 0) worldDelta.z /= parentScale.z;
+        const invQuat = new THREE.Quaternion().copy(obj.parent.getWorldQuaternion()).invert();
+        worldDelta.applyQuaternion(invQuat);
+    }
+    obj.position.add(worldDelta);
     updateAllVisuals(obj);
 }
 
