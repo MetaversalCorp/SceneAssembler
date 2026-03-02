@@ -1,7 +1,7 @@
 /**
  * sa-object-library.js
  * Object library: loadObjectLibrary, createObjectLibraryItem, preview rendering.
- * Depends: sa-core, sa-bootstrap, sa-models, sa-transforms, sa-selection, sa-json-sync, sa-sidebar
+ * Depends: sa-core, sa-bootstrap, sa-models, sa-properties, sa-transforms, sa-selection, sa-json-sync, sa-sidebar
  */
 /*
 ** Copyright 2025 Metaversal Corporation.
@@ -83,6 +83,29 @@ function getSharedPreviewRenderer() {
 
 let previewAnimationId = null;
 const previewPixelBuffer = new Uint8Array(PREVIEW_SIZE * PREVIEW_SIZE * 4);
+
+function formatTriangleCompact(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+    return String(n);
+}
+
+function formatTextureCompact(texInfo) {
+    if (!texInfo || !texInfo.totalTextures) return '—';
+    const { totalTextures, maxResolution, minResolution, totalPixels } = texInfo;
+    const mp = totalPixels ? (totalPixels / 1e6).toFixed(2) : '0';
+    const sameRes = maxResolution.width === minResolution.width && minResolution.width > 0;
+    if (sameRes && maxResolution.width === maxResolution.height) {
+        const w = maxResolution.width;
+        return w >= 1024 ? (w / 1024).toFixed(0) + 'K²' : w + '²';
+    }
+    if (sameRes) {
+        const w = maxResolution.width >= 1024 ? (maxResolution.width / 1024) + 'K' : maxResolution.width;
+        const h = maxResolution.height >= 1024 ? (maxResolution.height / 1024) + 'K' : maxResolution.height;
+        return w + '×' + h;
+    }
+    return mp + ' MP';
+}
 
 function runPreviewAnimationLoop() {
     if (hoveredPreviewPaths.size === 0 || !sharedPreviewRenderer) return;
@@ -189,6 +212,27 @@ function createObjectPreview(objectPath, container) {
         objectLibraryCache.set(objectPath, { scene: previewScene, camera: previewCamera, model, displayCanvas });
 
         renderPreviewToCanvas(objectPath);
+
+        const triCount = typeof getTriangleCount === 'function' ? getTriangleCount(model) : 0;
+        const texInfo = typeof getTextureResolutionInfo === 'function' ? getTextureResolutionInfo(model) : null;
+        const badgesWrap = document.createElement('div');
+        badgesWrap.className = 'position-absolute top-0 start-0 end-0 d-flex gap-1 p-1 justify-content-between';
+        badgesWrap.style.pointerEvents = 'none';
+        const triBadge = document.createElement('span');
+        triBadge.className = 'badge text-white flex-grow-0';
+        triBadge.style.fontSize = '0.6rem';
+        triBadge.style.lineHeight = '1.2';
+        triBadge.title = `${triCount.toLocaleString()} triangles`;
+        triBadge.innerHTML = '<i class="fa-solid fa-play fa-rotate-270 fa-xs me-0"></i> ' + formatTriangleCompact(triCount);
+        const texBadge = document.createElement('span');
+        texBadge.className = 'badge text-white flex-grow-0';
+        texBadge.style.fontSize = '0.6rem';
+        texBadge.style.lineHeight = '1.2';
+        texBadge.title = texInfo && texInfo.totalTextures ? `${texInfo.totalTextures} texture(s), ${((texInfo.totalPixels || 0) / 1e6).toFixed(2)} MP` : 'No textures';
+        texBadge.innerHTML = '<i class="fa-solid fa-image fa-xs me-0"></i> ' + formatTextureCompact(texInfo);
+        badgesWrap.appendChild(triBadge);
+        badgesWrap.appendChild(texBadge);
+        container.appendChild(badgesWrap);
     }, undefined, (error) => {
         console.error(`Failed to load preview for ${objectPath}:`, error);
         container.innerHTML = '<div class="text-center text-muted p-3"><i class="fa-solid fa-triangle-exclamation"></i><br>Failed to load</div>';
