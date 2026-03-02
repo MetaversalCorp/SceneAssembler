@@ -886,6 +886,16 @@ function getTextureResolutionInfo(model) {
                             // Identifiable info for cached textures (blob/data URLs or no filename)
                             const rawSrc = img.src || img.currentSrc || '';
                             const sourceHint = rawSrc.indexOf('blob:') === 0 ? 'blob' : rawSrc.indexOf('data:') === 0 ? 'data' : undefined;
+                            // Find sReference by walking up to nearest ancestor with sourceRef (for grouping by model)
+                            let sReference = '';
+                            let p = child;
+                            while (p) {
+                                if (p.userData?.sourceRef?.reference) {
+                                    sReference = p.userData.sourceRef.reference;
+                                    break;
+                                }
+                                p = p.parent;
+                            }
                             textureInfo.textures.push({
                                 type: name,
                                 width: width,
@@ -896,7 +906,8 @@ function getTextureResolutionInfo(model) {
                                 fileExtension: fileExtension || undefined,
                                 megapixels: (width * height) / 1e6,
                                 sourceHint: sourceHint,
-                                textureName: (texture.name && texture.name.trim()) ? texture.name.trim() : undefined
+                                textureName: (texture.name && texture.name.trim()) ? texture.name.trim() : undefined,
+                                sReference: sReference || undefined
                             });
 
                             textureInfo.totalTextures++;
@@ -1061,13 +1072,14 @@ function aggregateTextureInfo(objects) {
     return aggregated;
 }
 
-/** Returns a flat list of texture entries for the given objects (for #texList). */
+/** Returns a flat list of texture entries for the given objects (for #texList). Each entry includes sReference for grouping by model. */
 function getSelectedTextureList(objects) {
     const list = [];
     (objects || []).forEach(obj => {
         const tex = obj?.userData?.properties?.textures;
+        const objRef = obj?.userData?.sourceRef?.reference || '';
         if (tex && Array.isArray(tex.textures))
-            tex.textures.forEach(t => list.push(t));
+            tex.textures.forEach(t => list.push({ ...t, sReference: t.sReference || objRef }));
     });
     return list;
 }
@@ -1219,7 +1231,7 @@ function updatePropertiesPanel(model) {
         texSceneGaugeStatus.textContent = sceneTexTier === 0 ? "Good" : sceneTexTier === 1 ? "Consider reducing size/number of textures" : "This is too much — reduce for smoother rendering";
     }
 
-    // Texture list: selected objects' textures, or full scene when nothing selected
+    // Texture list: selected objects' textures, or full scene when nothing selected. Group by model (sReference).
     const textureListForDisplay = validSelectedObjects.length > 0
         ? getSelectedTextureList(validSelectedObjects)
         : (sceneTexInfo.textures || []);
@@ -1227,24 +1239,39 @@ function updatePropertiesPanel(model) {
         if (textureListForDisplay.length === 0) {
             texList.innerHTML = '<ul class="list-group list-group-flush small mb-2"><li class="list-group-item text-muted py-1">No textures</li></ul>';
         } else {
+            // Group textures by sReference (model reference from JSON pResource)
+            const byModel = {};
+            textureListForDisplay.forEach(t => {
+                const ref = t.sReference || '(unknown)';
+                if (!byModel[ref]) byModel[ref] = [];
+                byModel[ref].push(t);
+            });
+            const renderTexItem = (t, num) => {
+                const label = t.fileExtension ||
+                    (t.textureName && t.textureName.length > 0 ? t.textureName : null) ||
+                    (t.sourceHint ? t.sourceHint : null) ||
+                    '—';
+                const title = [t.fileName, t.textureName, t.sourceHint && ('src: ' + t.sourceHint)].filter(Boolean).join(' · ') || label;
+                const dims = t.resolution || (t.width && t.height ? t.width + '×' + t.height : '—');
+                const mp = t.megapixels != null ? (t.megapixels.toFixed(2) + ' MP') : (t.width && t.height ? ((t.width * t.height) / 1e6).toFixed(2) + ' MP' : '');
+                const dimsAndMp = mp ? dims + ' · ' + mp : dims;
+                return '<li class="list-group-item d-flex justify-content-between align-items-start py-1">' +
+                    '<span class="me-2 flex-shrink-0 text-muted">' + num + '</span>' +
+                    '<span class="me-2 text-break" title="' + (title.replace(/"/g, '&quot;')) + '">' + (label.replace(/</g, '&lt;')) + '</span>' +
+                    '<span class="badge text-bg-secondary flex-shrink-0">' + (t.type || '') + '</span>' +
+                    '<span class="text-body-secondary flex-shrink-0 ms-1">' + dimsAndMp + '</span>' +
+                    '</li>';
+            };
+            let globalNum = 0;
             texList.innerHTML = '<ul class="list-group list-group-flush small mb-2">' +
-                textureListForDisplay.map((t, i) => {
-                    const num = i + 1;
-                    // Identifiable label: extension, else loader name, else blob/data hint (for cache)
-                    const label = t.fileExtension ||
-                        (t.textureName && t.textureName.length > 0 ? t.textureName : null) ||
-                        (t.sourceHint ? t.sourceHint : null) ||
-                        '—';
-                    const title = [t.fileName, t.textureName, t.sourceHint && ('src: ' + t.sourceHint)].filter(Boolean).join(' · ') || label;
-                    const dims = t.resolution || (t.width && t.height ? t.width + '×' + t.height : '—');
-                    const mp = t.megapixels != null ? (t.megapixels.toFixed(2) + ' MP') : (t.width && t.height ? ((t.width * t.height) / 1e6).toFixed(2) + ' MP' : '');
-                    const dimsAndMp = mp ? dims + ' · ' + mp : dims;
-                    return '<li class="list-group-item d-flex justify-content-between align-items-start py-1">' +
-                        '<span class="me-2 flex-shrink-0 text-muted">' + num + '</span>' +
-                        '<span class="me-2 text-break" title="' + (title.replace(/"/g, '&quot;')) + '">' + (label.replace(/</g, '&lt;')) + '</span>' +
-                        '<span class="badge text-bg-secondary flex-shrink-0">' + (t.type || '') + '</span>' +
-                        '<span class="text-body-secondary flex-shrink-0 ms-1">' + dimsAndMp + '</span>' +
+                Object.entries(byModel).map(([ref, texs]) => {
+                    const count = texs.length;
+                    const header = '<li class="list-group-item list-group-item-secondary py-1 px-2 fw-medium small">' +
+                        (ref !== '(unknown)' ? ref.replace(/^.*[/\\]/, '') : ref) +
+                        (count > 1 ? ' <span class="text-body-secondary fw-normal">(' + count + ')</span>' : '') +
                         '</li>';
+                    const items = texs.map(t => renderTexItem(t, ++globalNum)).join('');
+                    return header + items;
                 }).join('') +
                 '</ul>';
         }
