@@ -323,7 +323,7 @@ function dropToFloor(obj) {
         if (parentScale.x !== 0) worldDelta.x /= parentScale.x;
         if (parentScale.y !== 0) worldDelta.y /= parentScale.y;
         if (parentScale.z !== 0) worldDelta.z /= parentScale.z;
-        const invQuat = new THREE.Quaternion().copy(obj.parent.getWorldQuaternion()).invert();
+        const invQuat = new THREE.Quaternion().copy(obj.parent.getWorldQuaternion(new THREE.Quaternion())).invert();
         worldDelta.applyQuaternion(invQuat);
     }
     obj.position.add(worldDelta);
