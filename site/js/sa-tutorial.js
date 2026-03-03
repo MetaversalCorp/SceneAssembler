@@ -62,7 +62,7 @@
             element: '#viewportCanvas',
             popover: {
                 title: '<i class="fa-solid fa-mouse-pointer fa-xs"></i><i style="margin-left:-2px;" class="fa-solid fa-bars text-secondary"></i> Context Menu',
-                description: 'Right-click on the viewport or in the Scene Outliner to open a context menu with actions like Duplicate, Reset Transform, Drop to Floor, and group options.',
+                description: 'Select an object then <i class="fa-solid fa-computer-mouse"></i> right-click inside the viewport or inside the Scene Outliner to open a context menu with actions like Duplicate, Reset Transform, Drop to Floor, and group options.',
                 side: 'top',
                 align: 'start',
                 popoverClass: 'sa-tutorial-context-menu-popover',
@@ -71,7 +71,7 @@
                     if (el) {
                         requestAnimationFrame(() => {
                             el.style.setProperty('position', 'fixed', 'important');
-                            el.style.setProperty('top', '100px', 'important');
+                            el.style.setProperty('top', '50px', 'important');
                             el.style.setProperty('left', '50%', 'important');
                             el.style.setProperty('transform', 'translateX(-50%)', 'important');
                             el.style.setProperty('bottom', 'auto', 'important');
@@ -106,7 +106,7 @@
             }
         },
         {
-            element: '#undo',
+            element: '#undoRedoGroup',
             popover: {
                 title: '<i class="fa-solid fa-rotate-left"></i> Undo & Redo',
                 description: '<i class="fa-solid fa-rotate-left"></i> Undo (<kbd>Ctrl+Z</kbd>) and <i class="fa-solid fa-rotate-right"></i> Redo (<kbd>Ctrl+Shift+Z</kbd>) let you revert or reapply changes. History is tracked for transforms, adds, and deletes.',
