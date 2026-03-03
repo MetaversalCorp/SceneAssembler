@@ -37,6 +37,7 @@ index.html
     └── sa-object-library.js
     └── sa-main.js
     └── sa-shell.js
+    └── sa-tutorial.js
 ```
 
 ---
@@ -59,6 +60,7 @@ index.html
 | **sa-object-library.js** | Loads object library, preview thumbnails, add objects to scene. | sa-core |
 | **sa-main.js** | `loadScene`, `refreshScene`; window exports for rp1.js. | sa-* |
 | **sa-shell.js** | Bootstrap tooltips, code editor panel fade/resize, object library panel resize. | sa-config |
+| **sa-tutorial.js** | Getting Started walkthrough using driver.js; sets `sceneAssemblerTutorialActive`. | sa-core, sa-bootstrap, sa-config, driver.js |
 
 ---
 
