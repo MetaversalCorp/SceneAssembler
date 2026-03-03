@@ -11,7 +11,7 @@ require ('@metaversalcorp/mvsb');
 require ('@metaversalcorp/mvxp');
 */
 
-MV.MVRP     = MV.Library ('MVRP',     'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Platform', '0.23.24');
+MV.MVRP     = MV.Library ('MVRP',     'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Platform', '0.24.1');
 
 MV.MVRP.Class.FLOAT3 = class extends MV.MVMF.Class.BASE
 {
@@ -2613,6 +2613,7 @@ else this.#apSvc["map"].pLnG        = MV.MVMF.Core.LnG_Open (pConfig.namespace, 
    get twRPersonaIx () { return this.#pRUser ? this.#pRUser.twRPersonaIx_Default : 0; }
    get XHRError ()     { return this.#XHRError;                                       }
    get pMSF_Map ()     { return this.pMSFConfig["map"];                               }
+   get pMSFConfig ()   { return this.#pMSFConfig;                                     }
 
    IsReady ()
    {
@@ -2624,13 +2625,6 @@ else this.#apSvc["map"].pLnG        = MV.MVMF.Core.LnG_Open (pConfig.namespace, 
    GetLnG (sName)
    {
       return this.#apSvc[sName] ? this.#apSvc[sName].pLnG : '';
-   }
-
-   get pMSFConfig ()   { return this.#pMSFConfig;                                         }
-
-   GetMapRootUrl ()
-   {
-      return (this.#pMSFConfig && this.#pMSFConfig["map"] && this.#pMSFConfig["map"].RootUrl) ? this.#pMSFConfig["map"].RootUrl : '';
    }
 }
 

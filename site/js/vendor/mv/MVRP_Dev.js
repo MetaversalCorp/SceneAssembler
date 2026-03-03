@@ -12,7 +12,7 @@ require ('@metaversalcorp/mvio');
 require ('@metaversalcorp/mvrest');
 */
 
-MV.MVRP.Dev = MV.Library ('MVRP_Dev', 'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Dev', '0.23.19');
+MV.MVRP.Dev = MV.Library ('MVRP_Dev', 'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Dev', '0.24.2');
 
 MV.MVRP.Dev.Class.RDCOMPANY_NAME = class extends MV.MVMF.Class.BASE
 {
@@ -1471,8 +1471,9 @@ MV.MVRP.Dev.SB_RDENVIRONMENT.apAction['IPADDRESS_OPEN'] = new MV.MVSB.SERVICE.CL
    ({
       twRDEnvironmentIx                : MV.MVSB.MAP.FIELD.TWORD8,
       abReserved_A                     : MV.MVSB.MAP.FIELD.PAD (8),
-      dwIPAddressIz                    : MV.MVSB.MAP.FIELD.DWORD,
+      twIPAddressIz                    : MV.MVSB.MAP.FIELD.TWORD8,
       dwIPAddress_WAN                  : MV.MVSB.MAP.FIELD.DWORD,
+      abReserved_B                     : MV.MVSB.MAP.FIELD.PAD (4),
    })
 );
 
@@ -1483,8 +1484,7 @@ MV.MVRP.Dev.SB_RDENVIRONMENT.apAction['IPADDRESS_CLOSE'] = new MV.MVSB.SERVICE.C
    ({
       twRDEnvironmentIx                : MV.MVSB.MAP.FIELD.TWORD8,
       abReserved_A                     : MV.MVSB.MAP.FIELD.PAD (8),
-      dwIPAddressIz                    : MV.MVSB.MAP.FIELD.DWORD,
-      abReserved_B                     : MV.MVSB.MAP.FIELD.PAD (4),
+      twIPAddressIz                    : MV.MVSB.MAP.FIELD.TWORD8
    })
 );
 
@@ -1495,8 +1495,7 @@ MV.MVRP.Dev.SB_RDENVIRONMENT.apAction['IPADDRESS_PAUSE'] = new MV.MVSB.SERVICE.C
    ({
       twRDEnvironmentIx                : MV.MVSB.MAP.FIELD.TWORD8,
       abReserved_A                     : MV.MVSB.MAP.FIELD.PAD (8),
-      dwIPAddressIz                    : MV.MVSB.MAP.FIELD.DWORD,
-      abReserved_B                     : MV.MVSB.MAP.FIELD.PAD (4),
+      twIPAddressIz                    : MV.MVSB.MAP.FIELD.TWORD8
    })
 );
 
@@ -1507,8 +1506,7 @@ MV.MVRP.Dev.SB_RDENVIRONMENT.apAction['IPADDRESS_CONTINUE'] = new MV.MVSB.SERVIC
    ({
       twRDEnvironmentIx                : MV.MVSB.MAP.FIELD.TWORD8,
       abReserved_A                     : MV.MVSB.MAP.FIELD.PAD (8),
-      dwIPAddressIz                    : MV.MVSB.MAP.FIELD.DWORD,
-      abReserved_B                     : MV.MVSB.MAP.FIELD.PAD (4),
+      twIPAddressIz                    : MV.MVSB.MAP.FIELD.TWORD8
    })
 );
 
@@ -2403,7 +2401,7 @@ MV.MVRP.Dev.RDENVIRONMENT_IPADDRESS = class extends MV.MVMF.MODEL_OBJECT
       super (pReference, pSource);
 
       this.twRDEnvironmentIx = pReference.twObjectIx;
-      this.dwIPAddressIz     = pReference.twChildIx;
+      this.twIPAddressIz     = pReference.twChildIx;
    }
 }
 
@@ -2413,9 +2411,9 @@ MV.MVRP.Dev.RDENVIRONMENT_IPADDRESS.FACTORY = class extends MV.MVMF.MODEL_OBJECT
    Reference (asArgs)
    {
       let twRDEnvironmentIx = Number (asArgs[0]);
-      let dwIPAddressIz     = Number (asArgs[1]);
+      let twIPAddressIz     = Number (asArgs[1]);
 
-      return new MV.MVRP.Dev.RDENVIRONMENT_IPADDRESS.IREFERENCE (this.sID, twRDEnvironmentIx, dwIPAddressIz);
+      return new MV.MVRP.Dev.RDENVIRONMENT_IPADDRESS.IREFERENCE (this.sID, twRDEnvironmentIx, twIPAddressIz);
    }
 }
 

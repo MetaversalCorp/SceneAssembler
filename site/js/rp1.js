@@ -108,6 +108,21 @@ class ExtractMap extends MapUtil
 
    destructor ()
    {
+      this.UnloadLnG ();
+
+      this.#pLogin = {
+         sUrl: window.location.origin + '/fabric/fabric.msf',
+         sKey: '',
+         bLogin: true,
+         bLoggedIn: false
+      }
+
+      this.#pZone.Remove ('sUrl');
+      this.#pZone.Remove ('sKey');
+   }
+
+   UnloadLnG ()
+   {
       if (this.#m_pLnG)
       {
          for (let sKey in this.#m_MapRMXItem)
@@ -128,16 +143,6 @@ class ExtractMap extends MapUtil
             this.#m_pFabric = null;
          }
       }
-
-      this.#pLogin = {
-         sUrl: window.location.origin + '/fabric/fabric.msf',
-         sKey: '',
-         bLogin: true,
-         bLoggedIn: false
-      }
-
-      this.#pZone.Remove ('sUrl');
-      this.#pZone.Remove ('sKey');
    }
 
    StringToBase64 (str)
@@ -192,7 +197,6 @@ class ExtractMap extends MapUtil
 
    onInserted (pNotice)
    {
-      if (this.IsReady ())
       {
          let pChild = pNotice.pData.pChild;
 
@@ -213,12 +217,9 @@ class ExtractMap extends MapUtil
 
    onUpdated (pNotice)
    {
-      if (this.IsReady ())
+      if (pNotice.pData.pChild == null)
       {
-         if (pNotice.pData.pChild == null)
-         {
-            this.nStack--;
-         }
+         this.nStack--;
       }
    }
 
@@ -229,22 +230,19 @@ class ExtractMap extends MapUtil
 
    onDeleting (pNotice)
    {
-      if (this.IsReady ())
+      let pChild = pNotice.pData.pChild;
+
+      if (pChild && pChild.wClass_Object == 73)
       {
-         let pChild = pNotice.pData.pChild;
+         if (pChild.twObjectIx == this.twObjectIx_Reparent)
+            this.nReparent--;
+         else if (pChild.twObjectIx == this.#twObjectIx_PendingDelete)
+            this.#twObjectIx_PendingDelete = 0;
 
-         if (pChild && pChild.wClass_Object == 73)
+         if (pChild.wClass_Parent == 70)
          {
-            if (pChild.twObjectIx == this.twObjectIx_Reparent)
-               this.nReparent--;
-            else if (pChild.twObjectIx == this.#twObjectIx_PendingDelete)
-               this.#twObjectIx_PendingDelete = 0;
-
-            if (pChild.wClass_Parent == 70)
-            {
-               this.#jPObject.find ('.jsSceneItem[twObjectIx=' + pChild.twObjectIx + ']').remove ();
+            this.#jPObject.find ('.jsSceneItem[twObjectIx=' + pChild.twObjectIx + ']').remove ();
 // TODO: finish this
-            }
          }
       }
    }
@@ -436,7 +434,7 @@ class ExtractMap extends MapUtil
                   {
                      this.#m_MapRMXItem[this.#pRMXRoot.wClass_Object + '-' + this.#pRMXRoot.twObjectIx] = this.#pRMXRoot;
                      this.ReadyState (this.eSTATE.LOADING); // Loading Children
-                     this.#pRMXRoot.Attach (this);
+                     this.#pRMXRoot.Attach (this, null, true);
                   }
                   else
                   {
@@ -456,7 +454,7 @@ class ExtractMap extends MapUtil
                      if (this.#m_MapRMXItem['73' + '-' + aPObject[i].twObjectIx] == undefined)
                      {
                         this.#m_MapRMXItem['73' + '-' + aPObject[i].twObjectIx] = aPObject[i];
-                        aPObject[i].Attach (this);
+                        aPObject[i].Attach (this, null, true);
                      }
                      else
                      {
@@ -487,7 +485,7 @@ class ExtractMap extends MapUtil
          this.#pRMXPending = this.#m_pLnG.Model_Open ('RMPObject', pIAction.pResponse.aResultSet[0][0].twRMPObjectIx);
          this.#m_MapRMXItem['73' + '-' + pIAction.pResponse.aResultSet[0][0].twRMPObjectIx] = this.#pRMXPending;
 
-         this.#pRMXPending.Attach (this);
+         this.#pRMXPending.Attach (this, null, true);
       }
       else
       {
@@ -857,7 +855,7 @@ class ExtractMap extends MapUtil
          this.#m_MapRMXItem['73' + '-' + twObjectIx] = this.#m_pLnG.Model_Open ('RMPObject', twObjectIx);
          this.#pRMXRoot = this.#m_MapRMXItem['73' + '-' + twObjectIx];
          this.ReadyState (this.eSTATE.LOADING); // Loading Children
-         this.#m_MapRMXItem['73' + '-' + twObjectIx].Attach (this);
+         this.#m_MapRMXItem['73' + '-' + twObjectIx].Attach (this, null, true);
       }
       else
       {
@@ -1020,7 +1018,7 @@ class ExtractMap extends MapUtil
             sID = 'RMPObject';
 
          this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx] = this.#m_pLnG.Model_Open (sID, this.#m_twObjectIx);
-         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx].Attach (this);
+         this.#m_MapRMXItem[this.#m_wClass_Object + '-' + this.#m_twObjectIx].Attach (this, null, true);
       }
    }
 
@@ -1039,9 +1037,7 @@ class ExtractMap extends MapUtil
 
    onLoginFailure ()
    {
-      this.#m_pFabric.Detach (this);
-      this.#m_pFabric.destructor ();
-      this.#m_pFabric = null;
+      this.UnloadLnG ();
    }
 
    onLogin (e)

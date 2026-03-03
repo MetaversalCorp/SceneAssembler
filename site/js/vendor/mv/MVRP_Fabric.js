@@ -11,7 +11,7 @@ require ('@metaversalcorp/mvrp');
 require ('@metaversalcorp/mvrp_dev');
 */
 
-MV.MVRP.Fabric = MV.Library ('MVRP_Fabric', 'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Fabric', '0.23.2');
+MV.MVRP.Fabric = MV.Library ('MVRP_Fabric', 'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Fabric', '0.24.6');
 
 MV.MVRP.Fabric.IO_RFROOT = class extends MV.MVIO.IO_OBJECT
 {
@@ -2802,7 +2802,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
    }
    eSTATE = MV.MVRP.Fabric.FRIENDS.eSTATE;
 
-   #m_pLnG;
+   #pLnG;
    #m_pRFRoot;
    #m_apRFChat;
    #m_apRFGroup;
@@ -2825,15 +2825,15 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
       this.#m_apRFMeeting     = {};
       this.#m_apRFInvitation  = {};
 
-      this.#m_pLnG            = pLnG;
-      this.#m_pLnG.Attach (this);
+      this.#pLnG            = pLnG;
+      this.#pLnG.Attach (this);
    }
 
    destructor ()
    {
       this.#Unload ();
 
-      this.#m_pLnG = null;
+      this.#pLnG = null;
 
       return null;
    }
@@ -2845,91 +2845,88 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    get pLnG ()
    {
-      return this.#m_pLnG;
+      return this.#pLnG;
    }
 
    onInserted (pNotice)
    {
-      if (pNotice.pData.pChild != null)
+      switch (pNotice.pData.pChild.sID)
       {
-         switch (pNotice.pData.pChild.sID)
-         {
-            case 'RFRoot_RFGroup':
-               let pRFRoot_RFGroup = pNotice.pData.pChild;
+         case 'RFRoot_RFGroup':
+            let pRFRoot_RFGroup = pNotice.pData.pChild;
 
-               if (pRFRoot_RFGroup.bState == MV.MVRP.Fabric.RFGROUP_RFMEMBER.eSTATE.ACCEPTED)
-               {
-                  this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx] = this.#m_pLnG.Model_Open ('RFGroup', '' + pNotice.pData.pChild.twRFGroupIx);
-                  this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx].Attach (this);
-               }
-               else
-               {
-                  this.Emit ('onRootGroupAdd', pRFRoot_RFGroup);
-               }
-               break;
+            if (pRFRoot_RFGroup.bState == MV.MVRP.Fabric.RFGROUP_RFMEMBER.eSTATE.ACCEPTED)
+            {
+               this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx] = this.#pLnG.Model_Open ('RFGroup', '' + pNotice.pData.pChild.twRFGroupIx);
+               this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx].Attach (this);
+            }
+            else
+            {
+               this.Emit ('onRootGroupAdd', pRFRoot_RFGroup);
+            }
+            break;
 
-            case 'RFMeeting':
-               this.Emit ('onMeetingAdd', pNotice.pData.pChild);
-               break;
+         case 'RFMeeting':
+            this.Emit ('onMeetingAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFInvitation':
-               this.Emit ('onInvitationAdd', pNotice.pData.pChild);
-               break;
+         case 'RFInvitation':
+            this.Emit ('onInvitationAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFRoot_RFChat':
-               this.Emit ('onRootChatAdd', pNotice.pData.pChild);
+         case 'RFRoot_RFChat':
+            this.Emit ('onRootChatAdd', pNotice.pData.pChild);
 
-               this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx] = this.#m_pLnG.Model_Open ('RFChat', '' + pNotice.pData.pChild.twRFChatIx);
-               this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx].Attach (this);
-               break;
+            this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx] = this.#pLnG.Model_Open ('RFChat', '' + pNotice.pData.pChild.twRFChatIx);
+            this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx].Attach (this);
+            break;
 
-            case 'RFRoot_RFTeleport':
-               let pRFRoot_RFTeleport = pNotice.pData.pChild;
+         case 'RFRoot_RFTeleport':
+            let pRFRoot_RFTeleport = pNotice.pData.pChild;
 
-               this.Emit ('onRootTeleportAdd', pRFRoot_RFTeleport);
+            this.Emit ('onRootTeleportAdd', pRFRoot_RFTeleport);
 
-               this.#m_apRFTeleport[pRFRoot_RFTeleport.twRFTeleportIx] = this.#m_pLnG.Model_Open ('RFTeleport', '' + pRFRoot_RFTeleport.twRFTeleportIx);
-               this.#m_apRFTeleport[pRFRoot_RFTeleport.twRFTeleportIx].Attach (this);
-               break;
+            this.#m_apRFTeleport[pRFRoot_RFTeleport.twRFTeleportIx] = this.#pLnG.Model_Open ('RFTeleport', '' + pRFRoot_RFTeleport.twRFTeleportIx);
+            this.#m_apRFTeleport[pRFRoot_RFTeleport.twRFTeleportIx].Attach (this);
+            break;
 
-            case 'RFFriend':
-               this.Emit ('onFriendAdd', pNotice.pData.pChild);
-               break;
+         case 'RFFriend':
+            this.Emit ('onFriendAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFGroup':
-               this.Emit ('onGroupAdd', pNotice.pData.pChild);
-               break;
+         case 'RFGroup':
+            this.Emit ('onGroupAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFGroup_RFMember':
-               this.Emit ('onGroupMemberAdd', { pRFGroup_RFMember: pNotice.pData.pChild, pRFGroup: pNotice.pCreator });
-               break;
+         case 'RFGroup_RFMember':
+            this.Emit ('onGroupMemberAdd', { pRFGroup_RFMember: pNotice.pData.pChild, pRFGroup: pNotice.pCreator });
+            break;
 
-            case 'RFChat':
-               this.Emit ('onChatAdd', pNotice.pData.pChild);
-               break;
+         case 'RFChat':
+            this.Emit ('onChatAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFChat_RFMember':
-               this.Emit ('onChatMemberAdd', { pRFChat_RFMember: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
-               break;
+         case 'RFChat_RFMember':
+            this.Emit ('onChatMemberAdd', { pRFChat_RFMember: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
+            break;
 
-            case 'RFChat_RFMessage':
-               this.Emit ('onChatMessageAdd', { pRFChat_RFMessage: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
-               break;
+         case 'RFChat_RFMessage':
+            this.Emit ('onChatMessageAdd', { pRFChat_RFMessage: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
+            break;
 
-            case 'RFTeleport':
-               this.Emit ('onTeleportAdd', pNotice.pData.pChild);
-               break;
+         case 'RFTeleport':
+            this.Emit ('onTeleportAdd', pNotice.pData.pChild);
+            break;
 
-            case 'RFTeleport_RFTarget':
-               this.Emit ('onTeleportTargetAdd', { pRFTeleport_RFTarget: pNotice.pData.pChild, pRFTeleport: pNotice.pCreator });
-               break;
-         }
+         case 'RFTeleport_RFTarget':
+            this.Emit ('onTeleportTargetAdd', { pRFTeleport_RFTarget: pNotice.pData.pChild, pRFTeleport: pNotice.pCreator });
+            break;
       }
    }
 
    onUpdated (pNotice)
    {
-      if (pNotice.pData.pChild != null)
+      if (pNotice.pData.pObject == null)
       {
          switch (pNotice.pData.pChild.sID)
          {
@@ -2940,7 +2937,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
                if (pRFRoot_RFGroup.bState == MV.MVRP.Fabric.RFGROUP_RFMEMBER.eSTATE.ACCEPTED && !(this.#m_apRFGroup[pRFRoot_RFGroup.twRFGroupIx]))
                {
-                  this.#m_apRFGroup[pRFRoot_RFGroup.twRFGroupIx] = this.#m_pLnG.Model_Open ('RFGroup', '' + pRFRoot_RFGroup.twRFGroupIx);
+                  this.#m_apRFGroup[pRFRoot_RFGroup.twRFGroupIx] = this.#pLnG.Model_Open ('RFGroup', '' + pRFRoot_RFGroup.twRFGroupIx);
                   this.#m_apRFGroup[pRFRoot_RFGroup.twRFGroupIx].Attach (this);
                }
                break;
@@ -3010,105 +3007,102 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    onDeleting (pNotice)
    {
-      if (pNotice.pData.pChild != null)
+      switch (pNotice.pData.pChild.sID)
       {
-         switch (pNotice.pData.pChild.sID)
-         {
-            case 'RFRoot_RFGroup':
-               this.Emit ('onRootGroupRemove', pNotice.pData.pChild);
+         case 'RFRoot_RFGroup':
+            this.Emit ('onRootGroupRemove', pNotice.pData.pChild);
 
-               if (this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx])
-               {
-                  this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx].Detach (this);
-                  this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx] = this.#m_pLnG.Model_Close (this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx]);
-               }
-               break;
+            if (this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx])
+            {
+               this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx].Detach (this);
+               this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx] = this.#pLnG.Model_Close (this.#m_apRFGroup[pNotice.pData.pChild.twRFGroupIx]);
+            }
+            break;
 
-            case 'RFMeeting':
-               this.Emit ('onMeetingRemove', pNotice.pData.pChild);
+         case 'RFMeeting':
+            this.Emit ('onMeetingRemove', pNotice.pData.pChild);
 
-               if (this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx])
-               {
-                  this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx].Detach (this);
-                  this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx] = this.#m_pLnG.Model_Close (this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx]);
-               }
-               break;
+            if (this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx])
+            {
+               this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx].Detach (this);
+               this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx] = this.#pLnG.Model_Close (this.#m_apRFMeeting[pNotice.pData.pChild.twRFMeetingIx]);
+            }
+            break;
 
-            case 'RFInvitation':
-               this.Emit ('onInvitationRemove', pNotice.pData.pChild);
+         case 'RFInvitation':
+            this.Emit ('onInvitationRemove', pNotice.pData.pChild);
 
-               if (this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx])
-               {
-                  this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx].Detach (this);
-                  this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx] = this.#m_pLnG.Model_Close (this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx]);
-               }
-               break;
+            if (this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx])
+            {
+               this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx].Detach (this);
+               this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx] = this.#pLnG.Model_Close (this.#m_apRFInvitation[pNotice.pData.pChild.twRFInvitationIx]);
+            }
+            break;
 
-            case 'RFRoot_RFChat':
-               this.Emit ('onRootChatRemove', pNotice.pData.pChild);
+         case 'RFRoot_RFChat':
+            this.Emit ('onRootChatRemove', pNotice.pData.pChild);
 
-               this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx].Detach (this);
-               this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx] = this.#m_pLnG.Model_Close (this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx]);
-               break;
+            this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx].Detach (this);
+            this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx] = this.#pLnG.Model_Close (this.#m_apRFChat[pNotice.pData.pChild.twRFChatIx]);
+            break;
 
-            case 'RFRoot_RFTeleport':
-               this.Emit ('onRootTeleportRemove', pNotice.pData.pChild);
+         case 'RFRoot_RFTeleport':
+            this.Emit ('onRootTeleportRemove', pNotice.pData.pChild);
 
-               if (this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx])
-               {
-                  this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx].Detach (this);
-                  this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx] = this.#m_pLnG.Model_Close (this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx]);
-               }
-               break;
+            if (this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx])
+            {
+               this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx].Detach (this);
+               this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx] = this.#pLnG.Model_Close (this.#m_apRFTeleport[pNotice.pData.pChild.twRFTeleportIx]);
+            }
+            break;
 
-            case 'RFFriend':
-               this.Emit ('onFriendRemove', pNotice.pData.pChild);
-               break;
+         case 'RFFriend':
+            this.Emit ('onFriendRemove', pNotice.pData.pChild);
+            break;
 
-            case 'RFGroup':
-               this.Emit ('onGroupRemove', pNotice.pData.pChild);
-               break;
+         case 'RFGroup':
+            this.Emit ('onGroupRemove', pNotice.pData.pChild);
+            break;
 
-            case 'RFGroup_RFMember':
-               this.Emit ('onGroupMemberRemove', { pRFGroup_RFMember: pNotice.pData.pChild, pRFGroup: pNotice.pCreator });
-               break;
+         case 'RFGroup_RFMember':
+            this.Emit ('onGroupMemberRemove', { pRFGroup_RFMember: pNotice.pData.pChild, pRFGroup: pNotice.pCreator });
+            break;
 
-            case 'RFChat':
-               this.Emit ('onChatRemove', pNotice.pData.pChild);
-               break;
+         case 'RFChat':
+            this.Emit ('onChatRemove', pNotice.pData.pChild);
+            break;
 
-            case 'RFChat_RFMember':
-               this.Emit ('onChatMemberRemove', { pRFChat_RFMember: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
-               break;
+         case 'RFChat_RFMember':
+            this.Emit ('onChatMemberRemove', { pRFChat_RFMember: pNotice.pData.pChild, pRFChat: pNotice.pCreator });
+            break;
 
-            case 'RFChat_RFMessage':
+         case 'RFChat_RFMessage':
 
-               break;
+            break;
 
-            case 'RFTeleport':
+         case 'RFTeleport':
 
-               break;
+            break;
 
-            case 'RFTeleport_RFTarget':
+         case 'RFTeleport_RFTarget':
 
-               break;
-         }
+            break;
       }
    }
 
    onReadyState (pNotice)
    {
-      if (pNotice.pCreator == this.#m_pLnG)
+      if (pNotice.pCreator == this.#pLnG)
       {
-         if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.DISCONNECTED)
+         if (this.#pLnG.ReadyState () == this.#pLnG.eSTATE.DISCONNECTED)
          {
             this.Emit ('onRP1Friend_NotReady');
          }
-         else if (this.#m_pLnG.ReadyState () == this.#m_pLnG.eSTATE.LOGGEDIN)
+         else if (this.#pLnG.ReadyState () == this.#pLnG.eSTATE.LOGGEDIN)
          {
             if (this.#m_pRFRoot == null)
             {
-               this.#m_pRFRoot = this.#m_pLnG.Model_Open ('RFRoot', '' + this.#m_twRPersonaIx);
+               this.#m_pRFRoot = this.#pLnG.Model_Open ('RFRoot', '' + this.#m_twRPersonaIx);
                this.#m_pRFRoot.Attach (this);
             }
             else
@@ -3294,7 +3288,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    Group_Mute (twRFGroupIx, twRPersonaIx, pThis, fn, Param)
    {
-      let pIAction = this.#m_pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFGROUP.apAction.MUTE);
+      let pIAction = this.#pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFGROUP.apAction.MUTE);
       let pRequest = pIAction.pRequest;
 
       pRequest.twRFGroupIx          = twRFGroupIx;
@@ -3375,7 +3369,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    Chat_Invite (twRFChatIx, sRPersonaIx_List, pThis, fn, Param)
    {
-      let pIAction = this.#m_pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFCHAT.apAction.ADD);
+      let pIAction = this.#pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFCHAT.apAction.ADD);
       let pRequest = pIAction.pRequest;
 
       pRequest.twRFChatIx        = twRFChatIx;
@@ -3386,7 +3380,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    Chat_Leave (twRFChatIx, pThis, fn, Param)
    {
-      let pIAction = this.#m_pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFCHAT.apAction.REMOVE);
+      let pIAction = this.#pLnG.pClient.Request (MV.MVRP.Fabric.IO_RFCHAT.apAction.REMOVE);
       let pRequest = pIAction.pRequest;
 
       pRequest.twRFChatIx        = twRFChatIx;
@@ -3396,7 +3390,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
 
    #Unload (bNotify)
    {
-      this.#m_pLnG.Detach (this);
+      this.#pLnG.Detach (this);
       this.ReadyState (this.eSTATE.NOTREADY);
 
       this.#m_twRPersonaIx = 0;
@@ -3404,7 +3398,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
       if (this.#m_pRFRoot)
       {
          this.#m_pRFRoot.Detach (this);
-         this.#m_pRFRoot = this.#m_pLnG.Model_Close (this.#m_pRFRoot);
+         this.#m_pRFRoot = this.#pLnG.Model_Close (this.#m_pRFRoot);
       }
 
       for (let twRFChatIx in this.#m_apRFChat)
@@ -3413,7 +3407,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
          {
             this.#m_apRFChat[twRFChatIx].Detach (this);
 
-            this.#m_pLnG.Model_Close (this.#m_apRFChat[twRFChatIx]);
+            this.#pLnG.Model_Close (this.#m_apRFChat[twRFChatIx]);
          }
       }
 
@@ -3423,7 +3417,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
          {
             this.#m_apRFGroup[twRFGroupIx].Detach (this);
 
-            this.#m_pLnG.Model_Close (this.#m_apRFGroup[twRFGroupIx]);
+            this.#pLnG.Model_Close (this.#m_apRFGroup[twRFGroupIx]);
          }
       }
 
@@ -3433,7 +3427,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
          {
             this.#m_apRFTeleport[twRFTeleportIx].Detach (this);
 
-            this.#m_pLnG.Model_Close (this.#m_apRFTeleport[twRFTeleportIx]);
+            this.#pLnG.Model_Close (this.#m_apRFTeleport[twRFTeleportIx]);
          }
       }
 
@@ -3443,7 +3437,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
          {
             this.#m_apRFMeeting[twRFMeetingIx].Detach (this);
 
-            this.#m_pLnG.Model_Close (this.#m_apRFMeeting[twRFMeetingIx]);
+            this.#pLnG.Model_Close (this.#m_apRFMeeting[twRFMeetingIx]);
          }
       }
 
@@ -3453,7 +3447,7 @@ MV.MVRP.Fabric.FRIENDS = class extends MV.MVMF.NOTIFICATION
          {
             this.#m_apRFInvitation[twRFInvitationIx].Detach (this);
 
-            this.#m_pLnG.Model_Close (this.#m_apRFInvitation[twRFInvitationIx]);
+            this.#pLnG.Model_Close (this.#m_apRFInvitation[twRFInvitationIx]);
          }
       }
    }
