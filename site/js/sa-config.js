@@ -22,6 +22,9 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
+// ===== Tutorial state (set by sa-tutorial.js; checked by sa-ui.js) =====
+window.sceneAssemblerTutorialActive = false;
+
 // ===== Constants & Styles =====
 const SNAP_STEP = 1;
 const LABEL_SIZE = 0.2;

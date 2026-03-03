@@ -65,6 +65,14 @@ body, .dropdown-item {
   margin: 0rem !important;
 }
 
+/* Hide focus/active styling when focus is moved here by Bootstrap trap (e.g. after clicking in .ui) */
+.offcanvas .btn-close:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+  opacity: 0.5;
+  background-color: transparent;
+}
+
 /* Resize handle for code editor panel */
 .offcanvas-resize-handle {
   position: absolute;
@@ -474,4 +482,156 @@ canvas {
 #texStats .tex-gauge .progress-bar {
   transition: width 0.2s ease;
   -webkit-transition: width 0.2s ease;
+}
+
+/* ==========================================================================
+   Driver.js tutorial popover – typography
+   ========================================================================== */
+
+.driver-popover,
+.driver-popover *:not(i):not(.fa-solid) {
+  font-family: "Outfit", sans-serif !important;
+}
+
+.driver-popover-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+
+.driver-popover-description {
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.01em;
+}
+
+.driver-popover-description kbd {
+  font-family: "Outfit", ui-monospace, monospace;
+  font-size: 0.8em;
+  padding: 0.1em 0.35em;
+  border-radius: 0.25rem;
+}
+
+.driver-popover-progress-text {
+  font-size: 0.8rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.driver-popover-footer button {
+  font-size: 0.85rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+/* Animated gradient border – minimal overrides to avoid breaking driver.js layout */
+.driver-popover {
+  background: transparent !important;
+}
+
+.driver-popover::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #c0392b, #b7950b, #1a5276, #7d3c98, #1a5276, #c0392b);
+  background-size: 300% 100%;
+  animation: driver-popover-gradient 3s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+.driver-popover::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 7px;
+  background: #fff;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.driver-popover-arrow {
+  border-width: 14px !important;
+}
+
+.driver-popover-arrow-side-top {
+  transform: translateY(-4px);
+}
+
+.driver-popover-arrow-side-bottom {
+  transform: translateY(4px);
+}
+
+.driver-popover-arrow-side-left {
+  transform: translateX(-4px);
+}
+
+.driver-popover-arrow-side-right {
+  transform: translateX(4px);
+}
+
+@keyframes driver-popover-gradient {
+  to {
+    background-position: 300% 0;
+  }
+}
+
+/* Start Tutorial button – same animated gradient border as driver-popover */
+#startTutorial {
+  position: relative;
+  background: transparent !important;
+}
+
+#startTutorial::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 7px;
+  background: linear-gradient(90deg, #c0392b, #b7950b, #1a5276, #7d3c98, #1a5276, #c0392b);
+  background-size: 300% 100%;
+  animation: driver-popover-gradient 3s linear infinite;
+  z-index: -2;
+  pointer-events: none;
+}
+
+#startTutorial::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 5px;
+  background: #f8f9fa;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.driver-overlay path {
+  fill: rgba(0, 0, 0, 0.85) !important;
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   Tutorial – blur UI on viewport step, disable pointer events
+   ========================================================================== */
+
+body.sa-tutorial-active .ui {
+  pointer-events: none !important;
+}
+
+/* Offcanvas panels during their tutorial step – disable all interaction */
+.sa-tutorial-offcanvas-view,
+.sa-tutorial-offcanvas-view * {
+  pointer-events: none !important;
+}
+
+body.sa-tutorial-context-menu-step #modelsPanel {
+  pointer-events: auto !important;
+}
+
+body.sa-tutorial-viewport-step .ui {
+  filter: blur(6px);
+  opacity: 0.85;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }

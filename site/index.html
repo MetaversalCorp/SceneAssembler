@@ -42,6 +42,10 @@
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
+   <!-- Driver.js (for Getting Started Guide) -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
+   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+
    <!-- Fonts & Icons -->
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +145,7 @@
                   </button>
                </li>
                <li class="nav-item dropdown">
-                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                  <button class="nav-link" id="settingsToggle" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                      <i class="fa-solid fa-cog" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Scene Settings"></i>
                   </button>
                   <ul class="dropdown-menu">
@@ -187,10 +191,14 @@
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item dropdown">
-                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                  <button class="nav-link" id="helpToggle" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                      <i class="fa-solid fa-graduation-cap" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Help"></i>
                   </button>
-                  <div class="dropdown-menu p-3 text-body-secondary" style="min-width: 20rem; max-width: 100%;">
+                  <div class="dropdown-menu p-3 text-body-secondary" id="help" style="min-width: 20rem; max-width: 100%;">
+                     <button type="button" class="btn btn-light w-100 mb-2 border-0" id="startTutorial" aria-label="Start getting started tutorial">
+                        <i class="fa-solid fa-star me-1"></i>Getting Started Tutorial
+                     </button>
+                     <hr class="dropdown-divider">
                      <div id="hotkeys" class="small">
                         <strong class="d-block mb-1">Hotkeys</strong>
                         <span class="text-body-tertiary my-2">Transform</span>
@@ -804,5 +812,8 @@
 
 <!-- Shell: Tooltips; code editor panel fade and resize; object library panel resize -->
 <script src="js/sa-shell.js"></script>
+
+<!-- Tutorial: Getting Started walkthrough using driver.js -->
+<script src="js/sa-tutorial.js"></script>
 
 </html>

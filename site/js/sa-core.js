@@ -39,6 +39,7 @@ function updateCameraFarPlane() {
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.setPixelRatio(window.devicePixelRatio);
+renderer.domElement.id = 'viewportCanvas';
 document.body.appendChild(renderer.domElement);
 
 const orbit = new THREE.OrbitControls(camera, renderer.domElement);

@@ -145,6 +145,7 @@ renderer.domElement.addEventListener("dblclick", e => {
 // ===== Keyboard shortcuts =====
 window.addEventListener("keydown", e => {
     if (!e.key) return;
+    if (window.sceneAssemblerTutorialActive) return;
 
     const key = e.key.toLowerCase();
     const inForm = (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA");
@@ -252,6 +253,7 @@ window.addEventListener("blur", () => {
 
 window.addEventListener("keyup", e => {
     if (!e.key) return;
+    if (window.sceneAssemblerTutorialActive) return;
 
     const key = e.key.toLowerCase();
 
@@ -285,24 +287,28 @@ window.addEventListener("keyup", e => {
 // ===== Fix #ui buttons =====
 if (typeof btnTranslate !== 'undefined') {
     btnTranslate.onclick = () => {
+        if (window.sceneAssemblerTutorialActive) return;
         if (!checkUnsavedChangesBeforeEdit()) return;
         if (isEditingAllowed()) { transform.setMode("translate"); updateTransformButtonActiveState(); }
     };
 }
 if (typeof btnRotate !== 'undefined') {
     btnRotate.onclick = () => {
+        if (window.sceneAssemblerTutorialActive) return;
         if (!checkUnsavedChangesBeforeEdit()) return;
         if (isEditingAllowed()) { transform.setMode("rotate"); updateTransformButtonActiveState(); }
     };
 }
 if (typeof btnScale !== 'undefined') {
     btnScale.onclick = () => {
+        if (window.sceneAssemblerTutorialActive) return;
         if (!checkUnsavedChangesBeforeEdit()) return;
         if (isEditingAllowed()) { transform.setMode("scale"); updateTransformButtonActiveState(); }
     };
 }
 if (typeof btnDelete !== 'undefined') {
     btnDelete.onclick = () => {
+        if (window.sceneAssemblerTutorialActive) return;
         if (!checkUnsavedChangesBeforeEdit()) return;
         const objectsToDelete = selectedObjects.filter(obj => !obj.userData?.isCanvasRoot);
         if (objectsToDelete.length) [...objectsToDelete].forEach(deleteObject);
@@ -310,9 +316,9 @@ if (typeof btnDelete !== 'undefined') {
         if (selectedObjects.length === 1 && selectedObjects[0].userData?.isCanvasRoot) return;
     };
 }
-if (typeof btnUndo !== 'undefined') btnUndo.onclick = () => undo();
-if (typeof btnRedo !== 'undefined') btnRedo.onclick = () => redo();
-if (typeof btnResetCamera !== 'undefined') btnResetCamera.onclick = () => resetCamera();
+if (typeof btnUndo !== 'undefined') btnUndo.onclick = () => { if (window.sceneAssemblerTutorialActive) return; undo(); };
+if (typeof btnRedo !== 'undefined') btnRedo.onclick = () => { if (window.sceneAssemblerTutorialActive) return; redo(); };
+if (typeof btnResetCamera !== 'undefined') btnResetCamera.onclick = () => { if (window.sceneAssemblerTutorialActive) return; resetCamera(); };
 
 // ===== Resize =====
 window.addEventListener("resize", () => {
