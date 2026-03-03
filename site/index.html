@@ -16,26 +16,48 @@
 
    SPDX-License-Identifier: Apache-2.0
 -->
+
+<!--
+   SCENE ASSEMBLER – UI Overview
+   - 3D Viewport: The canvas (injected by sa-core.js) where you view and select objects
+   - Scene Outliner: Left sidebar (#modelList) – scene objects hierarchy
+   - Object Properties: Left sidebar (#propertiesPanel) – object stats (triangles, textures)
+   - Header: Top bar – scene settings, undo/redo, transform tools, export
+   - Transform Gizmo: Move/Rotate/Scale buttons (W/E/R)
+   - Asset Browser: Object Library panel – add objects to scene
+   - Code Editor: Edit scene as JSON
+-->
+
 <html data-bs-theme="dark">
 
 <head>
    <meta charset="utf-8">
    <meta name="viewport" content="width=device-width, initial-scale=1">
    <title>Scene Assembler</title>
+   <link rel="icon" href="favicon.svg" type="image/svg+xml">
 
+   <!-- Styles -->
    <link rel="stylesheet" href="css/styles.css">
 
+   <!-- Bootstrap (UI framework) -->
    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
+   <!-- Driver.js (for Getting Started Guide) -->
+   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.css">
+   <script src="https://cdn.jsdelivr.net/npm/driver.js@1.4.0/dist/driver.js.iife.js"></script>
+
+   <!-- Fonts & Icons -->
    <link rel="preconnect" href="https://fonts.googleapis.com">
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet">
    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" integrity="sha512-2SwdPD6INVrV/lHTZbO2nodKhrnDdJK9/kg2XD1r9uGqPo1cUbujc+IYdlYdEErWNu69gVcYgdxlmVmzTWnetw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
+   <!-- jQuery, Socket.io (Fabric sync) -->
    <script type="text/javascript" src="js/vendor/jquery-3.7.1.min.js"></script>
    <script type="text/javascript" src="js/vendor/cdn.socket.io_4.8.1_socket.io.min.js"></script>
 
+   <!-- Metaversal Fabric (multi-user, scene sync) -->
    <script type="text/javascript" src="/js/vendor/mv/MVMF.js"></script>
    <script type="text/javascript" src="/js/vendor/mv/MVSB.js"></script>
    <script type="text/javascript" src="/js/vendor/mv/MVRest.js"></script>
@@ -46,14 +68,14 @@
    <script type="text/javascript" src="/js/vendor/mv/MVRP_Fabric.js"></script>
    <script type="text/javascript" src="/js/vendor/mv/MVRP_Map.js"></script>
 
-   <!-- App -->
+   <!-- App entry (Fabric integration, scene load) -->
    <script src="js/maputil.js"></script>
    <script src="js/rp1.js"></script>
 
-   <!-- Core Three.js -->
+   <!-- Three.js (3D engine) -->
    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
 
-   <!-- Controls & Loaders -->
+   <!-- OrbitControls = camera orbit; TransformControls = move/rotate/scale gizmo -->
    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/TransformControls.js"></script>
    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -72,8 +94,10 @@
 </head>
 
 <body>
-
-   <!-- Login Modal -->
+   <!--
+      LOGIN MODAL – Auth gate before editing.
+      Shown until user enters Fabric URL + key. Hidden when authenticated.
+   -->
    <div class="login-modal vh-100 vw-100 bg-dark position-absolute z-3 jsLogin" style="display:none;" tabindex="-1">
       <div class="modal-body text-center d-flex flex-column h-100 justify-content-center align-items-center">
          <h1 class="modal-title mb-2 pe-none text-uppercase fw-lighter">Scene Assembler</h1>
@@ -108,6 +132,10 @@
       </div>
    </div>
 
+   <!--
+      HEADER (top bar)
+      Scene list, settings (snap, canvas size), help, undo/redo, delete, camera, export, publish.
+   -->
    <div class="ui position-absolute w-100 user-select-none pe-none z-2 jsSceneEditor" style="display:none;">
       <nav class="main navbar navbar-expand py-1 pe-auto">
          <div class="container-lg">
@@ -118,7 +146,7 @@
                   </button>
                </li>
                <li class="nav-item dropdown">
-                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                  <button class="nav-link" id="settingsToggle" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                      <i class="fa-solid fa-cog" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Scene Settings"></i>
                   </button>
                   <ul class="dropdown-menu">
@@ -134,9 +162,12 @@
                         <hr class="dropdown-divider">
                      </li>
                      <li>
-                        <div class="px-3 py-2 d-flex align-items-center w-100 gap-3">
-                           <label for="canvasSize" class="form-label w-100 m-0">Canvas&nbsp;Size</label>
-                           <input type="text" class="form-control" id="canvasSize" placeholder="20" value="20" style="width:5rem">
+                        <div class="px-3 py-2 d-flex align-items-end w-100 gap-2">
+                           <div class="input-group">
+                              <label for="canvasSize" class="form-label w-100 m-0 small"><i class="fa-solid fa-ruler-combined"></i> Canvas&nbsp;Size</label>
+                              <input type="text" class="form-control" id="canvasSize" placeholder="200" value="200" maxlength="3" style="width:2rem">
+                             <span class="input-group-text">m.</span>
+                           </div>
                            <button type="submit" class="btn btn-outline-light" id="setCanvasSize">Set</button>
                         </div>
                      </li>
@@ -161,10 +192,14 @@
                <li class="nav-item border-start my-1">
                </li>
                <li class="nav-item dropdown">
-                  <button class="nav-link" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
+                  <button class="nav-link" id="helpToggle" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false">
                      <i class="fa-solid fa-graduation-cap" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Help"></i>
                   </button>
-                  <div class="dropdown-menu p-3 text-body-secondary" style="min-width: 20rem; max-width: 100%;">
+                  <div class="dropdown-menu p-3 text-body-secondary" id="help" style="min-width: 20rem; max-width: 100%;">
+                     <button type="button" class="btn btn-light w-100 mb-2 border-0" id="startTutorial" aria-label="Start getting started tutorial">
+                        <i class="fa-solid fa-star me-1"></i>Getting Started Tutorial
+                     </button>
+                     <hr class="dropdown-divider">
                      <div id="hotkeys" class="small">
                         <strong class="d-block mb-1">Hotkeys</strong>
                         <span class="text-body-tertiary my-2">Transform</span>
@@ -219,10 +254,8 @@
                   </div>
                </li>
                <li class="nav-item border-start my-1">
-               <li class="nav-item">
+               <li class="nav-item d-flex" id="undoRedoGroup">
                   <button class="nav-link" id="undo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Undo (ctrl+z)"><i class="fa-solid fa-rotate-left"></i></button>
-               </li>
-               <li class="nav-item">
                   <button class="nav-link" id="redo" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Redo (ctrl+shift+z)"><i class="fa-solid fa-rotate-right"></i></button>
                </li>
                <li class="nav-item border-start my-1">
@@ -245,6 +278,7 @@
             <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#codeEditorPanel" aria-controls="codeEditorPanel" data-bs-toggle="tooltip" data-bs-placement="bottom" title="View Scene JSON" id="codeToggle"><i class="fa-solid fa-code"></i> Code Editor</button>
          </div>
       </nav>
+      <!-- TRANSFORM TOOLBAR – Move/Rotate/Scale. Shown when object selected. -->
       <nav class="secondary navbar navbar-expand p-0 mt-3 mt-lg-0 pe-none d-none" id="objControls">
          <ul class="navbar-nav transforms gap-1 mb-lg-0 rounded-5 blur mx-auto pe-auto bg-dark bg-opacity-75">
             <li class="nav-item">
@@ -264,6 +298,11 @@
       </nav>
    </div>
 
+   <!--
+      SIDEBAR (left) – Outliner + Properties panels.
+      OUTLINER: #modelList – scene hierarchy, select objects, drag to group.
+      PROPERTIES: #propertiesPanel – stats (triangles, textures), efficiency tips.
+   -->
    <div class="ui position-fixed mt-5 pt-2 ms-3 h-100 pe-none z-1 jsSceneEditor" id="sidebar" style="display:none;">
       <div id="modelsPanel" class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-none user-select-none" style="width: 18rem;">
          <div class="card-body p-0">
@@ -275,21 +314,130 @@
       <div class="card mb-3 rounded-4 bg-dark bg-opacity-75 blur pe-auto user-select-none" style="width: 18rem;" id="propertiesPanel">
          <div class="card-body">
             <h6 class="card-title pe-none user-select-none">Properties</h6>
-            <p class="card-text small" id="properties"></p>
-            <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
-            <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
+            <p class="card-text small mb-2" id="properties"></p>
+
+            <div class="d-flex gap-1 align-items-center mb-2">
+               <div class="badge text-bg-secondary" id="triBadge"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangles: <span id="triCount"></span></div>
+               <div id="triStats" class="btn-group dropend">
+                  <button id="triStatus" class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 22rem; max-height: 80vh; overflow-y: auto;">
+                     <h6 class="pe-none user-select-none mb-2"><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> Triangle Analyzer</h6>
+                     <p class="stat-viewer-lead small mb-1 pe-none user-select-none text-muted">
+                        It's best to keep scenes under <strong><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 200K</strong> (and 20MB). Fewer <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> = better performance.
+                     </p>
+                     <div class="tri-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Selected:</span>
+                           <span><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i></span>
+                           <span class="fw-medium" id="triGaugeCount">0</span>
+                           <span>/</span>
+                           <span><i class="fa-solid fa-cube fa-sm"></i></span>
+                           <span class="fw-medium" id="vertCount"></span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triGaugeBar">
+                           <div class="progress-bar" id="triGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="triGaugeStatus">Good</div>
+                     </div>
+                     <div class="tri-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Scene total:</span>
+                           <span><i class="fa-solid fa-play fa-rotate-270 fa-sm"></i></span>
+                           <span class="fw-medium" id="triSceneCount">0</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Scene triangles vs 200K limit" aria-valuemin="0" aria-valuemax="200000" style="height: 0.5rem" id="triSceneGaugeBar">
+                           <div class="progress-bar" id="triSceneGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="triSceneGaugeStatus">Good</div>
+                     </div>
+                     <details class="stat-viewer-details small mb-1">
+                        <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>· Efficient scenes load faster and run better on all devices.</li>
+                           <li>· Use fewer triangles; reuse materials; unify normals; tile textures.</li>
+                           <li>· Build to real scale; group by proximity, not material; keep dense detail away from area edges.</li>
+                        </ul>
+                     </details>
+                     <details class="stat-viewer-details small">
+                        <summary class="text-body-secondary cursor-pointer">Tier specs (advanced)</summary>
+                        <p class="small text-body-secondary mt-1 mb-1">Pick the tier that fits your object size and how many can appear at once.</p>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>T1: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 500 · <i class="fa-solid fa-image fa-sm"></i> 64×64 · <i class="fa-solid fa-shapes"></i> 200</li>
+                           <li>T2: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 2K · <i class="fa-solid fa-image fa-sm"></i> 128×128 · <i class="fa-solid fa-shapes"></i> 50 </li>
+                           <li>T3: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 10K · <i class="fa-solid fa-image fa-sm"></i> 256×256 · <i class="fa-solid fa-shapes"></i> 10</li>
+                           <li>T4: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 1024×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                           <li>T5 Solo: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 2048×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                        </ul>
+                     </details>
+                  </div>
+               </div>
+            </div>
+            <div class="d-flex gap-1 align-items-center">
+               <div class="badge text-bg-secondary" id="texBadge"><i class="fa-solid fa-image fa-sm"></i> Textures: <span id="texCount"></span></div>
+               <div id="texStats" class="btn-group dropend">
+                  <button id="texStatus" class="btn btn-sm btn-outline-secondary text-light rounded-5 p-0" type="button" name="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false"><i class="fa-solid fa-info-circle fa-lg"></i></button>
+                  <div class="stat-viewer dropdown-menu dropdown-menu-end p-3" style="width: 22rem; max-height: 80vh; overflow-y: auto;">
+                     <h6 class="pe-none user-select-none mb-2"><i class="fa-solid fa-image fa-sm"></i> Texture Analyzer</h6>
+                     <p class="stat-viewer-lead small mb-1 pe-none user-select-none text-muted">
+                        It's best to keep total scene textures under <strong>2&nbsp;MP</strong>. Less/smaller <i class="fa-solid fa-image fa-sm"></i> = smoother rendering.
+                     </p>
+                     <p class="small fw-medium mb-1 pe-none user-select-none">Textures</p>
+                     <div id="texList"></div>
+                     <div class="tex-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Selected:</span>
+                           <span><i class="fa-solid fa-image fa-sm"></i></span>
+                           <span id="texGaugeDims">—</span>
+                           <span>MP</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Texture MP vs 2 MP limit" aria-valuemin="0" aria-valuemax="2" style="height: 0.5rem" id="texGaugeBar">
+                           <div class="progress-bar" id="texGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="texGaugeStatus">Good</div>
+                     </div>
+                     <div class="tex-gauge mb-2">
+                        <div class="d-flex gap-1 justify-content-start align-items-baseline small mb-1">
+                           <span>Scene total:</span>
+                           <span><i class="fa-solid fa-image fa-sm"></i></span>
+                           <span class="fw-medium" id="texSceneCount">0</span>
+                           <span>MP</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="Scene texture MP vs 2 MP limit" aria-valuemin="0" aria-valuemax="2" style="height: 0.5rem" id="texSceneGaugeBar">
+                           <div class="progress-bar" id="texSceneGaugeFill" style="width: 0%"></div>
+                        </div>
+                        <div class="stat-viewer-status small mt-1 text-start fw-medium" id="texSceneGaugeStatus">Good</div>
+                     </div>
+                     <details class="stat-viewer-details small mb-1">
+                        <summary class="text-body-secondary cursor-pointer">Efficiency tips</summary>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>· Reuse textures, use smaller resolutions, and tile instead of unique large images</li>
+                           <li>· Prefer single-texture materials; max 2 UV sets. PBR or alpha = higher tier.</li>
+                        </ul>
+                     </details>
+                     <details class="stat-viewer-details small">
+                        <summary class="text-body-secondary cursor-pointer">Tier specs (advanced)</summary>
+                        <p class="small text-body-secondary mt-1 mb-1">Pick the tier that fits your object size and how many can appear at once.</p>
+                        <ul class="list-unstyled mb-0 ps-2 small text-body-secondary">
+                           <li>T1: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 500 · <i class="fa-solid fa-image fa-sm"></i> 64×64 · <i class="fa-solid fa-shapes"></i> 200</li>
+                           <li>T2: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 2K · <i class="fa-solid fa-image fa-sm"></i> 128×128 · <i class="fa-solid fa-shapes"></i> 50 </li>
+                           <li>T3: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 10K · <i class="fa-solid fa-image fa-sm"></i> 256×256 · <i class="fa-solid fa-shapes"></i> 10</li>
+                           <li>T4: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 1024×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                           <li>T5 Solo: <i class="fa-solid fa-play fa-rotate-270 fa-sm"></i> 100K–150K · <i class="fa-solid fa-image fa-sm"></i> 2048×1024 · <i class="fa-solid fa-shapes"></i> 1</li>
+                        </ul>
+                     </details>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
-
    </div>
 
-   <div class="ui position-absolute bottom-0 w-100 user-select-none pe-none z-1 jsSceneEditor" style="display:none;">
-      <nav class="main navbar navbar-expand py-1 pe-auto">
-         <div class="container-lg">
-            <ul class="d-flex justify-content-center w-100">
-               <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
+   <!-- BOTTOM BAR – Opens Object Library. -->
+   <div class="ui position-absolute bottom-0 w-100 user-select-none z-1 pe-none jsSceneEditor" style="display:none;">
+      <nav class="main navbar navbar-expand py-1 pe-none">
+            <ul class="d-flex justify-content-center w-50 mx-auto">
+               <button class="btn btn-sm btn-outline-secondary text-light bg-dark rounded-5 pe-auto" type="button" data-bs-toggle="offcanvas" data-bs-target="#objLibPanel" aria-controls="objLibPanel" data-bs-placement="top" title="Open Object Library" id="objLibToggle"><i class="fa-solid fa-shapes"></i> Objects</button>
             </ul>
-         </div>
       </nav>
    </div>
 
@@ -300,7 +448,12 @@
       </li>
    </template>
 
-   <!-- Offcanvas Panels -->
+   <!--
+      OFFCANVAS PANELS – Slide-out panels.
+      sceneManagerPanel: Scene list, new scene, disconnect (Fabric).
+      codeEditorPanel: JSON scene editor – edit scene as code.
+      objLibPanel: Object Library – drag objects into scene.
+   -->
    <div class="offcanvas offcanvas-start" tabindex="-1" id="sceneManagerPanel" aria-labeledby="sceneManagerPanelLabel">
       <div class="offcanvas-header d-flex justify-content-between pb-0">
          <h5 class="offcanvas-title pe-none text-uppercase fw-lighter" id="sceneManagerPanelLabel">Scene Assembler</h5>
@@ -353,7 +506,12 @@
       </div>
    </div>
 
-   <!-- Modals -->
+   <!--
+      MODALS – confirmation dialogs.
+      deleteChangesModal: Confirm scene delete.
+      unsavedChangesModal: Apply or discard Code Editor changes before 3D edits.
+      Publishing overlay: Shown while publishing to Fabric.
+   -->
    <div class="modal fade blur jsModalScene" id="deleteChangesModal" tabindex="-1" aria-labelledby="deleteChangesModalLabel" aria-hidden="true">
       <div class="modal-dialog">
          <div class="modal-content bg-dark text-light">
@@ -413,6 +571,11 @@
       </div>
    </div>
 
+   <!--
+      CODE EDITOR – CodeMirror 6 for JSON.
+      Scene is stored as JSON; edits here sync to 3D view when Apply Changes is clicked.
+      See sa-json-sync.js for sync logic.
+   -->
    <script type="module">
       import {
          EditorView,
@@ -603,106 +766,53 @@
    </script>
 </body>
 
-<!-- App -->
-<script src="js/main.js"></script>
+<!--
+   Scene Assembler modules. **LOAD ORDER MATTERS**
+   Each file depends on the ones above it. See site/js/README.md for more.
+-->
+<!-- Config: Shared values (snap step, colors, human height) -->
+<script src="js/sa-config.js"></script>
 
-<!-- Enable BS Tooltips -->
-<script type="text/javascript">
-   const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-   const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+<!-- Scene Editor Core: 3D scene, camera, renderer, lights, grid, ruler, human guide -->
+<script src="js/sa-core.js"></script>
 
-   // Fade #codeToggle when codeEditorPanel is visible
-   const codeEditorPanel = document.getElementById('codeEditorPanel');
-   const codeToggle = document.getElementById('codeToggle');
-   const codeEditorResizeHandle = document.getElementById('codeEditorResizeHandle');
+<!-- Bootstrap: Connects HTML UI elements to the app; gets/sets JSON editor text; runs setup when page loads -->
+<script src="js/sa-bootstrap.js"></script>
 
-   if (codeEditorPanel && codeToggle) {
-      codeEditorPanel.addEventListener('shown.bs.offcanvas', function() {
-         codeToggle.classList.add('opacity-0');
-         codeToggle.style.pointerEvents = 'none';
-      });
+<!-- Models: Caches loaded 3D models; loads models from URLs -->
+<script src="js/sa-models.js"></script>
 
-      codeEditorPanel.addEventListener('hidden.bs.offcanvas', function() {
-         codeToggle.classList.remove('opacity-0');
-         codeToggle.style.pointerEvents = '';
-      });
-   }
+<!-- Object Properties: Bounds, clamping, texture info; updates the properties panel -->
+<script src="js/sa-properties.js"></script>
 
-   // Resize functionality for code editor panel
-   if (codeEditorPanel && codeEditorResizeHandle) {
-      let isResizing = false;
-      let startX = 0;
-      let startWidth = 0;
+<!-- Transforms: Move/rotate/scale gizmo; box helpers; undo/redo; canvas size; transform events -->
+<script src="js/sa-transforms.js"></script>
 
-      codeEditorResizeHandle.addEventListener('mousedown', function(e) {
-         if (!codeEditorPanel.classList.contains('show')) return;
+<!-- JSON sync: Keeps the code editor and 3D scene in sync; builds scene JSON; exports scene -->
+<script src="js/sa-json-sync.js"></script>
 
-         isResizing = true;
-         startX = e.clientX;
-         startWidth = codeEditorPanel.offsetWidth;
-         document.body.style.cursor = 'ew-resize';
-         document.body.style.userSelect = 'none';
-         e.preventDefault();
-      });
+<!-- Selection: Select objects from sidebar or 3d scene canvas; select all; deselect all -->
+<script src="js/sa-selection.js"></script>
 
-      document.addEventListener('mousemove', function(e) {
-         if (!isResizing) return;
+<!-- Groups: Group objects; ungroup; drag and drop to attach; duplicate; delete; EXPERIMENTAL -->
+<script src="js/sa-groups.js"></script>
 
-         const deltaX = startX - e.clientX; // Negative because we're dragging left
-         const newWidth = Math.max(320, Math.min(window.innerWidth * 0.95, startWidth + deltaX));
+<!-- Objects Sidebar: Builds the object list; adds objects and groups to the list; inline rename -->
+<script src="js/sa-sidebar.js"></script>
 
-         codeEditorPanel.style.width = newWidth + 'px';
-         codeEditorPanel.style.setProperty('--bs-offcanvas-width', newWidth + 'px');
-      });
+<!-- UI: Keyboard shortcuts; buttons; context menu; hover and click on canvas; render loop; camera helpers -->
+<script src="js/sa-ui.js"></script>
 
-      document.addEventListener('mouseup', function() {
-         if (isResizing) {
-            isResizing = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-         }
-      });
-   }
+<!-- Object library: Loads and shows the object library; preview thumbnails; add objects to scene -->
+<script src="js/sa-object-library.js"></script>
 
-   // Resize functionality for object library panel (vertical resize from top)
-   const objLibResizeHandle = document.getElementById('objLibResizeHandle');
+<!-- Main: Loads and refreshes scenes; exposes functions for [rp1.js] -->
+<script src="js/sa-main.js"></script>
 
-   if (objLibPanel && objLibResizeHandle) {
-      let isResizingVertical = false;
-      let startY = 0;
-      let startHeight = 0;
+<!-- Shell: Tooltips; code editor panel fade and resize; object library panel resize -->
+<script src="js/sa-shell.js"></script>
 
-      objLibResizeHandle.addEventListener('mousedown', function(e) {
-         if (!objLibPanel.classList.contains('show')) return;
-
-         isResizingVertical = true;
-         startY = e.clientY;
-         startHeight = objLibPanel.offsetHeight;
-         document.body.style.cursor = 'ns-resize';
-         document.body.style.userSelect = 'none';
-         e.preventDefault();
-      });
-
-      document.addEventListener('mousemove', function(e) {
-         if (!isResizingVertical) return;
-
-         const deltaY = startY - e.clientY; // Positive when dragging up (increasing height)
-         const minHeight = 200; // Minimum height in pixels
-         const maxHeight = window.innerHeight * 0.9; // Maximum 90% of viewport height
-         const newHeight = Math.max(minHeight, Math.min(maxHeight, startHeight + deltaY));
-
-         objLibPanel.style.height = newHeight + 'px';
-         objLibPanel.style.setProperty('--bs-offcanvas-height', newHeight + 'px');
-      });
-
-      document.addEventListener('mouseup', function() {
-         if (isResizingVertical) {
-            isResizingVertical = false;
-            document.body.style.cursor = '';
-            document.body.style.userSelect = '';
-         }
-      });
-   }
-</script>
+<!-- Tutorial: Getting Started walkthrough using driver.js -->
+<script src="js/sa-tutorial.js"></script>
 
 </html>
