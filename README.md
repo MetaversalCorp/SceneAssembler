@@ -26,9 +26,9 @@ A web-based 3D scene editor that assembles scenes from GLB/GLTF models, syncs wi
 
 ## For Beginners
 
-### What is SceneAssembler?
+### What is Scene Assembler?
 
-SceneAssembler lets you:
+Scene Assembler lets you:
 
 - **Add 3D objects** from a library (GLB/GLTF models) into a scene
 - **Move, rotate, and scale** objects with an interactive gizmo
@@ -70,7 +70,7 @@ SceneAssembler lets you:
 
 ### Getting Started Tutorial
 
-When you first open the app, a **Getting Started** tour guides you through the main features. You can restart it anytime from the help menu or settings.
+When you first open the app click on the Help, a **Getting Started** tour guides you through the editor's main features. You can restart it anytime from the help menu or settings.
 
 ### Keyboard Shortcuts
 
@@ -83,6 +83,9 @@ When you first open the app, a **Getting Started** tour guides you through the m
 | `Ctrl+Z` | Undo |
 | `Ctrl+Shift+Z` | Redo |
 | `Ctrl+A` | Select all |
+| `Ctrl+D` | Duplicate selected |
+| `F` | Frame camera on selected |
+| `Q` / `Shift+Q` | Detach / re-attach gizmo |
 | `Escape` | Deselect |
 
 ### Troubleshooting
@@ -90,8 +93,8 @@ When you first open the app, a **Getting Started** tour guides you through the m
 | Issue | Solution |
 |-------|----------|
 | Blank screen | Serve the app over HTTP (don’t open `file://`). Use `python3 -m http.server` or `npx serve`. |
-| Models not loading | Check the browser console for CORS or 404 errors. Ensure model URLs are accessible. |
-| Login modal stuck | Fabric requires a valid URL and key. For local-only use, you can work with the JSON editor without logging in. |
+| Models not loading | Check the browser console for CORS or 404 errors. Ensure model URLs are accessible. Editor currently only accepts .glb and .gltf files. |
+| Login modal stuck | Fabric requires a valid URL and key (passcode). A valid Fabric URL and corresponding MVSADMINKEY must be entered correctly to connect to a Fabric. For local-only use, you can work with the JSON editor without logging in. |
 | Gizmo not visible | Make sure an object is selected (highlighted in the outliner). |
 
 ---
@@ -104,6 +107,7 @@ The app is split into **`sa-*`** modules. Each file has a single responsibility.
 
 ```
 index.html
+    └── maputil.js
     └── rp1.js (Fabric integration, scene load)
     └── sa-config.js
     └── sa-core.js
@@ -133,11 +137,12 @@ index.html
 
 | Layer | Technology |
 |-------|------------|
-| 3D | Three.js (OrbitControls, TransformControls, GLTFLoader) |
-| UI | Bootstrap 5, Font Awesome |
-| Code editor | CodeMirror (via `window.jsonEditorAPI`) |
-| Multi-user | Metaversal Fabric (`vendor/mv/*`) |
-| Entry | `rp1.js` (Fabric integration), `maputil.js` |
+| 3D | Three.js 0.128 (OrbitControls, TransformControls, GLTFLoader) |
+| UI | Bootstrap 5.3, Font Awesome 7, Outfit (Google Fonts) |
+| Code editor | CodeMirror 6 (via `window.jsonEditorAPI`; ESM from esm.sh) |
+| Tutorial | Driver.js 1.4 (Getting Started walkthrough) |
+| Multi-user | Metaversal Fabric (`vendor/mv/*`), jQuery 3.7, Socket.io 4.8 |
+| Entry | `maputil.js`, `rp1.js` (Fabric integration, scene load) |
 
 ### Configuration
 

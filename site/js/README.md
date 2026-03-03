@@ -8,11 +8,12 @@ A 3D scene editor for the web. Assembles scenes from GLB/GLTF models, syncs with
 
 | Layer | Technology |
 |-------|------------|
-| 3D | Three.js (OrbitControls, TransformControls, GLTFLoader) |
-| UI | Bootstrap 5, Font Awesome |
-| Code editor | CodeMirror (via `window.jsonEditorAPI`) |
-| Multi-user | Metaversal Fabric (vendor/mv/*) |
-| Entry | `rp1.js` (Fabric integration), `maputil.js` |
+| 3D | Three.js 0.128 (OrbitControls, TransformControls, GLTFLoader) |
+| UI | Bootstrap 5.3, Font Awesome 7, Outfit (Google Fonts) |
+| Code editor | CodeMirror 6 (via `window.jsonEditorAPI`; ESM from esm.sh) |
+| Tutorial | Driver.js 1.4 (Getting Started walkthrough) |
+| Multi-user | Metaversal Fabric (vendor/mv/*), jQuery 3.7, Socket.io 4.8 |
+| Entry | `maputil.js`, `rp1.js` (Fabric integration, scene load) |
 
 ---
 
@@ -22,6 +23,7 @@ The app is split into **sa-*** modules. Each file has a single responsibility. S
 
 ```
 index.html
+    └── maputil.js
     └── rp1.js (Fabric, scene load)
     └── sa-config.js
     └── sa-core.js

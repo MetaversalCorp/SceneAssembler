@@ -38,7 +38,7 @@
         {
             popover: {
                title: '<i class="fa-regular fa-hand fa-shake" style="--fa-animation-duration: 5s;"></i> Hello',
-                description: 'This quick tour will walk you through the main features of the editor. Click <strong>Next</strong> to continue, or <strong>Close</strong> to skip.',
+                description: 'This quick tour will walk you through the main features of the Scene Assembler. Click <strong>Next</strong> to continue, or <strong>X</strong> to skip.',
                 side: 'bottom',
                 align: 'center'
             }
@@ -56,6 +56,22 @@
             },
             onDeselected: () => {
                 document.body.classList.remove('sa-tutorial-viewport-step');
+            }
+        },
+        {
+            element: '#viewportCanvas',
+            popover: {
+                title: '<i class="fa-solid fa-mouse-pointer fa-xs"></i><i style="margin-left:-2px;" class="fa-solid fa-bars text-secondary"></i> Context Menu',
+                description: 'Right-click on the viewport or in the Scene Outliner to open a context menu with actions like Duplicate, Reset Transform, Drop to Floor, and group options.',
+                side: 'bottom',
+                align: 'start'
+            },
+            onHighlightStarted: () => {
+                document.body.classList.remove('sa-tutorial-viewport-step');
+                document.body.classList.add('sa-tutorial-context-menu-step');
+            },
+            onDeselected: () => {
+                document.body.classList.remove('sa-tutorial-context-menu-step', 'sa-tutorial-viewport-step');
             }
         },
         {
@@ -297,21 +313,6 @@
                 const objPanel = document.getElementById('objLibPanel');
                 const objInstance = objPanel && typeof bootstrap !== 'undefined' ? bootstrap.Offcanvas.getInstance(objPanel) : null;
                 if (objInstance) objInstance.hide();
-            }
-        },
-        {
-            element: '#viewportCanvas',
-            popover: {
-                title: '<i class="fa-solid fa-mouse-pointer fa-xs"></i><i style="margin-left:-2px;" class="fa-solid fa-bars text-secondary"></i> Context Menu',
-                description: 'Right-click on the viewport or in the Scene Outliner to open a context menu with actions like Duplicate, Reset Transform, Drop to Floor, and group options.',
-                side: 'bottom',
-                align: 'start'
-            },
-            onHighlightStarted: () => {
-                document.body.classList.add('sa-tutorial-context-menu-step');
-            },
-            onDeselected: () => {
-                document.body.classList.remove('sa-tutorial-context-menu-step');
             }
         },
         {
