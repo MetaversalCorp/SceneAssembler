@@ -47,7 +47,7 @@
             element: '#viewportCanvas',
             popover: {
                 title: '<i class="fa-solid fa-cube"></i> 3D Viewport',
-                description: 'This is your main workspace. Click and drag to orbit the camera. Add objects from the <i class="fa-solid fa-shapes"></i> Object Library (bottom bar), then click objects to select and transform them.',
+                description: 'This is your main workspace. Click and drag to orbit the camera. Add objects from the <i class="fa-solid fa-shapes"></i> Object Library (bottom bar), then click objects to select and transform them. Double-click an object in the viewport or in the Scene Outliner to focus the camera on it.',
                 side: 'bottom',
                 align: 'start'
             },
@@ -63,8 +63,21 @@
             popover: {
                 title: '<i class="fa-solid fa-mouse-pointer fa-xs"></i><i style="margin-left:-2px;" class="fa-solid fa-bars text-secondary"></i> Context Menu',
                 description: 'Right-click on the viewport or in the Scene Outliner to open a context menu with actions like Duplicate, Reset Transform, Drop to Floor, and group options.',
-                side: 'bottom',
-                align: 'start'
+                side: 'top',
+                align: 'start',
+                popoverClass: 'sa-tutorial-context-menu-popover',
+                onPopoverRender: (popover) => {
+                    const el = popover.popover || popover.wrapper || document.querySelector('.sa-tutorial-context-menu-popover');
+                    if (el) {
+                        requestAnimationFrame(() => {
+                            el.style.setProperty('position', 'fixed', 'important');
+                            el.style.setProperty('top', '100px', 'important');
+                            el.style.setProperty('left', '50%', 'important');
+                            el.style.setProperty('transform', 'translateX(-50%)', 'important');
+                            el.style.setProperty('bottom', 'auto', 'important');
+                        });
+                    }
+                }
             },
             onHighlightStarted: () => {
                 document.body.classList.remove('sa-tutorial-viewport-step');

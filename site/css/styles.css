@@ -630,6 +630,19 @@ body.sa-tutorial-context-menu-step #modelsPanel {
   pointer-events: auto !important;
 }
 
+body.sa-tutorial-context-menu-step #objLibToggle {
+  pointer-events: none !important;
+}
+
+/* Force context menu tutorial popover to top center of viewport */
+.sa-tutorial-context-menu-popover {
+  position: fixed !important;
+  top: 100px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  bottom: auto !important;
+}
+
 body.sa-tutorial-viewport-step .ui {
   filter: blur(6px);
   opacity: 0.85;
