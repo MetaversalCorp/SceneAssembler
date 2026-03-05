@@ -36,7 +36,7 @@ const MV = new class
 }
 ();
 
-MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.11');
+MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.12');
 
 MV.MVMF.Const.BANK_NULL        = 0;
 MV.MVMF.Const.OBJECTIX_NULL    = 0;
@@ -3657,6 +3657,12 @@ MV.MVMF.MEM = class
                            if ((pChild.pObjectHead.wFlags & this.eOBJECTHEAD.FLAG.SUBSCRIBE_MASK) == 0)
                            {
                               pChild = pObjectBank_Child.Object_Close (pChild);
+                           }
+                           else
+                           {
+
+                              pChild.pObjectHead.wClass_Parent = 0;
+                              pChild.pObjectHead.twParentIx    = 0;
                            }
                         }
                      }
