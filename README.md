@@ -1,6 +1,6 @@
 # SceneAssembler
 
-A web-based 3D scene editor that assembles scenes from GLB/GLTF models, syncs with a JSON representation, and integrates with **Metaversal Fabric** for multi-user editing.
+A web-based 3D scene editor that assembles scenes from GLB/GLTF models, syncs with a JSON representation, and integrates with **Metaversal Fabric** for 6DoF access via Metaverse Browser.
 
 ---
 
