@@ -6,7 +6,7 @@ import { MV } from '@metaversalcorp/mvmf'
 const { MV } = require ('@metaversalcorp/mvmf');
 */
 
-MV.MVRest = MV.Library ('MVRest', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Rest Service', '0.24.2');
+MV.MVRest = MV.Library ('MVRest', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Rest Service', '0.24.5');
 
 MV.MVRest.SERVICE = class extends MV.MVMF.SERVICE
 {
@@ -894,9 +894,9 @@ MV.MVRest.REST_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Inserted (pObject, pChild, pChange)
    {
-      if (pChild == this)
+      if (pChild != null)
       {
-         this.Map_Read (this.pModel);
+         pChild.Map_Read (pChild.pModel);
       }
 
       this.pModel.Inserted (pObject.pModel, pChild ? pChild.pModel : null, pChange);
@@ -914,9 +914,9 @@ MV.MVRest.REST_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Updated (pObject, pChild)
    {
-      if (pChild == this)
+      if (pChild == null)
       {
-         this.Map_Read (this.pModel);
+         pObject.Map_Read (pObject.pModel);
       }
 
       this.pModel.Updated (pObject.pModel, pChild ? pChild.pModel : null);
@@ -929,9 +929,9 @@ MV.MVRest.REST_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Changed (pObject, pChild, pChange)
    {
-      if (pObject == this  ||  pChild == this)
+      if (pObject != null)
       {
-         this.Map_Read (this.pModel);
+         pObject.Map_Read (pObject.pModel);
       }
 
       this.pModel.Changed (pObject ? pObject.pModel : null, pChild ? pChild.pModel : null, pChange);

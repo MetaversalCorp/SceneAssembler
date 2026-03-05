@@ -6,7 +6,7 @@ import { MV } from '@metaversalcorp/mvmf'
 const { MV } = require ('@metaversalcorp/mvmf');
 */
 
-MV.MVSB = MV.Library ('MVSB', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Statabase Service', '0.24.2');
+MV.MVSB = MV.Library ('MVSB', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Statabase Service', '0.24.6');
 
 MV.MVSB.TIME = class
 {
@@ -4058,9 +4058,9 @@ MV.MVSB.SB_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Inserted (pObject, pChild, pChange)
    {
-      if (pChild == this)
+      if (pChild == null)
       {
-         this.Map_Read (this.pModel);
+         pObject.Map_Read (pObject.pModel);
       }
 
       this.pModel.Inserted (pObject.pModel, pChild ? pChild.pModel : null, pChange);
@@ -4078,9 +4078,9 @@ MV.MVSB.SB_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Updated (pObject, pChild)
    {
-      if (pChild == this)
+      if (pChild == null)
       {
-         this.Map_Read (this.pModel);
+         pObject.Map_Read (pObject.pModel);
       }
 
       this.pModel.Updated (pObject.pModel, pChild ? pChild.pModel : null);
@@ -4093,9 +4093,9 @@ MV.MVSB.SB_OBJECT = class extends MV.MVMF.MEM.SOURCE
 
    Changed (pObject, pChild, pChange)
    {
-      if (pObject == this  ||  pChild == this)
+      if (pObject != null)
       {
-         this.Map_Read (this.pModel);
+         pObject.Map_Read (pObject.pModel);
       }
 
       this.pModel.Changed (pObject ? pObject.pModel : null, pChild ? pChild.pModel : null, pChange);

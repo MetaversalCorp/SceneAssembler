@@ -36,7 +36,7 @@ const MV = new class
 }
 ();
 
-MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.6');
+MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.11');
 
 MV.MVMF.Const.BANK_NULL        = 0;
 MV.MVMF.Const.OBJECTIX_NULL    = 0;
@@ -3522,7 +3522,7 @@ MV.MVMF.MEM = class
                   if (bChange != false)
                   {
                      pParent.Updating (pParent, pObject);
-                     pObject.Updating (pParent, pObject);
+                     pObject.Updating (pObject, null);
                   }
 
                   wFlags = pObject.pObjectHead.wFlags;
@@ -3542,7 +3542,7 @@ MV.MVMF.MEM = class
 
                   if (bInsert != false)
                   {
-                     pObject.Inserted (pParent, pObject, null);
+                     pObject.Inserted (pObject, null,    null);
                      pParent.Inserted (pParent, pObject, null);
                   }
                   else if (bChange == false)
@@ -3553,7 +3553,7 @@ MV.MVMF.MEM = class
 
                   if (bChange != false)
                   {
-                     pObject.Updated (pParent, pObject);
+                     pObject.Updated (pObject, null);
                      pParent.Updated (pParent, pObject);
                   }
 
@@ -3608,12 +3608,12 @@ MV.MVMF.MEM = class
                      pParent.Changing (null, pObject, pChange);
                   pObject.Changing (pObject, pChild, pChange);
                   if (bChange != false  &&  pChild != null)
-                     pChild.Changing (pObject, pChild, pChange);
+                     pChild.Changing (pChild, null, pChange);
 
                   if (wClass_Child != MV.MVMF.Const.BANK_NULL  &&  bClose != false  &&  pChild != null)
                   {
                      pObject.Deleting (pObject, pChild, pChange);
-                     pChild .Deleting (pObject, pChild, pChange);
+                     pChild .Deleting (pChild,  null,   pChange);
                   }
 
                   if (wClass_Child != MV.MVMF.Const.BANK_NULL  &&  bOpen != false)
@@ -3664,14 +3664,14 @@ MV.MVMF.MEM = class
 
                   if (wClass_Child != MV.MVMF.Const.BANK_NULL  &&  bOpen != false  &&  pChild != null)
                   {
-                     pChild .Inserted (pObject, pChild, pChange);
+                     pChild .Inserted (pChild,  null,   pChange);
                      pObject.Inserted (pObject, pChild, pChange);
 
                      pChild.Partial ();
                   }
 
                   if (bChange != false  &&  pChild != null)
-                     pChild.Changed (pObject, pChild, pChange);
+                     pChild.Changed (pChild, null, pChange);
                   pObject.Changed (pObject, pChild, pChange);
                   if (bPartial != false)
                      pParent.Changed (null, pObject, pChange);
@@ -3692,7 +3692,7 @@ MV.MVMF.MEM = class
          if ((pChild.pObjectHead.wFlags & this.eOBJECTHEAD.FLAG.SUBSCRIBE_FULL) == 0)
          {
             pObject.Deleting (pObject, pChild, null);
-            pChild .Deleting (pObject, pChild, null);
+            pChild .Deleting (pChild,  null,   null);
          }
 
          pChild.pObjectHead.wFlags &= ~this.eOBJECTHEAD.FLAG.SUBSCRIBE_PARTIAL;
@@ -3721,7 +3721,7 @@ MV.MVMF.MEM = class
          if ((pObject.pObjectHead.wFlags & this.eOBJECTHEAD.FLAG.SUBSCRIBE_PARTIAL) == 0)
          {
             pParent.Deleting (pParent, pObject, null);
-            pObject.Deleting (pParent, pObject, null);
+            pObject.Deleting (pObject, null,    null);
          }
 
          pObject.pObjectHead.wFlags &= ~this.eOBJECTHEAD.FLAG.SUBSCRIBE_FULL;
@@ -4804,7 +4804,7 @@ MV.MVMF.MODEL_OBJECT = class extends MV.MVMF.MEM.MODEL
    {
       let cpChild;
 
-      if (pObject == this)
+      if (pChild != null)
       {
          if ((cpChild = this.Child_Collection (pChild.sID)) != null)
          {
@@ -4821,7 +4821,7 @@ MV.MVMF.MODEL_OBJECT = class extends MV.MVMF.MEM.MODEL
 
       this.Emit ('onDeleting', { pObject, pChild, pChange });
 
-      if (pObject == this)
+      if (pChild != null)
       {
          if ((cpChild = this.Child_Collection (pChild.sID)) != null)
          {
