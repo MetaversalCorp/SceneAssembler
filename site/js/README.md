@@ -1,6 +1,6 @@
 # Scene Assembler – JavaScript Modules
 
-A 3D scene editor for the web. Assembles scenes from GLB/GLTF models, syncs with a JSON representation, and integrates with Metaversal Fabric for multi-user editing.
+A 3D scene editor for the web. Assembles scenes from GLB/GLTF models, syncs with a JSON representation, and integrates with Metaversal Fabrics for 6DoF access via Metaverse Browser.
 
 ---
 
