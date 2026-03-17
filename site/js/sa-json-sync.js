@@ -184,12 +184,27 @@ function discardCodeEditorChanges() {
     setTimeout(() => { isProgrammaticUpdate = false; }, 0);
 }
 
+// Auto-insert missing wClass and twObjectIx (default 0) into parsed JSON nodes
+function augmentJSONWithDefaults(nodes) {
+    if (!Array.isArray(nodes)) return;
+    for (const node of nodes) {
+        if (!node || typeof node !== 'object') continue;
+        if (node.wClass === undefined) node.wClass = 73;
+        if (node.twObjectIx === undefined) node.twObjectIx = 0;
+        if (node.aChildren && Array.isArray(node.aChildren)) {
+            augmentJSONWithDefaults(node.aChildren);
+        }
+    }
+}
+
 // Parse JSON and update scene
 async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
     try {
         const data = JSON.parse(jsonText);
 
         if (!Array.isArray(data) || data.length === 0) return;
+
+        augmentJSONWithDefaults(data);
 
         const rootNode = data[0];
         const isObjectRootFormat = rootNode && rootNode.twObjectIx !== undefined && rootNode.sName !== undefined;
@@ -200,7 +215,7 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
         // Handle Object Root updates from JSON
         if (isObjectRootFormat) {
             if (rootNode.wClass !== undefined) canvasRoot.userData.wClass = rootNode.wClass;
-            if (rootNode.twObjectIx !== undefined) canvasRoot.userData.twObjectIx = rootNode.twObjectIx;
+            if (rootNode.twObjectIx !== undefined && rootNode.twObjectIx !== 0) canvasRoot.userData.twObjectIx = rootNode.twObjectIx;
 
             if (rootNode.sName) {
                 canvasRoot.name = rootNode.sName;
