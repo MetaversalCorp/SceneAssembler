@@ -16,6 +16,8 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
+function unescapeRMPObjectName (s) { const t = s || ''; return t.includes("''") ? t.replace(/''/g, "'") : t; }
+
 class ExtractMap extends MapUtil
 {
    #m_pFabric;
@@ -187,12 +189,12 @@ class ExtractMap extends MapUtil
       if (bSelected)
       {
          jItem.addClass ('active');
-         this.#jBody.find ('.jsCurrentScene').text (pRMCObject.pName.wsRMPObjectId);
+         this.#jBody.find ('.jsCurrentScene').text (unescapeRMPObjectName (pRMCObject.pName.wsRMPObjectId));
       }
 
       this.#jPObject.append (jItem);
 
-      jItem.find ('.jsSceneItemName').text (pRMCObject.pName.wsRMPObjectId);
+      jItem.find ('.jsSceneItemName').text (unescapeRMPObjectName (pRMCObject.pName.wsRMPObjectId));
    }
 
    onInserted (pNotice)
@@ -273,10 +275,11 @@ class ExtractMap extends MapUtil
 
    PObjectToJSON (pRMXObject, bRoot)
    {
+      const sName = unescapeRMPObjectName (pRMXObject.pName.wsRMPObjectId);
       let Result = {
          twObjectIx:    pRMXObject.twObjectIx,
          wClass:        pRMXObject.wClass_Object,
-         sName:         pRMXObject.pName.wsRMPObjectId,
+         sName:         sName,
          pTransform:    {
             aPosition: [
                pRMXObject.pTransform.vPosition.dX,
@@ -776,9 +779,9 @@ class ExtractMap extends MapUtil
       {
          this.#jPObject.find ('.jsSceneItem[twObjectIx=' + this.#pRMXRoot.twObjectIx + ']')
             .addClass ('active')
-            .find ('.jsSceneItemName').text (this.#pRMXRoot.pName.wsRMPObjectId);
+            .find ('.jsSceneItemName').text (unescapeRMPObjectName (this.#pRMXRoot.pName.wsRMPObjectId));
 
-         this.#jBody.find ('.jsCurrentScene').text (this.#pRMXRoot.pName.wsRMPObjectId);
+         this.#jBody.find ('.jsCurrentScene').text (unescapeRMPObjectName (this.#pRMXRoot.pName.wsRMPObjectId));
       }
 
       this.UpdateAttachmentPointUrl ();
@@ -866,7 +869,7 @@ class ExtractMap extends MapUtil
       this.#jPObject.find ('.jsSceneItem').removeClass ('active');
       jItem.addClass ('active');
 
-      this.#jBody.find ('.jsCurrentScene').text (pRMCObject.pName.wsRMPObjectId);
+      this.#jBody.find ('.jsCurrentScene').text (unescapeRMPObjectName (pRMCObject.pName.wsRMPObjectId));
       this.UpdateAttachmentPointUrl ();
    }
 
@@ -886,7 +889,7 @@ class ExtractMap extends MapUtil
       let pRMCObject = jItem.data ('object');
 
       this.pTmpDelete = pRMCObject;
-      ShowDeleteWarning (pRMCObject.pName.wsRMPObjectId);
+      ShowDeleteWarning (unescapeRMPObjectName (pRMCObject.pName.wsRMPObjectId));
 
       e.stopPropagation ();
    }
