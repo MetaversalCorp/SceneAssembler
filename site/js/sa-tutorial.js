@@ -133,10 +133,10 @@
             }
         },
         {
-            element: '#exportJson',
+            element: '#export',
             popover: {
                 title: '<i class="fa-solid fa-file-export"></i> Export JSON',
-                description: 'Export your scene as JSON. Use this to save a copy, share, or integrate with other tools.',
+                description: 'Export your scene as JSON. Use <i class="fa-solid fa-database"></i><strong>Export Backup</strong> when your scene is already saved to the database. Use <i class="fa-solid fa-up-right-from-square"></i><strong>Export for External</strong> when sharing to other servers or creating new scenes not yet in a database.',
                 side: 'bottom',
                 align: 'start'
             }

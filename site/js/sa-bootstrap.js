@@ -75,6 +75,7 @@ const fabricUrlInput = document.getElementById("fabricUrl");
 const copyFabricUrlBtn = document.getElementById("copyFabricUrl");
 const jsonEditor = document.getElementById("jsonEditor");
 const exportJson = document.getElementById("exportJson");
+const exportJsonExt = document.getElementById("exportJsonExt");
 const applyChanges = document.getElementById("applyChanges");
 
 function getJSONEditorText() {

@@ -23,7 +23,7 @@
 */
 
 // ===== Export JSON (quaternions) =====
-function buildNode(obj) {
+function buildNode(obj, includeIds = true, zeroTwObjectIx = false) {
     if (!obj.userData?.isSelectable)
         return null;
 
@@ -48,18 +48,18 @@ function buildNode(obj) {
             pTransform: {
                 aPosition: [localPosition.x, localPosition.y, localPosition.z],
                 aRotation: [localQuaternion.x, localQuaternion.y, localQuaternion.z, localQuaternion.w],
-                aScale: [localScale.x, localScale.y, localScale.z]
+                aScale: [localScale.x, localScale.y, localScale.z],
             },
             aBound: [size.x, size.y, size.z],
             aChildren: []
         };
 
-        if (obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
-        if (obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
+        if (includeIds && obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
+        if (zeroTwObjectIx) node.twObjectIx = 0; else if (includeIds && obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
 
         if (obj instanceof THREE.Group) {
             obj.children.forEach(child => {
-                const childNode = buildNode(child);
+                const childNode = buildNode(child, includeIds, zeroTwObjectIx);
                 if (childNode) node.aChildren.push(childNode);
             });
         }
@@ -82,13 +82,13 @@ function buildNode(obj) {
         aChildren: []
     };
 
-    if (obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
-    if (obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
+    if (includeIds && obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
+    if (zeroTwObjectIx) node.twObjectIx = 0; else if (includeIds && obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
 
     if (obj instanceof THREE.Group) {
         const childrenToExport = obj.userData?.isEditorGroup === true ? obj.children.slice(1) : obj.children;
         childrenToExport.forEach(child => {
-            const childNode = buildNode(child);
+            const childNode = buildNode(child, includeIds, zeroTwObjectIx);
             if (childNode) node.aChildren.push(childNode);
         });
     }
@@ -103,8 +103,14 @@ function generateSceneJSONEx(sJSON) {
     });
 }
 
-function generateSceneJSON() {
-    const objectRootNode = buildNode(canvasRoot);
+function generateSceneJSON(includeIds = true) {
+    const objectRootNode = buildNode(canvasRoot, includeIds);
+    const exportData = objectRootNode ? [objectRootNode] : [];
+    return generateSceneJSONEx(JSON.stringify(exportData, null, 2));
+}
+
+function generateSceneJSONExt() {
+    const objectRootNode = buildNode(canvasRoot, true, true);
     const exportData = objectRootNode ? [objectRootNode] : [];
     return generateSceneJSONEx(JSON.stringify(exportData, null, 2));
 }
@@ -121,10 +127,22 @@ function updateJSONEditor() {
     }
 }
 
-// Export JSON button
-if (typeof exportJson !== 'undefined') {
+// Export JSON buttons
+if (typeof exportJson !== 'undefined' && exportJson) {
     exportJson.onclick = () => {
-        const jsonText = generateSceneJSON();
+        const jsonText = generateSceneJSON(true);
+        const blob = new Blob([jsonText], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scene-backup.json";
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+}
+if (typeof exportJsonExt !== 'undefined' && exportJsonExt) {
+    exportJsonExt.onclick = () => {
+        const jsonText = generateSceneJSONExt();
         const blob = new Blob([jsonText], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");

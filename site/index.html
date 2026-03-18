@@ -268,8 +268,23 @@
                </li>
                <li class="nav-item border-start my-1">
                </li>
-               <li class="nav-item">
-                  <button class="nav-link" id="exportJson" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Export JSON"><i class="fa-solid fa-file-export"></i></button>
+               <li class="nav-item dropdown">
+                  <button class="nav-link" id="export" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" data-bs-placement="bottom" title="Export JSON"><i class="fa-solid fa-file-export"></i></button>
+                  <ul class="dropdown-menu dropdown-menu-end py-2" aria-labelledby="export">
+                     <li>
+                        <button class="dropdown-item" id="exportJson" type="button">
+                           <i class="fa-solid fa-database me-2"></i><strong>Export Backup</strong>
+                           <div class="small text-muted mt-1">Preserves existing links to your database.</div>
+                        </button>
+                     </li>
+                     <li><hr class="dropdown-divider"></li>
+                     <li>
+                        <button class="dropdown-item" id="exportJsonExt" type="button">
+                           <i class="fa-solid fa-up-right-from-square me-2"></i><strong>Export for External</strong>
+                           <div class="small text-muted mt-1">For importing into new scenes or databases.</div>
+                        </button>
+                     </li>
+                  </ul>
                </li>
                <li class="nav-item d-flex align-items-center">
                   <button class="nav-link jsPublish pe-3 rounded-5" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Publish Scene"><i class="fa-solid fa-cloud-arrow-up"></i></button>
