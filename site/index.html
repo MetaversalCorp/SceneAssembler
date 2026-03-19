@@ -589,7 +589,7 @@
    <!--
       CODE EDITOR – CodeMirror 6 for JSON.
       Scene is stored as JSON; edits here sync to 3D view when Apply Changes is clicked.
-      See sa-json-sync.js for sync logic.
+      See sa-json-sync.js for sync logic; sa-json-lint.js for schema linting.
    -->
    <script type="module">
       import {
@@ -610,9 +610,11 @@
          bracketMatching
       } from 'https://esm.sh/@codemirror/language@6';
       import {
-         json,
-         jsonParseLinter
+         json
       } from 'https://esm.sh/@codemirror/lang-json@6';
+      import {
+         createSceneAssemblerLintSource
+      } from './js/sa-json-lint.js';
       import {
          defaultKeymap,
          history,
@@ -658,7 +660,7 @@
                closeBrackets(),
                highlightSelectionMatches(),
                lintGutter(),
-               linter(jsonParseLinter()),
+               linter(createSceneAssemblerLintSource()),
                history(),
                keymap.of([
                   ...defaultKeymap,
@@ -741,7 +743,7 @@
                   closeBrackets(),
                   highlightSelectionMatches(),
                   lintGutter(),
-                  linter(jsonParseLinter()),
+                  linter(createSceneAssemblerLintSource()),
                   history(), // Fresh history extension
                   keymap.of([
                      ...defaultKeymap,

@@ -55,6 +55,7 @@ index.html
 | **sa-properties.js** | Bounds, clamping, texture info, properties panel updates. | sa-core, sa-bootstrap |
 | **sa-transforms.js** | Transform gizmo, box helpers, undo/redo, canvas size, transform events. | sa-config, sa-core |
 | **sa-json-sync.js** | Syncs JSON editor ↔ 3D scene; `buildNode`, `parseJSONAndUpdateScene`, export. | sa-core, sa-models |
+| **sa-json-lint.js** | CodeMirror linting for Scene Assembler JSON schema (ES module; imported by index.html). | @codemirror/lang-json |
 | **sa-selection.js** | `selectObject`, `selectFromSidebar`, `selectFromCanvas`, select all, deselect. | sa-core |
 | **sa-groups.js** | Group/ungroup, drag-drop attach, duplicate, delete. | sa-core |
 | **sa-sidebar.js** | Builds outliner; `createSidebarItem`, `addGroupToList`, `addModelToList`, `makeLabelEditable`. | sa-core |
