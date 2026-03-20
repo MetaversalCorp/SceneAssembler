@@ -66,7 +66,7 @@ Scene Assembler lets you:
 | Move / Rotate / Scale | Use the **W** / **E** / **R** buttons (or toolbar) and drag the gizmo handles |
 | Edit JSON | Open the **Code Editor** panel to edit the scene structure directly |
 | Undo / Redo | Use the toolbar buttons or keyboard shortcuts |
-| Export | Use the export option to get your scene as JSON |
+| Export | **Export** menu → **Export Backup** (keeps DB links) or **Export for External** (for new scenes/databases) |
 
 ### Getting Started Tutorial
 
@@ -74,19 +74,22 @@ When you first open the app click on the Help, a **Getting Started** tour guides
 
 ### Keyboard Shortcuts
 
+Use **Ctrl** or **⌘ (Cmd)** where **Ctrl** is shown below. Shortcuts are disabled while the JSON editor is focused (except where the editor handles its own keys).
+
 | Key | Action |
 |-----|--------|
 | `W` | Translate (move) mode |
 | `E` | Rotate mode |
 | `R` | Scale mode |
-| `Delete` / `Backspace` | Delete selected object(s) |
-| `Ctrl+Z` | Undo |
-| `Ctrl+Shift+Z` | Redo |
-| `Ctrl+A` | Select all |
+| `Delete` | Delete selected object(s) |
+| `Ctrl+Z` / `Ctrl+Shift+Z` | Undo / Redo |
 | `Ctrl+D` | Duplicate selected |
 | `F` | Frame camera on selected |
 | `Q` / `Shift+Q` | Detach / re-attach gizmo |
 | `Escape` | Deselect |
+| `Arrow keys` | Move camera |
+| `Space` (hold) + `Arrow keys` | Pan camera |
+| *Context menu* | **Select all** / **Deselect all** (right-click the 3D viewport or scene outliner) |
 
 ### Troubleshooting
 
@@ -103,27 +106,30 @@ When you first open the app click on the Help, a **Getting Started** tour guides
 
 ### Architecture
 
-The app is split into **`sa-*`** modules. Each file has a single responsibility. Scripts load in dependency order (see `site/index.html`). Global state lives in `sa-core.js` (scene, camera, selection) and `sa-bootstrap.js` (DOM refs).
+The app is split into **`sa-*`** modules. Each file has a single responsibility. Classic scripts load in dependency order at the bottom of `site/index.html`. Global state lives in `sa-core.js` (scene, camera, selection) and `sa-bootstrap.js` (DOM refs).
+
+The **CodeMirror 6** JSON editor is initialized in a `<script type="module">` block in `index.html`; it imports **`sa-json-lint.js`** (schema linting) and **`sa-json-autocomplete.js`** (completions) as ESM alongside packages from esm.sh.
 
 ```
-index.html
-    └── maputil.js
-    └── rp1.js (Fabric integration, scene load)
-    └── sa-config.js
-    └── sa-core.js
-    └── sa-bootstrap.js
-    └── sa-models.js
-    └── sa-properties.js
-    └── sa-transforms.js
-    └── sa-json-sync.js
-    └── sa-selection.js
-    └── sa-groups.js
-    └── sa-sidebar.js
-    └── sa-ui.js
-    └── sa-object-library.js
-    └── sa-main.js
-    └── sa-shell.js
-    └── sa-tutorial.js
+site/index.html
+    ├── Head: Bootstrap, Driver.js, jQuery, Socket.io, Fabric (vendor/mv/*), maputil.js, rp1.js, Three.js
+    ├── Body: <script type="module"> → CodeMirror + sa-json-lint.js, sa-json-autocomplete.js
+    └── Foot (order matters):
+        sa-config.js
+        sa-core.js
+        sa-bootstrap.js
+        sa-models.js
+        sa-properties.js
+        sa-transforms.js
+        sa-json-sync.js
+        sa-selection.js
+        sa-groups.js
+        sa-sidebar.js
+        sa-ui.js
+        sa-object-library.js
+        sa-main.js
+        sa-shell.js
+        sa-tutorial.js
 ```
 
 **Key concepts:**
@@ -131,17 +137,17 @@ index.html
 - **Object Root** – A `THREE.Group` that holds all scene objects. `userData.isCanvasRoot === true`.
 - **Editor Group** – A group that can contain multiple models. `userData.isEditorGroup === true`.
 - **Selection** – `selectedObject` (single), `selectedObjects` (array). Updated by `selectObject` in `sa-selection.js`.
-- **JSON ↔ Scene** – The JSON editor and 3D scene stay in sync via `sa-json-sync.js`.
+- **JSON ↔ Scene** – `sa-json-sync.js` keeps the document and the 3D scene in sync when changes are applied; the editor also runs **lint** and **autocomplete** via the ESM modules above.
 
 ### Tech Stack
 
 | Layer | Technology |
 |-------|------------|
 | 3D | Three.js 0.128 (OrbitControls, TransformControls, GLTFLoader) |
-| UI | Bootstrap 5.3, Font Awesome 7, Outfit (Google Fonts) |
-| Code editor | CodeMirror 6 (via `window.jsonEditorAPI`; ESM from esm.sh) |
+| UI | Bootstrap 5.3.8, Font Awesome 7, Outfit (Google Fonts) |
+| Code editor | CodeMirror 6 (via `window.jsonEditorAPI`; ESM from esm.sh; `sa-json-lint.js`, `sa-json-autocomplete.js`) |
 | Tutorial | Driver.js 1.4 (Getting Started walkthrough) |
-| Multi-user | Metaversal Fabric (`vendor/mv/*`), jQuery 3.7, Socket.io 4.8 |
+| Multi-user | Metaversal Fabric (`vendor/mv/*`), jQuery 3.7.1, Socket.io 4.8 |
 | Entry | `maputil.js`, `rp1.js` (Fabric integration, scene load) |
 
 ### Configuration
@@ -170,6 +176,8 @@ Edit `site/js/sa-config.js` to change behavior:
 | **sa-properties.js** | Bounds, clamping, texture info, properties panel updates. | sa-core, sa-bootstrap |
 | **sa-transforms.js** | Transform gizmo, box helpers, undo/redo, canvas size, transform events. | sa-config, sa-core |
 | **sa-json-sync.js** | Syncs JSON editor ↔ 3D scene; `buildNode`, `parseJSONAndUpdateScene`, export. | sa-core, sa-models |
+| **sa-json-lint.js** | CodeMirror lint source for Scene Assembler JSON schema (ESM; loaded from `index.html`). | @codemirror/lang-json, @codemirror/lint |
+| **sa-json-autocomplete.js** | Scene JSON completions; optional reformat when parse succeeds (skips huge docs). | @codemirror/lang-json, @codemirror/language, @codemirror/state |
 | **sa-selection.js** | `selectObject`, `selectFromSidebar`, `selectFromCanvas`, select all, deselect. | sa-core |
 | **sa-groups.js** | Group/ungroup, drag-drop attach, duplicate, delete. | sa-core |
 | **sa-sidebar.js** | Builds outliner; `createSidebarItem`, `addGroupToList`, `addModelToList`, `makeLabelEditable`. | sa-core |
@@ -198,6 +206,7 @@ Edit `site/js/sa-config.js` to change behavior:
 - `snap`, `canvasSize`, `setCanvasSize` – Scene settings
 - `translate`, `rotate`, `scale` – Transform mode buttons
 - `undo`, `redo`, `delete`, `resetCamera` – Toolbar actions
+- `exportJson`, `exportJsonExt` – Export Backup / Export for External
 
 **Debugging:** Use browser DevTools. Key globals: `scene`, `camera`, `selectedObjects`, `canvasRoot`.
 
