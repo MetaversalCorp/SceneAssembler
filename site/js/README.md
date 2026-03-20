@@ -56,6 +56,7 @@ index.html
 | **sa-transforms.js** | Transform gizmo, box helpers, undo/redo, canvas size, transform events. | sa-config, sa-core |
 | **sa-json-sync.js** | Syncs JSON editor ↔ 3D scene; `buildNode`, `parseJSONAndUpdateScene`, export. | sa-core, sa-models |
 | **sa-json-lint.js** | CodeMirror linting for Scene Assembler JSON schema (ES module; imported by index.html). | @codemirror/lang-json |
+| **sa-json-autocomplete.js** | Scene JSON completions; reformats like `generateSceneJSONEx` when parse succeeds and doc is under ~400k chars (skips reformat on huge pastes). | @codemirror/lang-json, @codemirror/language, @codemirror/state |
 | **sa-selection.js** | `selectObject`, `selectFromSidebar`, `selectFromCanvas`, select all, deselect. | sa-core |
 | **sa-groups.js** | Group/ungroup, drag-drop attach, duplicate, delete. | sa-core |
 | **sa-sidebar.js** | Builds outliner; `createSidebarItem`, `addGroupToList`, `addModelToList`, `makeLabelEditable`. | sa-core |

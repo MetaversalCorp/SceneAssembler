@@ -589,7 +589,7 @@
    <!--
       CODE EDITOR – CodeMirror 6 for JSON.
       Scene is stored as JSON; edits here sync to 3D view when Apply Changes is clicked.
-      See sa-json-sync.js for sync logic; sa-json-lint.js for schema linting.
+      See sa-json-sync.js for sync logic; sa-json-lint.js for schema linting; sa-json-autocomplete.js for key hints.
    -->
    <script type="module">
       import {
@@ -597,7 +597,8 @@
          keymap,
          lineNumbers,
          highlightActiveLine,
-         drawSelection
+         drawSelection,
+         tooltips
       } from 'https://esm.sh/@codemirror/view@6';
       import {
          EditorState
@@ -616,6 +617,9 @@
          createSceneAssemblerLintSource
       } from './js/sa-json-lint.js';
       import {
+         sceneJsonAutocompleteFacet
+      } from './js/sa-json-autocomplete.js';
+      import {
          defaultKeymap,
          history,
          historyKeymap,
@@ -627,8 +631,10 @@
          highlightSelectionMatches
       } from 'https://esm.sh/@codemirror/search@6';
       import {
+         autocompletion,
          closeBrackets,
-         closeBracketsKeymap
+         closeBracketsKeymap,
+         completionKeymap
       } from 'https://esm.sh/@codemirror/autocomplete@6';
       import {
          linter,
@@ -644,55 +650,66 @@
       // Clear any existing visible text to avoid duplicate rendering next to CodeMirror
       if (container) container.textContent = '';
 
-      const updateListeners = [];
+      const editorRef = {};
+      const buildExtensions = () => [
+         EditorState.allowMultipleSelections.of(true),
+         // Host tooltips on body so autocomplete + completion info are not clipped by
+         // #jsonEditor overflow or the offcanvas .blur transform (fixed positioning).
+         tooltips({
+            parent: document.body,
+            position: 'fixed'
+         }),
+         oneDark,
+         lineNumbers(),
+         foldGutter(),
+         highlightActiveLine(),
+         drawSelection(),
+         bracketMatching(),
+         closeBrackets(),
+         autocompletion(),
+         sceneJsonAutocompleteFacet,
+         highlightSelectionMatches(),
+         lintGutter(),
+         linter(createSceneAssemblerLintSource()),
+         history(),
+         keymap.of([
+            ...defaultKeymap,
+            ...historyKeymap,
+            ...searchKeymap,
+            ...foldKeymap,
+            ...closeBracketsKeymap,
+            ...completionKeymap
+         ]),
+         syntaxHighlighting(defaultHighlightStyle, {
+            fallback: true
+         }),
+         json(),
+         EditorView.updateListener.of(
+            v => {
+               if (v.docChanged) {
+                  const value = v.state.doc.toString();
+                  container.dispatchEvent(new CustomEvent('json-change', {
+                     detail: {
+                        value
+                     }
+                  }));
+               }
+
+               if (v.focusChanged && editorRef.view?.hasFocus) {
+                  container.dispatchEvent(new Event('focus'));
+               }
+            }
+         )
+      ];
 
       const view = new EditorView({
          state: EditorState.create({
             doc: initialDoc,
-            extensions: [
-               EditorState.allowMultipleSelections.of(true),
-               oneDark,
-               lineNumbers(),
-               foldGutter(),
-               highlightActiveLine(),
-               drawSelection(),
-               bracketMatching(),
-               closeBrackets(),
-               highlightSelectionMatches(),
-               lintGutter(),
-               linter(createSceneAssemblerLintSource()),
-               history(),
-               keymap.of([
-                  ...defaultKeymap,
-                  ...historyKeymap,
-                  ...searchKeymap,
-                  ...foldKeymap,
-                  ...closeBracketsKeymap
-               ]),
-               syntaxHighlighting(defaultHighlightStyle, {
-                  fallback: true
-               }),
-               json(),
-               EditorView.updateListener.of(
-                  v => {
-                     if (v.docChanged) {
-                        const value = v.state.doc.toString();
-                        container.dispatchEvent(new CustomEvent('json-change', {
-                           detail: {
-                              value
-                           }
-                        }));
-                     }
-
-                     if (v.focusChanged && view.hasFocus) {
-                        container.dispatchEvent(new Event('focus'));
-                     }
-                  }
-               )
-            ]
+            extensions: buildExtensions()
          }),
          parent: container
       });
+      editorRef.view = view;
 
       window.jsonEditorAPI = {
          getValue() {
@@ -732,47 +749,7 @@
             const currentDoc = view.state.doc;
             const newState = EditorState.create({
                doc: currentDoc,
-               extensions: [
-                  EditorState.allowMultipleSelections.of(true),
-                  oneDark,
-                  lineNumbers(),
-                  foldGutter(),
-                  highlightActiveLine(),
-                  drawSelection(),
-                  bracketMatching(),
-                  closeBrackets(),
-                  highlightSelectionMatches(),
-                  lintGutter(),
-                  linter(createSceneAssemblerLintSource()),
-                  history(), // Fresh history extension
-                  keymap.of([
-                     ...defaultKeymap,
-                     ...historyKeymap,
-                     ...searchKeymap,
-                     ...foldKeymap,
-                     ...closeBracketsKeymap
-                  ]),
-                  syntaxHighlighting(defaultHighlightStyle, {
-                     fallback: true
-                  }),
-                  json(),
-                  EditorView.updateListener.of(
-                     v => {
-                        if (v.docChanged) {
-                           const value = v.state.doc.toString();
-                           container.dispatchEvent(new CustomEvent('json-change', {
-                              detail: {
-                                 value
-                              }
-                           }));
-                        }
-
-                        if (v.focusChanged && view.hasFocus) {
-                           container.dispatchEvent(new Event('focus'));
-                        }
-                     }
-                  )
-               ]
+               extensions: buildExtensions()
             });
             view.setState(newState);
          }
