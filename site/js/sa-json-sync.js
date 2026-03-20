@@ -22,6 +22,40 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
+const JSON_EXPORT_VEC_DECIMALS = 5;
+const JSON_EXPORT_QUAT_DECIMALS = 6;
+
+function jsonExportRound(n, decimals) {
+    if (typeof n !== 'number' || !Number.isFinite(n)) return 0;
+    const p = 10 ** decimals;
+    return Math.round(n * p) / p;
+}
+
+function jsonExportVec3(v) {
+    const d = JSON_EXPORT_VEC_DECIMALS;
+    return [
+        jsonExportRound(v.x, d),
+        jsonExportRound(v.y, d),
+        jsonExportRound(v.z, d)
+    ];
+}
+
+function jsonExportQuat(q) {
+    const d = JSON_EXPORT_QUAT_DECIMALS;
+    let x = jsonExportRound(q.x, d);
+    let y = jsonExportRound(q.y, d);
+    let z = jsonExportRound(q.z, d);
+    let w = jsonExportRound(q.w, d);
+    const len = Math.hypot(x, y, z, w);
+    if (len < 1e-15) return [0, 0, 0, 1];
+    return [
+        jsonExportRound(x / len, d),
+        jsonExportRound(y / len, d),
+        jsonExportRound(z / len, d),
+        jsonExportRound(w / len, d)
+    ];
+}
+
 // ===== Export JSON (quaternions) =====
 function buildNode(obj, includeIds = true, zeroTwObjectIx = false) {
     if (!obj.userData?.isSelectable)
@@ -46,11 +80,11 @@ function buildNode(obj, includeIds = true, zeroTwObjectIx = false) {
         const node = {
             sName: displayName,
             pTransform: {
-                aPosition: [localPosition.x, localPosition.y, localPosition.z],
-                aRotation: [localQuaternion.x, localQuaternion.y, localQuaternion.z, localQuaternion.w],
-                aScale: [localScale.x, localScale.y, localScale.z],
+                aPosition: jsonExportVec3(localPosition),
+                aRotation: jsonExportQuat(localQuaternion),
+                aScale: jsonExportVec3(localScale),
             },
-            aBound: [size.x, size.y, size.z],
+            aBound: jsonExportVec3(size),
             aChildren: []
         };
 
@@ -74,11 +108,11 @@ function buildNode(obj, includeIds = true, zeroTwObjectIx = false) {
             sReference: (obj instanceof THREE.Group && obj.userData?.isEditorGroup === true) ? (obj.children[0]?.userData?.sourceRef?.reference || (baseName + ".glb")) : (sourceRef?.reference || (baseName + ".glb"))
         },
         pTransform: {
-            aPosition: [localPosition.x, localPosition.y, localPosition.z],
-            aRotation: [localQuaternion.x, localQuaternion.y, localQuaternion.z, localQuaternion.w],
-            aScale: [localScale.x, localScale.y, localScale.z]
+            aPosition: jsonExportVec3(localPosition),
+            aRotation: jsonExportQuat(localQuaternion),
+            aScale: jsonExportVec3(localScale)
         },
-        aBound: [size.x, size.y, size.z],
+        aBound: jsonExportVec3(size),
         aChildren: []
     };
 

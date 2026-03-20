@@ -762,14 +762,14 @@ function duplicateObject(obj, offset = new THREE.Vector3(1, 0, 1)) {
     delete duplicate.userData.dimGroup;
     delete duplicate.userData.listItem;
 
-    delete duplicate.userData.wClass;
-    delete duplicate.userData.twObjectIx;
+    duplicate.userData.wClass = 73;
+    duplicate.userData.twObjectIx = 0;
 
     if (duplicate instanceof THREE.Group) {
         duplicate.traverse(child => {
             if (child.userData) {
-                delete child.userData.wClass;
-                delete child.userData.twObjectIx;
+                child.userData.wClass = 73;
+                child.userData.twObjectIx = 0;
             }
         });
     }
