@@ -220,6 +220,7 @@ canvas {
 #jsonEditor {
   flex: 1;
   height: 100%;
+  min-height: 0;
   color: #ffffff;
   border: 1px solid #555;
   border-radius: 3px;
@@ -228,12 +229,66 @@ canvas {
   line-height: 1.4;
   resize: vertical;
   white-space: pre;
-  overflow: auto;
+  /* Scrolling lives on .cm-scroller; visible here avoids clipping in-editor UI. */
+  overflow: hidden;
 }
 
 .cm-editor {
   height: 100%;
   background: #22222290;
+}
+
+/* CodeMirror tooltips (autocomplete list + completion info) use parent: document.body — keep above offcanvas/modals */
+.cm-tooltip {
+  z-index: 2000;
+}
+
+/* Match #jsonEditor (11px); portaled to body they no longer inherit that size. */
+.cm-tooltip.cm-tooltip-autocomplete {
+  max-height: min(50vh, 280px);
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.cm-tooltip .cm-completionInfo,
+.cm-tooltip.cm-completionInfo {
+  max-width: min(22rem, calc(100vw - 2rem));
+  max-height: min(50vh, 18rem);
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: normal;
+  box-sizing: border-box;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+  padding: 4px 8px;
+}
+
+/*
+ * Lint diagnostics: the tooltip root IS the ul (both .cm-tooltip and .cm-tooltip-lint on one node),
+ * so descendant selectors like .cm-tooltip .cm-tooltip-lint never matched.
+ */
+.cm-tooltip.cm-tooltip-lint {
+  max-width: min(22rem, calc(100vw - 2rem));
+  box-sizing: border-box;
+  margin: 0;
+  padding: 4px 8px;
+  list-style: none;
+  font-family: 'Courier New', monospace;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnostic {
+  max-width: 100%;
+}
+
+.cm-tooltip.cm-tooltip-lint .cm-diagnosticText {
+  display: block;
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
 #codeToggle {
