@@ -22,8 +22,42 @@
 ** SPDX-License-Identifier: Apache-2.0
 */
 
+const JSON_EXPORT_VEC_DECIMALS = 5;
+const JSON_EXPORT_QUAT_DECIMALS = 6;
+
+function jsonExportRound(n, decimals) {
+    if (typeof n !== 'number' || !Number.isFinite(n)) return 0;
+    const p = 10 ** decimals;
+    return Math.round(n * p) / p;
+}
+
+function jsonExportVec3(v) {
+    const d = JSON_EXPORT_VEC_DECIMALS;
+    return [
+        jsonExportRound(v.x, d),
+        jsonExportRound(v.y, d),
+        jsonExportRound(v.z, d)
+    ];
+}
+
+function jsonExportQuat(q) {
+    const d = JSON_EXPORT_QUAT_DECIMALS;
+    let x = jsonExportRound(q.x, d);
+    let y = jsonExportRound(q.y, d);
+    let z = jsonExportRound(q.z, d);
+    let w = jsonExportRound(q.w, d);
+    const len = Math.hypot(x, y, z, w);
+    if (len < 1e-15) return [0, 0, 0, 1];
+    return [
+        jsonExportRound(x / len, d),
+        jsonExportRound(y / len, d),
+        jsonExportRound(z / len, d),
+        jsonExportRound(w / len, d)
+    ];
+}
+
 // ===== Export JSON (quaternions) =====
-function buildNode(obj) {
+function buildNode(obj, includeIds = true, zeroTwObjectIx = false) {
     if (!obj.userData?.isSelectable)
         return null;
 
@@ -46,20 +80,20 @@ function buildNode(obj) {
         const node = {
             sName: displayName,
             pTransform: {
-                aPosition: [localPosition.x, localPosition.y, localPosition.z],
-                aRotation: [localQuaternion.x, localQuaternion.y, localQuaternion.z, localQuaternion.w],
-                aScale: [localScale.x, localScale.y, localScale.z]
+                aPosition: jsonExportVec3(localPosition),
+                aRotation: jsonExportQuat(localQuaternion),
+                aScale: jsonExportVec3(localScale),
             },
-            aBound: [size.x, size.y, size.z],
+            aBound: jsonExportVec3(size),
             aChildren: []
         };
 
-        if (obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
-        if (obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
+        if (includeIds && obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
+        if (zeroTwObjectIx) node.twObjectIx = 0; else if (includeIds && obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
 
         if (obj instanceof THREE.Group) {
             obj.children.forEach(child => {
-                const childNode = buildNode(child);
+                const childNode = buildNode(child, includeIds, zeroTwObjectIx);
                 if (childNode) node.aChildren.push(childNode);
             });
         }
@@ -74,21 +108,21 @@ function buildNode(obj) {
             sReference: (obj instanceof THREE.Group && obj.userData?.isEditorGroup === true) ? (obj.children[0]?.userData?.sourceRef?.reference || (baseName + ".glb")) : (sourceRef?.reference || (baseName + ".glb"))
         },
         pTransform: {
-            aPosition: [localPosition.x, localPosition.y, localPosition.z],
-            aRotation: [localQuaternion.x, localQuaternion.y, localQuaternion.z, localQuaternion.w],
-            aScale: [localScale.x, localScale.y, localScale.z]
+            aPosition: jsonExportVec3(localPosition),
+            aRotation: jsonExportQuat(localQuaternion),
+            aScale: jsonExportVec3(localScale)
         },
-        aBound: [size.x, size.y, size.z],
+        aBound: jsonExportVec3(size),
         aChildren: []
     };
 
-    if (obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
-    if (obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
+    if (includeIds && obj.userData?.wClass !== undefined) node.wClass = obj.userData.wClass;
+    if (zeroTwObjectIx) node.twObjectIx = 0; else if (includeIds && obj.userData?.twObjectIx !== undefined) node.twObjectIx = obj.userData.twObjectIx;
 
     if (obj instanceof THREE.Group) {
         const childrenToExport = obj.userData?.isEditorGroup === true ? obj.children.slice(1) : obj.children;
         childrenToExport.forEach(child => {
-            const childNode = buildNode(child);
+            const childNode = buildNode(child, includeIds, zeroTwObjectIx);
             if (childNode) node.aChildren.push(childNode);
         });
     }
@@ -103,8 +137,14 @@ function generateSceneJSONEx(sJSON) {
     });
 }
 
-function generateSceneJSON() {
-    const objectRootNode = buildNode(canvasRoot);
+function generateSceneJSON(includeIds = true) {
+    const objectRootNode = buildNode(canvasRoot, includeIds);
+    const exportData = objectRootNode ? [objectRootNode] : [];
+    return generateSceneJSONEx(JSON.stringify(exportData, null, 2));
+}
+
+function generateSceneJSONExt() {
+    const objectRootNode = buildNode(canvasRoot, true, true);
     const exportData = objectRootNode ? [objectRootNode] : [];
     return generateSceneJSONEx(JSON.stringify(exportData, null, 2));
 }
@@ -121,10 +161,22 @@ function updateJSONEditor() {
     }
 }
 
-// Export JSON button
-if (typeof exportJson !== 'undefined') {
+// Export JSON buttons
+if (typeof exportJson !== 'undefined' && exportJson) {
     exportJson.onclick = () => {
-        const jsonText = generateSceneJSON();
+        const jsonText = generateSceneJSON(true);
+        const blob = new Blob([jsonText], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "scene-backup.json";
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+}
+if (typeof exportJsonExt !== 'undefined' && exportJsonExt) {
+    exportJsonExt.onclick = () => {
+        const jsonText = generateSceneJSONExt();
         const blob = new Blob([jsonText], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -184,12 +236,27 @@ function discardCodeEditorChanges() {
     setTimeout(() => { isProgrammaticUpdate = false; }, 0);
 }
 
+// Auto-insert missing wClass and twObjectIx (default 0) into parsed JSON nodes
+function augmentJSONWithDefaults(nodes) {
+    if (!Array.isArray(nodes)) return;
+    for (const node of nodes) {
+        if (!node || typeof node !== 'object') continue;
+        if (node.wClass === undefined) node.wClass = 73;
+        if (node.twObjectIx === undefined) node.twObjectIx = 0;
+        if (node.aChildren && Array.isArray(node.aChildren)) {
+            augmentJSONWithDefaults(node.aChildren);
+        }
+    }
+}
+
 // Parse JSON and update scene
 async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
     try {
         const data = JSON.parse(jsonText);
 
         if (!Array.isArray(data) || data.length === 0) return;
+
+        augmentJSONWithDefaults(data);
 
         const rootNode = data[0];
         const isObjectRootFormat = rootNode && rootNode.twObjectIx !== undefined && rootNode.sName !== undefined;
@@ -200,7 +267,7 @@ async function parseJSONAndUpdateScene(jsonText, skipStateSave = false) {
         // Handle Object Root updates from JSON
         if (isObjectRootFormat) {
             if (rootNode.wClass !== undefined) canvasRoot.userData.wClass = rootNode.wClass;
-            if (rootNode.twObjectIx !== undefined) canvasRoot.userData.twObjectIx = rootNode.twObjectIx;
+            if (rootNode.twObjectIx !== undefined && rootNode.twObjectIx !== 0) canvasRoot.userData.twObjectIx = rootNode.twObjectIx;
 
             if (rootNode.sName) {
                 canvasRoot.name = rootNode.sName;

@@ -9,37 +9,40 @@ A 3D scene editor for the web. Assembles scenes from GLB/GLTF models, syncs with
 | Layer | Technology |
 |-------|------------|
 | 3D | Three.js 0.128 (OrbitControls, TransformControls, GLTFLoader) |
-| UI | Bootstrap 5.3, Font Awesome 7, Outfit (Google Fonts) |
-| Code editor | CodeMirror 6 (via `window.jsonEditorAPI`; ESM from esm.sh) |
+| UI | Bootstrap 5.3.8, Font Awesome 7, Outfit (Google Fonts) |
+| Code editor | CodeMirror 6 (`window.jsonEditorAPI`; ESM from esm.sh; `sa-json-lint.js`, `sa-json-autocomplete.js`) |
 | Tutorial | Driver.js 1.4 (Getting Started walkthrough) |
-| Multi-user | Metaversal Fabric (vendor/mv/*), jQuery 3.7, Socket.io 4.8 |
+| Multi-user | Metaversal Fabric (vendor/mv/*), jQuery 3.7.1, Socket.io 4.8 |
 | Entry | `maputil.js`, `rp1.js` (Fabric integration, scene load) |
 
 ---
 
 ## Architecture Overview
 
-The app is split into **sa-*** modules. Each file has a single responsibility. Scripts load in dependency order (see `index.html`). Global state lives in `sa-core.js` (scene, camera, selection) and `sa-bootstrap.js` (DOM refs).
+The app is split into **sa-*** modules. Each file has a single responsibility. Classic scripts at the foot of `index.html` load in dependency order. Global state lives in `sa-core.js` (scene, camera, selection) and `sa-bootstrap.js` (DOM refs).
+
+The JSON editor is a `<script type="module">` block that imports **sa-json-lint.js** and **sa-json-autocomplete.js** (plus CodeMirror packages from esm.sh) before the ordered `sa-*.js` scripts run.
 
 ```
 index.html
-    └── maputil.js
-    └── rp1.js (Fabric, scene load)
-    └── sa-config.js
-    └── sa-core.js
-    └── sa-bootstrap.js
-    └── sa-models.js
-    └── sa-properties.js
-    └── sa-transforms.js
-    └── sa-json-sync.js
-    └── sa-selection.js
-    └── sa-groups.js
-    └── sa-sidebar.js
-    └── sa-ui.js
-    └── sa-object-library.js
-    └── sa-main.js
-    └── sa-shell.js
-    └── sa-tutorial.js
+    ├── Head: vendor + maputil.js, rp1.js, Three.js, …
+    ├── Body: <script type="module"> → CodeMirror + sa-json-lint.js, sa-json-autocomplete.js
+    └── Foot:
+        sa-config.js
+        sa-core.js
+        sa-bootstrap.js
+        sa-models.js
+        sa-properties.js
+        sa-transforms.js
+        sa-json-sync.js
+        sa-selection.js
+        sa-groups.js
+        sa-sidebar.js
+        sa-ui.js
+        sa-object-library.js
+        sa-main.js
+        sa-shell.js
+        sa-tutorial.js
 ```
 
 ---
@@ -55,6 +58,8 @@ index.html
 | **sa-properties.js** | Bounds, clamping, texture info, properties panel updates. | sa-core, sa-bootstrap |
 | **sa-transforms.js** | Transform gizmo, box helpers, undo/redo, canvas size, transform events. | sa-config, sa-core |
 | **sa-json-sync.js** | Syncs JSON editor ↔ 3D scene; `buildNode`, `parseJSONAndUpdateScene`, export. | sa-core, sa-models |
+| **sa-json-lint.js** | CodeMirror linting for Scene Assembler JSON schema (ES module; imported by index.html). | @codemirror/lang-json |
+| **sa-json-autocomplete.js** | Scene JSON completions; reformats like `generateSceneJSONEx` when parse succeeds and doc is under ~400k chars (skips reformat on huge pastes). | @codemirror/lang-json, @codemirror/language, @codemirror/state |
 | **sa-selection.js** | `selectObject`, `selectFromSidebar`, `selectFromCanvas`, select all, deselect. | sa-core |
 | **sa-groups.js** | Group/ungroup, drag-drop attach, duplicate, delete. | sa-core |
 | **sa-sidebar.js** | Builds outliner; `createSidebarItem`, `addGroupToList`, `addModelToList`, `makeLabelEditable`. | sa-core |
@@ -93,6 +98,7 @@ index.html
 | `delete` | Delete button |
 | `undo`, `redo` | Undo/redo buttons |
 | `resetCamera` | Reset camera button |
+| `exportJson`, `exportJsonExt` | Export Backup / Export for External |
 
 ---
 

@@ -268,8 +268,23 @@
                </li>
                <li class="nav-item border-start my-1">
                </li>
-               <li class="nav-item">
-                  <button class="nav-link" id="exportJson" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Export JSON"><i class="fa-solid fa-file-export"></i></button>
+               <li class="nav-item dropdown">
+                  <button class="nav-link" id="export" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" data-bs-placement="bottom" title="Export JSON"><i class="fa-solid fa-file-export"></i></button>
+                  <ul class="dropdown-menu dropdown-menu-end py-2" aria-labelledby="export">
+                     <li>
+                        <button class="dropdown-item" id="exportJson" type="button">
+                           <i class="fa-solid fa-database me-2"></i><strong>Export Backup</strong>
+                           <div class="small text-muted mt-1">Preserves existing links to your database.</div>
+                        </button>
+                     </li>
+                     <li><hr class="dropdown-divider"></li>
+                     <li>
+                        <button class="dropdown-item" id="exportJsonExt" type="button">
+                           <i class="fa-solid fa-up-right-from-square me-2"></i><strong>Export for External</strong>
+                           <div class="small text-muted mt-1">For importing into new scenes or databases.</div>
+                        </button>
+                     </li>
+                  </ul>
                </li>
                <li class="nav-item d-flex align-items-center">
                   <button class="nav-link jsPublish pe-3 rounded-5" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Publish Scene"><i class="fa-solid fa-cloud-arrow-up"></i></button>
@@ -574,7 +589,7 @@
    <!--
       CODE EDITOR – CodeMirror 6 for JSON.
       Scene is stored as JSON; edits here sync to 3D view when Apply Changes is clicked.
-      See sa-json-sync.js for sync logic.
+      See sa-json-sync.js for sync logic; sa-json-lint.js for schema linting; sa-json-autocomplete.js for key hints.
    -->
    <script type="module">
       import {
@@ -582,7 +597,8 @@
          keymap,
          lineNumbers,
          highlightActiveLine,
-         drawSelection
+         drawSelection,
+         tooltips
       } from 'https://esm.sh/@codemirror/view@6';
       import {
          EditorState
@@ -595,9 +611,14 @@
          bracketMatching
       } from 'https://esm.sh/@codemirror/language@6';
       import {
-         json,
-         jsonParseLinter
+         json
       } from 'https://esm.sh/@codemirror/lang-json@6';
+      import {
+         createSceneAssemblerLintSource
+      } from './js/sa-json-lint.js';
+      import {
+         sceneJsonAutocompleteFacet
+      } from './js/sa-json-autocomplete.js';
       import {
          defaultKeymap,
          history,
@@ -610,8 +631,10 @@
          highlightSelectionMatches
       } from 'https://esm.sh/@codemirror/search@6';
       import {
+         autocompletion,
          closeBrackets,
-         closeBracketsKeymap
+         closeBracketsKeymap,
+         completionKeymap
       } from 'https://esm.sh/@codemirror/autocomplete@6';
       import {
          linter,
@@ -627,55 +650,66 @@
       // Clear any existing visible text to avoid duplicate rendering next to CodeMirror
       if (container) container.textContent = '';
 
-      const updateListeners = [];
+      const editorRef = {};
+      const buildExtensions = () => [
+         EditorState.allowMultipleSelections.of(true),
+         // Host tooltips on body so autocomplete + completion info are not clipped by
+         // #jsonEditor overflow or the offcanvas .blur transform (fixed positioning).
+         tooltips({
+            parent: document.body,
+            position: 'fixed'
+         }),
+         oneDark,
+         lineNumbers(),
+         foldGutter(),
+         highlightActiveLine(),
+         drawSelection(),
+         bracketMatching(),
+         closeBrackets(),
+         autocompletion(),
+         sceneJsonAutocompleteFacet,
+         highlightSelectionMatches(),
+         lintGutter(),
+         linter(createSceneAssemblerLintSource()),
+         history(),
+         keymap.of([
+            ...defaultKeymap,
+            ...historyKeymap,
+            ...searchKeymap,
+            ...foldKeymap,
+            ...closeBracketsKeymap,
+            ...completionKeymap
+         ]),
+         syntaxHighlighting(defaultHighlightStyle, {
+            fallback: true
+         }),
+         json(),
+         EditorView.updateListener.of(
+            v => {
+               if (v.docChanged) {
+                  const value = v.state.doc.toString();
+                  container.dispatchEvent(new CustomEvent('json-change', {
+                     detail: {
+                        value
+                     }
+                  }));
+               }
+
+               if (v.focusChanged && editorRef.view?.hasFocus) {
+                  container.dispatchEvent(new Event('focus'));
+               }
+            }
+         )
+      ];
 
       const view = new EditorView({
          state: EditorState.create({
             doc: initialDoc,
-            extensions: [
-               EditorState.allowMultipleSelections.of(true),
-               oneDark,
-               lineNumbers(),
-               foldGutter(),
-               highlightActiveLine(),
-               drawSelection(),
-               bracketMatching(),
-               closeBrackets(),
-               highlightSelectionMatches(),
-               lintGutter(),
-               linter(jsonParseLinter()),
-               history(),
-               keymap.of([
-                  ...defaultKeymap,
-                  ...historyKeymap,
-                  ...searchKeymap,
-                  ...foldKeymap,
-                  ...closeBracketsKeymap
-               ]),
-               syntaxHighlighting(defaultHighlightStyle, {
-                  fallback: true
-               }),
-               json(),
-               EditorView.updateListener.of(
-                  v => {
-                     if (v.docChanged) {
-                        const value = v.state.doc.toString();
-                        container.dispatchEvent(new CustomEvent('json-change', {
-                           detail: {
-                              value
-                           }
-                        }));
-                     }
-
-                     if (v.focusChanged && view.hasFocus) {
-                        container.dispatchEvent(new Event('focus'));
-                     }
-                  }
-               )
-            ]
+            extensions: buildExtensions()
          }),
          parent: container
       });
+      editorRef.view = view;
 
       window.jsonEditorAPI = {
          getValue() {
@@ -715,47 +749,7 @@
             const currentDoc = view.state.doc;
             const newState = EditorState.create({
                doc: currentDoc,
-               extensions: [
-                  EditorState.allowMultipleSelections.of(true),
-                  oneDark,
-                  lineNumbers(),
-                  foldGutter(),
-                  highlightActiveLine(),
-                  drawSelection(),
-                  bracketMatching(),
-                  closeBrackets(),
-                  highlightSelectionMatches(),
-                  lintGutter(),
-                  linter(jsonParseLinter()),
-                  history(), // Fresh history extension
-                  keymap.of([
-                     ...defaultKeymap,
-                     ...historyKeymap,
-                     ...searchKeymap,
-                     ...foldKeymap,
-                     ...closeBracketsKeymap
-                  ]),
-                  syntaxHighlighting(defaultHighlightStyle, {
-                     fallback: true
-                  }),
-                  json(),
-                  EditorView.updateListener.of(
-                     v => {
-                        if (v.docChanged) {
-                           const value = v.state.doc.toString();
-                           container.dispatchEvent(new CustomEvent('json-change', {
-                              detail: {
-                                 value
-                              }
-                           }));
-                        }
-
-                        if (v.focusChanged && view.hasFocus) {
-                           container.dispatchEvent(new Event('focus'));
-                        }
-                     }
-                  )
-               ]
+               extensions: buildExtensions()
             });
             view.setState(newState);
          }

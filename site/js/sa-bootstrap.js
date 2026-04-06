@@ -25,6 +25,61 @@
 // ===== UI refs =====
 const loader = new THREE.GLTFLoader();
 
+// Many glTF/GLB exporters omit accessor min/max (allowed by common tooling; Three.js still loads fine).
+// GLTFLoader logs a console.warn per primitive; suppress only that message during loads.
+(function quietGLTFAccessorMinMaxWarnings(gltfLoader) {
+    const origLoad = gltfLoader.load.bind(gltfLoader);
+    let activeLoads = 0;
+    let savedConsoleWarn = null;
+    const PREFIX = 'THREE.GLTFLoader: Missing min/max properties for accessor POSITION';
+    gltfLoader.load = function (url, onLoad, onProgress, onError) {
+        if (activeLoads === 0) {
+            savedConsoleWarn = console.warn;
+            console.warn = function (...args) {
+                const msg = args[0];
+                if (typeof msg === 'string' && msg.indexOf(PREFIX) === 0) return;
+                savedConsoleWarn.apply(console, args);
+            };
+        }
+        activeLoads++;
+        try {
+            origLoad(
+                url,
+                function (gltf) {
+                    try {
+                        if (onLoad) onLoad(gltf);
+                    } finally {
+                        activeLoads--;
+                        if (activeLoads === 0 && savedConsoleWarn) {
+                            console.warn = savedConsoleWarn;
+                            savedConsoleWarn = null;
+                        }
+                    }
+                },
+                onProgress,
+                function (err) {
+                    try {
+                        if (onError) onError(err);
+                    } finally {
+                        activeLoads--;
+                        if (activeLoads === 0 && savedConsoleWarn) {
+                            console.warn = savedConsoleWarn;
+                            savedConsoleWarn = null;
+                        }
+                    }
+                }
+            );
+        } catch (e) {
+            activeLoads--;
+            if (activeLoads === 0 && savedConsoleWarn) {
+                console.warn = savedConsoleWarn;
+                savedConsoleWarn = null;
+            }
+            throw e;
+        }
+    };
+})(loader);
+
 const modelList = document.getElementById("modelList");
 const propertiesPanel = document.getElementById("properties");
 const propertiesPanelCard = document.getElementById("propertiesPanel");
@@ -75,6 +130,7 @@ const fabricUrlInput = document.getElementById("fabricUrl");
 const copyFabricUrlBtn = document.getElementById("copyFabricUrl");
 const jsonEditor = document.getElementById("jsonEditor");
 const exportJson = document.getElementById("exportJson");
+const exportJsonExt = document.getElementById("exportJsonExt");
 const applyChanges = document.getElementById("applyChanges");
 
 function getJSONEditorText() {
