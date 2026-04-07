@@ -14,7 +14,7 @@ require ('@metaversalcorp/mvrest');
 require ('@metaversalcorp/mvio');
 */
 
-MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.24.6');
+MV.MVRP.Map = MV.Library ('MVRP_Map', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Map', '0.24.7');
 
 MV.MVRP.Map.Class.RMCOMMON_TYPE = class extends MV.MVMF.Class.BASE
 {
@@ -1503,7 +1503,7 @@ MV.MVRP.Map.IO_OBJECT = class extends MV.MVIO.IO_OBJECT
 
    ParseResponse (pResult, result)
    {
-      pResult.Parent = parse (result.recordsets[0][0].Object);
+      pResult.Parent = JSON.parse (result.recordsets[0][0].Object);
       pResult.aChild = [];
 
       for (let i=1; i < result.recordsets.length; i++)
@@ -1511,7 +1511,7 @@ MV.MVRP.Map.IO_OBJECT = class extends MV.MVIO.IO_OBJECT
          pResult.aChild[i-1] = [];
          for (let j=0; j < result.recordsets[i].length; j++)
          {
-            pResult.aChild[i-1].push (parse (result.recordsets[i][j].Object));
+            pResult.aChild[i-1].push (JSON.parse (result.recordsets[i][j].Object));
          }
       }
    }
