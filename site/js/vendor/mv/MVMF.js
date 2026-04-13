@@ -36,7 +36,7 @@ const MV = new class
 }
 ();
 
-MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.17');
+MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.18');
 
 MV.MVMF.Const.BANK_NULL        = 0;
 MV.MVMF.Const.OBJECTIX_NULL    = 0;
@@ -5672,6 +5672,7 @@ MV.MVMF.LNG = class extends MV.MVMF.NOTIFICATION
    get twUserIx ()   { return this.#pSession.twUserIx;   }
    get sNamespace () { return this.#pService.sNamespace; }
    get pSession   () { return this.#pSession;            }
+   get pClient ()    { return this.#pClient;             }
 
    #Login_Call ()
    {
