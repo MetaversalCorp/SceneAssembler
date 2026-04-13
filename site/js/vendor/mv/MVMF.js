@@ -36,7 +36,7 @@ const MV = new class
 }
 ();
 
-MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.13');
+MV.MVMF = MV.Library ('MVMF', 'Copyright 2014-2024 Metaversal Corporation. All rights reserved.', 'Metaversal Model Foundation', '0.24.17');
 
 MV.MVMF.Const.BANK_NULL        = 0;
 MV.MVMF.Const.OBJECTIX_NULL    = 0;
@@ -1806,9 +1806,9 @@ MV.MVMF.CORE = class
 
    LnG_Open (sNamespace, sID_Service, sConnect, sSession)
    {
-      let pLnG = new MV.MVMF.LNG (sNamespace, sID_Service, sConnect, sSession);
+      let pLnG = new MV.MVMF.LNG ();
 
-      if (pLnG.pSession != null)
+      if (pLnG.Init (sNamespace, sID_Service, sConnect, sSession))
       {
          this.#cpLnG.Add (pLnG, pLnG);
       }
@@ -4894,6 +4894,8 @@ MV.MVMF.SESSION_NULL = class extends MV.MVMF.MODEL_SESSION
       this.pSource.Logout ();
    }
 
+   get twUserIx ()   { return 0; }
+
    IsLoggedOut ()
    {
       return true;
@@ -4965,7 +4967,8 @@ MV.MVMF.SESSION_UIP = class extends MV.MVMF.MODEL_SESSION
 
    eSTATE = MV.MVMF.SESSION_UIP.eSTATE;
 
-   get pLogin () { return this.pSource.pLogin; }
+   get pLogin ()     { return this.pSource.pLogin; }
+   get twUserIx ()   { return 0; }
 
    Progress (pProgress)
    {
@@ -5580,9 +5583,14 @@ MV.MVMF.LNG = class extends MV.MVMF.NOTIFICATION
    #pSession;
    #sSession;
 
-   constructor (sNamespace, sID_Service, sConnect, sSession)
+   constructor ()
    {
       super ();
+   }
+
+   Init (sNamespace, sID_Service, sConnect, sSession)
+   {
+      let bResult = false;
 
       if (this.#pService = MV.MVMF.Core.Service_Open (sNamespace, sID_Service, sConnect))
       {
@@ -5594,12 +5602,16 @@ MV.MVMF.LNG = class extends MV.MVMF.NOTIFICATION
 
             if (this.#pSession = this.#pClient.Session_Open (true))
             {
+               bResult = true;
+
                this.#pSession.Attach (this, true);
 
                this.#sSession = sSession;
             }
          }
       }
+
+      return bResult;
    }
 
    SafeClose ()
@@ -5657,10 +5669,8 @@ MV.MVMF.LNG = class extends MV.MVMF.NOTIFICATION
       return super.destructor ();
    }
 
-   get pNamespace () { return this.#pService.pNamespace; }
+   get twUserIx ()   { return this.#pSession.twUserIx;   }
    get sNamespace () { return this.#pService.sNamespace; }
-   get pService   () { return this.#pService;            }
-   get pClient    () { return this.#pClient;             }
    get pSession   () { return this.#pSession;            }
 
    #Login_Call ()

@@ -11,7 +11,7 @@ require ('@metaversalcorp/mvsb');
 require ('@metaversalcorp/mvxp');
 */
 
-MV.MVRP     = MV.Library ('MVRP',     'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Platform', '0.24.3');
+MV.MVRP     = MV.Library ('MVRP',     'Copyright 2023-2024 Metaversal Corporation. All rights reserved.', 'Metaversal RP1 Platform', '0.24.5');
 
 MV.MVRP.Class.FLOAT3 = class extends MV.MVMF.Class.BASE
 {
@@ -2431,9 +2431,19 @@ MV.MVRP.MSF = class extends MV.MVMF.NOTIFICATION
                   let pServices = pPrimary["services"];
                   let pRequire;
 
-                  if ((pRequire = MV.MVMF.Core.Require (pPrimary.sRequire, pPrimary.sService, pPrimary.sNamespace)) != null)
+let _pPrimary = {};
+if (pPrimary.require)
+{
+   _pPrimary.sRequire   = pPrimary.require;
+   _pPrimary.sService   = pPrimary.service;
+   _pPrimary.sNamespace = pPrimary.namespace;
+   _pPrimary.sConnect   = pPrimary.connect;
+}
+else _pPrimary = pPrimary;
+
+                  if ((pRequire = MV.MVMF.Core.Require (_pPrimary.sRequire, _pPrimary.sService, _pPrimary.sNamespace)) != null)
                   {
-                     this.#pLnG      = MV.MVMF.Core.LnG_Open (pPrimary.sNamespace, pPrimary.sService, pPrimary.sConnect);
+                     this.#pLnG      = MV.MVMF.Core.LnG_Open (_pPrimary.sNamespace, _pPrimary.sService, _pPrimary.sConnect);
                      this.#bLnGAlloc   = true;
                      this.#pLnG.Attach (this);
 
@@ -2441,12 +2451,22 @@ MV.MVRP.MSF = class extends MV.MVMF.NOTIFICATION
                      {
                         let pConfig = pServices[sName];
 
-                        if ((pRequire = MV.MVMF.Core.Require (pConfig.sRequire, pConfig.sService, pConfig.sNamespace)) != null)
+let _pConfig = {};
+if (pConfig.require)
+{
+   _pConfig.sRequire   = pConfig.require;
+   _pConfig.sService   = pConfig.service;
+   _pConfig.sNamespace = pConfig.namespace;
+   _pConfig.sConnect   = pConfig.connect;
+}
+else _pConfig = pConfig;
+
+                        if ((pRequire = MV.MVMF.Core.Require (_pConfig.sRequire, _pConfig.sService, _pConfig.sNamespace)) != null)
                         {
                            this.#apSvc[sName] = {};
-                           this.#apSvc[sName].bRequired = pConfig.bRequired;
-                           this.#apSvc[sName].bAuth     = pConfig.bAuth;
-                           this.#apSvc[sName].pLnG      = MV.MVMF.Core.LnG_Open (pConfig.sNamespace, pConfig.sService, pConfig.sConnect);
+                           this.#apSvc[sName].bRequired = _pConfig.bRequired;
+                           this.#apSvc[sName].bAuth     = _pConfig.bAuth;
+                           this.#apSvc[sName].pLnG      = MV.MVMF.Core.LnG_Open (_pConfig.sNamespace, _pConfig.sService, _pConfig.sConnect);
                            this.#apSvc[sName].pLnG.Attach (this);
                         }
                      }
@@ -2463,13 +2483,23 @@ MV.MVRP.MSF = class extends MV.MVMF.NOTIFICATION
                   let pConfig = this.#pMSFConfig["map"];
                   let pRequire;
 
-                  pRequire =  MV.MVMF.Core.Require (pConfig.sRequire, pConfig.sService, pConfig.sNamespace);
+let _pConfig = {};
+if (pConfig.require)
+{
+   _pConfig.sRequire   = pConfig.require;
+   _pConfig.sService   = pConfig.service;
+   _pConfig.sNamespace = pConfig.namespace;
+   _pConfig.sConnect   = pConfig.connect;
+}
+else _pConfig = pConfig;
+
+                  pRequire =  MV.MVMF.Core.Require (_pConfig.sRequire, _pConfig.sService, _pConfig.sNamespace);
                   if (pRequire != null)
                   {
                      this.#apSvc["map"] = {};
-                     this.#apSvc["map"].bAuth       = pConfig.bAuth;
+                     this.#apSvc["map"].bAuth       = _pConfig.bAuth;
                      this.#apSvc["map"].bRequired   = true;
-                     this.#apSvc["map"].pLnG        = MV.MVMF.Core.LnG_Open (pConfig.sNamespace, pConfig.sService, pConfig.sConnect);
+                     this.#apSvc["map"].pLnG        = MV.MVMF.Core.LnG_Open (_pConfig.sNamespace, _pConfig.sService, _pConfig.sConnect);
                      this.#apSvc["map"].pLnG.Attach (this);
                   }
                }
@@ -2567,7 +2597,7 @@ MV.MVRP.MSF = class extends MV.MVMF.NOTIFICATION
          case this.#pLnG.eSTATE.LOGGEDIN:
             if (this.#pRUser == null)
             {
-               this.#pRUser = this.#pLnG.Model_Open ('RUser', this.#pLnG.pSession.twUserIx);
+               this.#pRUser = this.#pLnG.Model_Open ('RUser', this.#pLnG.twUserIx);
                this.#pRUser.Attach (this);
             }
             else if (this.#pRUser.IsReady ())
